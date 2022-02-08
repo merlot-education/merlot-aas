@@ -1,0 +1,9 @@
+.idea/
+*/target/**
+*.iml
+
+*.editorconfig
+# Eclipse
+.classpath
+.project
+.settings/

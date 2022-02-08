@@ -1,0 +1,85 @@
+openapi: '3.0.2'
+info:
+  title: SSI Client Registration Auth API
+  version: '1.0'
+servers:
+  - url: https://example.com/ssishell/clientregistration/v1
+
+paths:
+  /clients/iat/request:
+    summary: IAT provisioning request
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/access_request"
+      responses:
+        '201':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/access_response"
+  /clients/iat/request/{request_id}:
+    parameters:
+      - name: request_id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/access_response"
+
+
+components:
+  schemas:
+    access_request:
+      type: object
+      properties:
+        subject:
+          type: string
+        object:
+          $ref : "#/components/schemas/service_access_scope"
+      required:
+        - subject
+        - object
+    access_response:
+      allOf:
+        - $ref: "#/components/schemas/access_request"
+        - type: object
+          properties:
+            request_id:
+              type: string
+            status:
+              $ref: "#/components/schemas/access_request_status"
+            policy_evaluation_result:
+              type: object
+            initial_access_token:
+              type: string
+          required:
+            - request_id
+            - status
+    access_request_status:
+      type: string
+      enum:
+        - accepted
+        - rejected
+        - pending
+        - timed-out
+    service_access_scope:
+      type: object
+      properties:
+        did:
+          type: string
+        scope:
+          type: string
+      required:
+        - did
+        - scope
