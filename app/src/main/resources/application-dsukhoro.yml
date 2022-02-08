@@ -1,0 +1,10 @@
+server:
+  port: 8991
+security:
+  oauth2:
+    client:
+      clientId: demo-app
+      clientSecret: 8ngxjnfoywTFd5MR8HZkLKslQpfuffKE
+      accessTokenUri: https://localhost:8080/login/oauth/access_token
+      userAuthorizationUri: https://localhost:8080/login/oauth/authorize
+      clientAuthenticationScheme: form

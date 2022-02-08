@@ -22,24 +22,12 @@
         <name>T-Systems International GmbH</name>
     </organization>
 
-    <!--repositories>
-        <repository>
-            <id>dgc-github</id>
-            <url>https://maven.pkg.github.com/${github.organization}/*</url>
-        </repository>
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
-        </repository>
-    </repositories-->
-
     <modules>
         <module>app</module>
         <module>service</module>
     </modules>
 
     <properties>
-        <!--packaging.format>war</packaging.format-->
         <packaging.format>jar</packaging.format>
         <!-- java -->
         <java.version>11</java.version>
@@ -77,72 +65,8 @@
     </properties>
 
     <url>https://github.com/gaia-x/dgc-gateway</url>
-    <!--ciManagement>
-        <url>https://github.com/eu-digital-green-certificates/dgc-gateway/actions?query=workflow%3Aci</url>
-    </ciManagement>
-    <issueManagement>
-        <url>https://github.com/eu-digital-green-certificates/dgc-gateway/issues</url>
-    </issueManagement>
-    <scm>
-        <url>https://github.com/eu-digital-green-certificates/dgc-gateway</url>
-    </scm-->
-
-    <!--profiles>
-        <profile>
-            <id>docker</id>
-            <properties>
-                <build.profile.id>docker</build.profile.id>
-                <packaging.format>jar</packaging.format>
-            </properties>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.springframework.boot</groupId>
-                        <artifactId>spring-boot-maven-plugin</artifactId>
-                        <configuration>
-                            <outputDirectory>${project.build.directory}/docker</outputDirectory>
-                            <finalName>dgcg</finalName>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>make-zip-ACC</id>
-                                <phase>none</phase>
-                            </execution>
-                            <execution>
-                                <id>make-zip-test</id>
-                                <phase>none</phase>
-                            </execution>
-                            <execution>
-                                <id>make-zip-PRD</id>
-                                <phase>none</phase>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles-->
-
-    <!--distributionManagement>
-        <repository>
-            <id>dgc-github</id>
-            <url>https://maven.pkg.github.com/${github.organization}/${github.project}</url>
-        </repository>
-    </distributionManagement-->
-
     <dependencyManagement>
         <dependencies>
-            <!--dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-dependencies</artifactId>
-                <version>${spring.cloud.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency-->
-
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter</artifactId>
@@ -153,11 +77,6 @@
                 <artifactId>spring-boot-starter-actuator</artifactId>
                 <version>${spring-boot.version}</version>
             </dependency>
-            <!--dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-validation</artifactId>
-                <version>${spring-boot.version}</version>
-            </dependency-->
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-security</artifactId>
@@ -201,12 +120,6 @@
                 <artifactId>bcpkix-jdk15on</artifactId>
                 <version>${bcpkix.version}</version>
             </dependency>
-            <!--dependency>
-                <groupId>org.mockito</groupId>
-                <artifactId>mockito-core</artifactId>
-                <version>${mockito.version}</version>
-                <scope>test</scope>
-            </dependency-->
             <dependency>
                 <groupId>org.springframework.security</groupId>
                 <artifactId>spring-security-web</artifactId>
@@ -244,16 +157,6 @@
                     <artifactId>maven-checkstyle-plugin</artifactId>
                     <version>${plugin.checkstyle.version}</version>
                 </plugin>
-                <!--plugin>
-                    <groupId>org.sonarsource.scanner.maven</groupId>
-                    <artifactId>sonar-maven-plugin</artifactId>
-                    <version>${plugin.sonar.version}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.jacoco</groupId>
-                    <artifactId>jacoco-maven-plugin</artifactId>
-                    <version>${plugin.jacoco.version}</version>
-                </plugin-->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
@@ -304,7 +207,6 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <!--version>${spring-boot.version}</version-->
                 <executions>
                     <execution>
                         <goals>

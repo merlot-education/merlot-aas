@@ -8,7 +8,6 @@
         <groupId>eu.gaiax.difs.aas</groupId>
         <artifactId>auth-service-parent</artifactId>
         <version>0.0.1</version>
-        <!--relativePath/-->
     </parent>
 
     <groupId>eu.gaiax.difs.aas</groupId>
@@ -18,54 +17,11 @@
     <name>auth-app</name>
     <description>GAIA-X AAS Demo Application</description>
 
-    <!--profiles>
-        <profile>
-            <id>docker</id>
-            <properties>
-                <build.profile.id>docker</build.profile.id>
-                <packaging.format>jar</packaging.format>
-            </properties>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.springframework.boot</groupId>
-                        <artifactId>spring-boot-maven-plugin</artifactId>
-                        <configuration>
-                            <outputDirectory>${project.build.directory}/docker</outputDirectory>
-                            <finalName>dgcg</finalName>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>make-zip-ACC</id>
-                                <phase>none</phase>
-                            </execution>
-                            <execution>
-                                <id>make-zip-test</id>
-                                <phase>none</phase>
-                            </execution>
-                            <execution>
-                                <id>make-zip-PRD</id>
-                                <phase>none</phase>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles-->
-
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
         </dependency>
-        <!--dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-validation</artifactId>
-        </dependency-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
@@ -102,24 +58,5 @@
             <artifactId>spring-security-oauth2</artifactId>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <!--plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-war-plugin</artifactId>
-                <configuration>
-                    <webXml>${project.basedir}/src/WEB-INF/web.xml</webXml>
-                </configuration>
-            </plugin-->
-            <!--plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <configuration>
-                    <encoding>${project.build.sourceEncoding}</encoding>
-                </configuration>
-            </plugin-->
-        </plugins>
-    </build>
 
 </project>

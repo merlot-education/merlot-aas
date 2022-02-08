@@ -1,15 +1,10 @@
 server:
-  port: 8090
+  port: 8990
 spring:
-#  profiles:
-#    group:
-#      "dev": "h2"
+  profiles:
+    active: default
   application:
     name: auth-app
-#  task:
-#    scheduling:
-#      pool:
-#        size: 5
 security:
   oauth2:
     client:
@@ -18,16 +13,3 @@ security:
       accessTokenUri: https://github.com/login/oauth/access_token
       userAuthorizationUri: https://github.com/login/oauth/authorize
       clientAuthenticationScheme: form        
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "*"
-#  server:
-#    port: -1
-springdoc:
-  api-docs:
-    path: /api/docs
-    enabled: true
-#  swagger-ui:
-#    path: /swagger
