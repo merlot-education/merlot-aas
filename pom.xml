@@ -64,7 +64,17 @@
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     </properties>
 
-    <url>https://github.com/gaia-x/dgc-gateway</url>
+    <url>https://gitlab.com/gaia-x/data-infrastructure-federation-services/authenticationauthorization</url>
+    <scm>
+        <url>https://gitlab.com/gaia-x/data-infrastructure-federation-services/authenticationauthorization</url>
+    </scm>
+    <issueManagement>
+        <url>https://gitlab.com/gaia-x/data-infrastructure-federation-services/authenticationauthorization/-/issues</url>
+    </issueManagement>
+    <ciManagement>
+        <url>https://gitlab.com/gaia-x/data-infrastructure-federation-services/authenticationauthorization/-/pipelines</url>
+    </ciManagement>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
