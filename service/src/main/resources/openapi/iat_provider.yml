@@ -3,24 +3,32 @@ info:
   title: SSI Client Registration Auth API
   version: '1.0'
 servers:
-  - url: https://example.com/ssishell/clientregistration/v1
+  - url: 'http://localhost:8090'
+    description: Local run configuration
+
+tags:
+  - name: IATController
+    description: Controller for SSI IAT issuing
 
 paths:
   /clients/iat/request:
-    summary: IAT provisioning request
     post:
+      summary: Create IAT provisioning request
+      operationId: postAccessRequest
       requestBody:
         content:
           application/json:
             schema:
               $ref: "#/components/schemas/access_request"
       responses:
-        '201':
+        201:
           description: Success
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/access_response"
+      tags:
+        - IATController
   /clients/iat/request/{request_id}:
     parameters:
       - name: request_id
@@ -29,13 +37,17 @@ paths:
         schema:
           type: string
     get:
+      summary: Get IAT provisioning request details
+      operationId: getAccessRequest
       responses:
-        '200':
+        200:
           description: Success
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/access_response"
+      tags:
+        - IATController
 
 
 components:
