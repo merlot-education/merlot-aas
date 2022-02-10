@@ -1,9 +1,10 @@
-openapi: '3.0.2'
+openapi: 3.0.3
 info:
-  title: SSI Client Registration Auth API
-  version: '1.0'
+  title: IatProvider
+  description: SSI Client Registration Auth API
+  version: 1.0
 servers:
-  - url: 'http://localhost:8090'
+  - url: http://localhost:8090
     description: Local run configuration
 
 tags:
@@ -16,23 +17,33 @@ paths:
       summary: Create IAT provisioning request
       operationId: postAccessRequest
       requestBody:
+        description: Request data
+        required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/access_request"
+              $ref: "#/components/schemas/access_request_dto"
       responses:
         201:
           description: Success
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/access_response"
+                $ref: "#/components/schemas/access_response_dto"
+        400:
+          description: Invalid input data
+        401:
+          description: Unauthorized
+        500:
+          description: Internal Server Error
       tags:
         - IATController
+
   /clients/iat/request/{request_id}:
     parameters:
       - name: request_id
         in: path
+        description: Request identifier
         required: true
         schema:
           type: string
@@ -45,32 +56,39 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/access_response"
+                $ref: "#/components/schemas/access_response_dto"
+        400:
+          description: Invalid input data
+        401:
+          description: Unauthorized
+        404:
+          description: Request with selected id was not found
+        500:
+          description: Internal Server Error
       tags:
         - IATController
 
-
 components:
   schemas:
-    access_request:
+    access_request_dto:
       type: object
       properties:
         subject:
           type: string
         object:
-          $ref : "#/components/schemas/service_access_scope"
+          $ref : "#/components/schemas/service_access_scope_dto"
       required:
         - subject
         - object
-    access_response:
+    access_response_dto:
       allOf:
-        - $ref: "#/components/schemas/access_request"
+        - $ref: "#/components/schemas/access_request_dto"
         - type: object
           properties:
             request_id:
               type: string
             status:
-              $ref: "#/components/schemas/access_request_status"
+              $ref: "#/components/schemas/access_request_status_dto"
             policy_evaluation_result:
               type: object
             initial_access_token:
@@ -78,14 +96,14 @@ components:
           required:
             - request_id
             - status
-    access_request_status:
+    access_request_status_dto:
       type: string
       enum:
         - accepted
         - rejected
         - pending
         - timed-out
-    service_access_scope:
+    service_access_scope_dto:
       type: object
       properties:
         did:
