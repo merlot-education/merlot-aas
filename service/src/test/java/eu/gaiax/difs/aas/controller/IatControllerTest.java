@@ -2,8 +2,8 @@ package eu.gaiax.difs.aas.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.gaiax.difs.aas.generated.controller.IatControllerApiController;
-import eu.gaiax.difs.aas.generated.model.AccessRequest;
-import eu.gaiax.difs.aas.generated.model.ServiceAccessScope;
+import eu.gaiax.difs.aas.generated.model.AccessRequestDto;
+import eu.gaiax.difs.aas.generated.model.ServiceAccessScopeDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -12,7 +12,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(IatControllerApiController.class)
@@ -22,21 +21,13 @@ public class IatControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
-
-
-    @Test
-    void getIatRequest_missingRequestId_405() throws Exception {
-        mockMvc.perform(
-                        get("/clients/iat/request/"))
-                .andExpect(status().isMethodNotAllowed());
-    }
     
     @Test
     void postIatRequest_missingAccessRequest_400() throws Exception {
         mockMvc.perform(
                         post("/clients/iat/request")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(new AccessRequest())))
+                                .content(objectMapper.writeValueAsString(new AccessRequestDto())))
                 .andExpect(status().isBadRequest());
     }
 
@@ -45,7 +36,7 @@ public class IatControllerTest {
         mockMvc.perform(
                         post("/clients/iat/request")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(new AccessRequest().subject("testSubject"))))
+                                .content(objectMapper.writeValueAsString(new AccessRequestDto().subject("testSubject"))))
                 .andExpect(status().isBadRequest());
     }
 
@@ -54,9 +45,9 @@ public class IatControllerTest {
         mockMvc.perform(
                         post("/clients/iat/request")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(new AccessRequest()
+                                .content(objectMapper.writeValueAsString(new AccessRequestDto()
                                         ._object(
-                                                new ServiceAccessScope().scope("testScope").did("testDid")
+                                                new ServiceAccessScopeDto().scope("testScope").did("testDid")
                                         )
                                 )))
                 .andExpect(status().isBadRequest());
@@ -67,10 +58,10 @@ public class IatControllerTest {
         mockMvc.perform(
                         post("/clients/iat/request")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(new AccessRequest()
+                                .content(objectMapper.writeValueAsString(new AccessRequestDto()
                                         .subject("testSubject")
                                         ._object(
-                                                new ServiceAccessScope().scope("testScope")
+                                                new ServiceAccessScopeDto().scope("testScope")
                                         )
                                 )))
                 .andExpect(status().isBadRequest());
@@ -81,10 +72,10 @@ public class IatControllerTest {
         mockMvc.perform(
                         post("/clients/iat/request")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(new AccessRequest()
+                                .content(objectMapper.writeValueAsString(new AccessRequestDto()
                                         .subject("testSubject")
                                         ._object(
-                                                new ServiceAccessScope().did("testDid")
+                                                new ServiceAccessScopeDto().did("testDid")
                                         )
                                 )))
                 .andExpect(status().isBadRequest());
