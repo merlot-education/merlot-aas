@@ -39,7 +39,7 @@ paths:
       tags:
         - IATController
 
-  /clients/iat/request/{request_id}:
+  /clients/iat/requests/{request_id}:
     parameters:
       - name: request_id
         in: path

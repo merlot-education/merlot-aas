@@ -11,6 +11,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -21,6 +22,13 @@ public class IatControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Test
+    void getIatRequest_missingRequestId_404() throws Exception {
+        mockMvc.perform(
+                        get("/clients/iat/request/"))
+                .andExpect(status().isNotFound());
+    }
 
     @Test
     void postIatRequest_missingAccessRequest_400() throws Exception {
