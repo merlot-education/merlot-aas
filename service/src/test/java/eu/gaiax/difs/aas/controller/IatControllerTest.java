@@ -21,11 +21,11 @@ public class IatControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
-    
+
     @Test
     void postIatRequest_missingAccessRequest_400() throws Exception {
         mockMvc.perform(
-                        post("/clients/iat/request")
+                        post("/clients/iat/requests")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(new AccessRequestDto())))
                 .andExpect(status().isBadRequest());
@@ -34,7 +34,7 @@ public class IatControllerTest {
     @Test
     void postRequest_missingServiceAccessScope_400() throws Exception {
         mockMvc.perform(
-                        post("/clients/iat/request")
+                        post("/clients/iat/requests")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(new AccessRequestDto().subject("testSubject"))))
                 .andExpect(status().isBadRequest());
@@ -43,7 +43,7 @@ public class IatControllerTest {
     @Test
     void postRequest_missingSubject_400() throws Exception {
         mockMvc.perform(
-                        post("/clients/iat/request")
+                        post("/clients/iat/requests")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(new AccessRequestDto()
                                         ._object(
@@ -56,7 +56,7 @@ public class IatControllerTest {
     @Test
     void postRequest_missingSubjectDid_400() throws Exception {
         mockMvc.perform(
-                        post("/clients/iat/request")
+                        post("/clients/iat/requests")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(new AccessRequestDto()
                                         .subject("testSubject")
@@ -70,7 +70,7 @@ public class IatControllerTest {
     @Test
     void postRequest_missingSubjectScope_400() throws Exception {
         mockMvc.perform(
-                        post("/clients/iat/request")
+                        post("/clients/iat/requests")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(new AccessRequestDto()
                                         .subject("testSubject")
