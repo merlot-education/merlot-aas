@@ -12,7 +12,7 @@ tags:
     description: Controller for SSI IAT issuing
 
 paths:
-  /clients/iat/request:
+  /clients/iat/requests:
     post:
       summary: Create IAT provisioning request
       operationId: postAccessRequest
