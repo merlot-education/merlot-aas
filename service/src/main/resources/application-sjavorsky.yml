@@ -1,0 +1,10 @@
+server:
+  port: 8080
+
+security:
+  oauth2:
+    client:
+      clientId: aas-app
+      clientSecret: 1UnZxYv9h94LAZKQcyxdkS9Ua6ApdRUF
+      accessTokenUri: https://localhost:8080/login/oauth/access_token
+      userAuthorizationUri: https://localhost:8080/login/oauth/authorize

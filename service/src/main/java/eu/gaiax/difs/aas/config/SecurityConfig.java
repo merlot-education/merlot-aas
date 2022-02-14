@@ -32,11 +32,6 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration(proxyBeanMethods = false)
 public class SecurityConfig {
 
-    /**
-     * @param http
-     * @return
-     * @throws Exception
-     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.requestMatcher(EndpointRequest.toAnyEndpoint())
