@@ -22,3 +22,10 @@ springdoc:
   api-docs:
     path: /api/docs
     enabled: true
+aas:
+  tsa:
+    url: http://trustservice/api
+    repo: repo
+    group: group
+    version: version
+    action: evaluate
