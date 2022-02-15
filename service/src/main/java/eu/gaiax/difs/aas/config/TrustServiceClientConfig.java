@@ -8,16 +8,16 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 @Configuration
-public class TrustServiceConfig {
+public class TrustServiceClientConfig {
     @Bean
     @Profile("prod")
-    public TrustServiceClient prodTrustService() {
+    public TrustServiceClient restTrustServiceClient() {
         return new RestTrustServiceClientImpl();
     }
 
     @Bean
     @Profile("!prod")
-    public TrustServiceClient testTrustService() {
+    public TrustServiceClient localTrustServiceClient() {
         return new LocalTrustServiceClientImpl();
     }
 }
