@@ -1,0 +1,16 @@
+application:
+  localTrustServiceClient:
+    policyMocks:
+      GetLoginProofInvitation:
+        requestId: test-requestId
+        link: test-link
+      GetLoginProofResult:
+        iss: test-iss
+        sub: test-sub
+        claim1: test-claim1
+      GetIatProofInvitation:
+        requestId: test-requestId
+      GetIatProofResult:
+        iss: test-iss
+        sub: test-sub
+        claim1: test-claim1
