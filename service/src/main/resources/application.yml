@@ -24,7 +24,7 @@ springdoc:
     enabled: true
 aas:
   tsa:
-    url: http://stustservice/api
+    url: http://trustservice/api
     repo: repo
     group: group
     version: version
