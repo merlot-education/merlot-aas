@@ -15,14 +15,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ActiveProfiles("local")
 public class LocalTrustServiceClientTest {
     @Autowired
-    private LocalTrustServiceClientImpl testTrustService;
+    private LocalTrustServiceClientImpl localTrustServiceClient;
     @Autowired
     private LocalTrustServiceClientProperties localTrustServiceClientProperties;
 
     @Test
     void localTrustServiceClientTest() {
         localTrustServiceClientProperties.getPolicyMocks().keySet().forEach(policy -> {
-            Map<String, Object> result = testTrustService.evaluate(policy, Collections.emptyMap());
+            Map<String, Object> result = localTrustServiceClient.evaluate(policy, Collections.emptyMap());
             Map<String, Object> expectedResult = localTrustServiceClientProperties.getPolicyMocks().get(policy);
 
             assertTrue(areEqual(result, expectedResult));
