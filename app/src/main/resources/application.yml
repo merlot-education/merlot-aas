@@ -4,12 +4,14 @@ spring:
   profiles:
     active: default
   application:
-    name: auth-app
-security:
-  oauth2:
-    client:
-      clientId: bd1c0a783ccdd1c9b9e4
-      clientSecret: 1a9030fbca47a5b2c28e92f19050bb77824b5ad1
-      accessTokenUri: https://github.com/login/oauth/access_token
-      userAuthorizationUri: https://github.com/login/oauth/authorize
-      clientAuthenticationScheme: form        
+    name: demo-app
+  security:
+    oauth2:
+      client:
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:8080/auth/realms/gaia-x
+        registration:
+          keycloak:
+            client-id: demo-app
+            scope: openid

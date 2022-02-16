@@ -28,7 +28,6 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
  * The Application class.
  */
 @SpringBootApplication
-//@EnableResourceServer
 public class AuthDemoApplication extends SpringBootServletInitializer {
 
     /**
@@ -39,4 +38,5 @@ public class AuthDemoApplication extends SpringBootServletInitializer {
     public static void main(String[] args) {
         SpringApplication.run(AuthDemoApplication.class, args);
     }
+    
 }
