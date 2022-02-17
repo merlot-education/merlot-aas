@@ -12,5 +12,7 @@ import java.util.Map;
 @Profile("local")
 @ConfigurationProperties(prefix = "application.local-trust-service-client")
 public class LocalTrustServiceClientProperties {
+
     private Map<String, Map<String, Object>> policyMocks;
+
 }

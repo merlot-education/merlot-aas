@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Profile;
 
 @Configuration
 public class TrustServiceClientConfig {
+
     @Bean
     @Profile("prod")
     public TrustServiceClient restTrustServiceClient() {
@@ -20,4 +21,5 @@ public class TrustServiceClientConfig {
     public TrustServiceClient localTrustServiceClient() {
         return new LocalTrustServiceClientImpl();
     }
+
 }
