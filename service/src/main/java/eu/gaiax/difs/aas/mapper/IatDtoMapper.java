@@ -24,11 +24,31 @@ public class IatDtoMapper {
 
     public AccessResponseDto mapToResponse(Map<String, Object> map) {
         return new AccessResponseDto()
-                .subject((String) map.getOrDefault("subject", null))
-                ._object((ServiceAccessScopeDto) map.getOrDefault("object", null))
+                .subject((String) map.getOrDefault("iss", null))
+                ._object(mapAccessScope(map.getOrDefault("object", null)))
+                // TODO: claims to be specified
                 .requestId((String) map.getOrDefault("requestId", null))
-                .status((AccessRequestStatusDto) map.getOrDefault("status", null))
+                .status(mapStatus(map.getOrDefault("status", null)))
                 .policyEvaluationResult(map.getOrDefault("policyEvaluationResult", null))
                 .initialAccessToken((String) map.getOrDefault("initialAccessToken", null));
     }
+
+    private ServiceAccessScopeDto mapAccessScope(Object input) {
+        try {
+            Map<String, String> map = (Map<String, String>) input;
+            return new ServiceAccessScopeDto()
+                    .scope(map.getOrDefault("scope", null))
+                    .did(map.getOrDefault("sub", null));
+        } catch (Exception ignored) {
+            return new ServiceAccessScopeDto();
+        }
+    }
+
+    private AccessRequestStatusDto mapStatus(Object input) {
+        if (input instanceof String) {
+            return AccessRequestStatusDto.fromValue((String) input);
+        }
+        return null;
+    }
+
 }
