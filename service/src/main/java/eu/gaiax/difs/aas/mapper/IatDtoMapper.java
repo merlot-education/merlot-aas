@@ -6,6 +6,7 @@ import eu.gaiax.difs.aas.generated.model.AccessResponseDto;
 import eu.gaiax.difs.aas.generated.model.ServiceAccessScopeDto;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,15 +23,19 @@ public class IatDtoMapper {
         return map;
     }
 
+    public Map<String, Object> requestToMap(String requestId) {
+        return Collections.singletonMap("requestId", requestId);
+    }
+
     public AccessResponseDto mapToResponse(Map<String, Object> map) {
         return new AccessResponseDto()
                 .subject((String) map.getOrDefault("iss", null))
-                ._object(mapAccessScope(map.getOrDefault("object", null)))
+                ._object(mapAccessScope(map.getOrDefault("sub", null)))
+                .status(mapStatus(map.getOrDefault("status", null)))
+                .initialAccessToken((String) map.getOrDefault("iat", null))
                 // TODO: claims to be specified
                 .requestId((String) map.getOrDefault("requestId", null))
-                .status(mapStatus(map.getOrDefault("status", null)))
-                .policyEvaluationResult(map.getOrDefault("policyEvaluationResult", null))
-                .initialAccessToken((String) map.getOrDefault("initialAccessToken", null));
+                .policyEvaluationResult(map.getOrDefault("policyEvaluationResult", null));
     }
 
     private ServiceAccessScopeDto mapAccessScope(Object input) {
@@ -38,7 +43,7 @@ public class IatDtoMapper {
             Map<String, String> map = (Map<String, String>) input;
             return new ServiceAccessScopeDto()
                     .scope(map.getOrDefault("scope", null))
-                    .did(map.getOrDefault("sub", null));
+                    .did(map.getOrDefault("did", null));
         } catch (Exception ignored) {
             return new ServiceAccessScopeDto();
         }

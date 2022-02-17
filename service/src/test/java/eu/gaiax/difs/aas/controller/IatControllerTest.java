@@ -3,6 +3,7 @@ package eu.gaiax.difs.aas.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.gaiax.difs.aas.client.LocalTrustServiceClientImpl;
 import eu.gaiax.difs.aas.generated.model.AccessRequestDto;
+import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
 import eu.gaiax.difs.aas.generated.model.AccessResponseDto;
 import eu.gaiax.difs.aas.generated.model.ServiceAccessScopeDto;
 import eu.gaiax.difs.aas.properties.LocalTrustServiceClientProperties;
@@ -58,10 +59,16 @@ public class IatControllerTest {
     void getRequest_correctRequest_200() throws Exception {
         Map<String, Object> serviceResponse = Map.of(
                 "iss", "responseSubject",
-                "object", Map.of("scope", "responseScope", "sub", "responseDid"));
+                "sub", Map.of("scope", "responseScope", "did", "responseDid"),
+                "requestId", "responseRequestId",
+                "status", "accepted",
+                "iat", "responseIat");
         AccessResponseDto expectedResponse = new AccessResponseDto()
                 .subject("responseSubject")
-                ._object(new ServiceAccessScopeDto().scope("responseScope").did("responseDid"));
+                ._object(new ServiceAccessScopeDto().scope("responseScope").did("responseDid"))
+                .requestId("responseRequestId")
+                .status(AccessRequestStatusDto.ACCEPTED)
+                .initialAccessToken("responseIat");
 
         when(service.evaluate(eq("GetIatProofResult"), any())).thenReturn(serviceResponse);
 

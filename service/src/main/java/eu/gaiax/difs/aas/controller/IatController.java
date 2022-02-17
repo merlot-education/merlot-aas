@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
 import java.util.Map;
 
 @Component
@@ -39,7 +38,7 @@ public class IatController implements IatControllerApiDelegate {
 
         Map<String, Object> evaluation = service.evaluate(
                 "GetIatProofResult",
-                Collections.singletonMap("requestId", requestId));
+                mapper.requestToMap(requestId));
 
         return ResponseEntity.ok(mapper.mapToResponse(evaluation));
     }

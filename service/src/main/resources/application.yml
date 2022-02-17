@@ -29,3 +29,4 @@ aas:
     group: group
     version: version
     action: evaluate
+  iat: temporary-iat-example
