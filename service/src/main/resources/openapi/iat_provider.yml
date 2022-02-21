@@ -8,7 +8,7 @@ servers:
     description: Local run configuration
 
 tags:
-  - name: IATController
+  - name: IatController
     description: Controller for SSI IAT issuing
 
 paths:
@@ -37,7 +37,7 @@ paths:
         500:
           description: Internal Server Error
       tags:
-        - IATController
+        - IatController
 
   /clients/iat/requests/{request_id}:
     parameters:
@@ -66,7 +66,7 @@ paths:
         500:
           description: Internal Server Error
       tags:
-        - IATController
+        - IatController
 
 components:
   schemas:
@@ -75,11 +75,11 @@ components:
       properties:
         subject:
           type: string
-        object:
+        entity:
           $ref : "#/components/schemas/service_access_scope_dto"
       required:
         - subject
-        - object
+        - entity
     access_response_dto:
       allOf:
         - $ref: "#/components/schemas/access_request_dto"

@@ -65,7 +65,7 @@ public class IatControllerTest {
                 "iat", "responseIat");
         AccessResponseDto expectedResponse = new AccessResponseDto()
                 .subject("responseSubject")
-                ._object(new ServiceAccessScopeDto().scope("responseScope").did("responseDid"))
+                .entity(new ServiceAccessScopeDto().scope("responseScope").did("responseDid"))
                 .requestId("responseRequestId")
                 .status(AccessRequestStatusDto.ACCEPTED)
                 .initialAccessToken("responseIat");
@@ -104,7 +104,7 @@ public class IatControllerTest {
                         post("/clients/iat/requests")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(new AccessRequestDto()
-                                        ._object(
+                                        .entity(
                                                 new ServiceAccessScopeDto().scope("testScope").did("testDid")
                                         )
                                 )))
@@ -118,7 +118,7 @@ public class IatControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(new AccessRequestDto()
                                         .subject("testSubject")
-                                        ._object(
+                                        .entity(
                                                 new ServiceAccessScopeDto().scope("testScope")
                                         )
                                 )))
@@ -132,7 +132,7 @@ public class IatControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(new AccessRequestDto()
                                         .subject("testSubject")
-                                        ._object(
+                                        .entity(
                                                 new ServiceAccessScopeDto().did("testDid")
                                         )
                                 )))
@@ -143,11 +143,11 @@ public class IatControllerTest {
     void postRequest_correctRequest_200() throws Exception {
         AccessRequestDto requestDto = new AccessRequestDto()
                 .subject("testSubject")
-                ._object(new ServiceAccessScopeDto().scope("testScope").did("testDid"));
+                .entity(new ServiceAccessScopeDto().scope("testScope").did("testDid"));
         Map<String, Object> serviceResponse = Map.of("requestId", "responseRequestId");
         AccessResponseDto expectedResponse = new AccessResponseDto()
                 .requestId("responseRequestId")
-                ._object(new ServiceAccessScopeDto());
+                .entity(new ServiceAccessScopeDto());
 
         when(service.evaluate(eq("GetIatProofInvitation"), any())).thenReturn(serviceResponse);
 
