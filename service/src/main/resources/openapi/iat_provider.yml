@@ -75,11 +75,11 @@ components:
       properties:
         subject:
           type: string
-        object:
+        entity:
           $ref : "#/components/schemas/service_access_scope_dto"
       required:
         - subject
-        - object
+        - entity
     access_response_dto:
       allOf:
         - $ref: "#/components/schemas/access_request_dto"

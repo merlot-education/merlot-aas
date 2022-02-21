@@ -16,8 +16,8 @@ public class IatDtoMapper {
 
     public Map<String, Object> requestToMap(AccessRequestDto request) {
         Map<String, Object> map = new HashMap<>();
-        map.put("scope", List.of("openid", request.getObject().getScope()));
-        map.put("sub", request.getObject().getDid());
+        map.put("scope", List.of("openid", request.getEntity().getScope()));
+        map.put("sub", request.getEntity().getDid());
         map.put("iss", request.getSubject());
         map.put("namespace", "Access");
         return map;
@@ -30,7 +30,7 @@ public class IatDtoMapper {
     public AccessResponseDto mapToResponse(Map<String, Object> map) {
         return new AccessResponseDto()
                 .subject((String) map.getOrDefault("iss", null))
-                ._object(mapAccessScope(map.getOrDefault("sub", null)))
+                .entity(mapAccessScope(map.getOrDefault("sub", null)))
                 .status(mapStatus(map.getOrDefault("status", null)))
                 .initialAccessToken((String) map.getOrDefault("iat", null))
                 // TODO: claims to be specified
