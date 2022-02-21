@@ -22,13 +22,12 @@ package eu.gaiax.difs.aas;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 
 /**
  * The Application class.
  */
 @SpringBootApplication
-public class AuthDemoApplication extends SpringBootServletInitializer {
+public class AuthDemoApplication { 
 
     /**
      * The main Method.

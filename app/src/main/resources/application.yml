@@ -8,10 +8,16 @@ spring:
   security:
     oauth2:
       client:
+        registration:
+          aas-app:
+            provider: keycloak
+            client-id: aas-app
+            client-secret: secret
+            authorization-grant-type: authorization_code
+            redirect-uri: "http://auth-server:8080/auth/realms/gaia-x/broker/ssi-oidc/endpoint"
+            scope: openid
+            client-name: aas-app
         provider:
           keycloak:
-            issuer-uri: http://localhost:8080/auth/realms/gaia-x
-        registration:
-          keycloak:
-            client-id: demo-app
-            scope: openid
+            issuer-uri: http://auth-server:8080/auth/realms/gaia-x
+

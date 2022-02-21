@@ -20,23 +20,52 @@
 
 package eu.gaiax.difs.aas.config;
 
-import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
+import static org.springframework.security.config.Customizer.withDefaults;
+
+//import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
  * The Spring Security config.
  */
-@Configuration(proxyBeanMethods = false)
+@EnableWebSecurity //(debug = true)
 public class SecurityConfig {
-
+	
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.requestMatcher(EndpointRequest.toAnyEndpoint())
-                .authorizeRequests((requests) -> requests.anyRequest().permitAll()); // hasRole("ENDPOINT_ADMIN"));
+        //http.requestMatcher(EndpointRequest.toAnyEndpoint())  // actuator endpoints
+        //        .authorizeRequests((requests) -> requests.anyRequest().permitAll()) // hasRole("ENDPOINT_ADMIN"));
+        //        .authorizeRequests().antMatchers("*/oauth2/**").permitAll()
+        //        .and()
+        //        .formLogin(withDefaults())
+                //.oauth2Login(withDefaults())
+        //        ;
+    	
+        http
+        	.csrf().disable()
+        	.authorizeRequests()
+        	.antMatchers(
+                    "/api/**", "/*.ico", "/*.png",
+                    "/webjars/springfox-swagger-ui/**",
+                    "/swagger-ui.html",
+                    "/swagger-ui/**",
+                    "/swagger-resources/**",
+                    "/actuator", "/actuator/**",
+                    "/oauth2/**", "/.well-known/**", 
+                    "/error", "/login"
+                )
+                .permitAll()
+        	
+            .anyRequest().authenticated()
+        	.and()
+        	.formLogin(withDefaults())
+        	//.oauth2Login(withDefaults())
+        	;
         return http.build();
     }
-
+    
 }
+
