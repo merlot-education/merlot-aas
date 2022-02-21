@@ -5,23 +5,18 @@ spring:
     active: default
   application:
     name: auth-service
-  security:
-    oauth2:
-      client:
-        clientId: bd1c0a783ccdd1c9b9e4
-        clientSecret: 1a9030fbca47a5b2c28e92f19050bb77824b5ad1
-        accessTokenUri: https://github.com/login/oauth/access_token
-        userAuthorizationUri: https://github.com/login/oauth/authorize
-        clientAuthenticationScheme: form
+
 management:
   endpoints:
     web:
       exposure:
         include: "*"
+
 springdoc:
   api-docs:
     path: /api/docs
     enabled: true
+
 aas:
   tsa:
     url: http://trustservice/api
@@ -30,3 +25,10 @@ aas:
     version: version
     action: evaluate
   iat: temporary-iat-example
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: INFO
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG  

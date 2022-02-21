@@ -1,11 +1,16 @@
 server:
-  port: 8091
-spring:
-  security:
-    oauth2:
-      client:
-        clientId: aas-app
-        clientSecret: 8ngxjnfoywTFd5MR8HZkLKslQpfuffKE
-        accessTokenUri: https://localhost:8080/login/oauth/access_token
-        userAuthorizationUri: https://localhost:8080/login/oauth/authorize
-        clientAuthenticationScheme: form
+  port: 9000
+
+#spring:
+#  security:
+#    oauth2:
+#      client:
+#        client-id: aas-app
+#        client-secret: 8ngxjnfoywTFd5MR8HZkLKslQpfuffKE
+#        registration:
+#          keycloak:
+##            client-id: demo-app
+#            client-id: aas-app
+#            scope: 
+#              - openid
+##              - profile
