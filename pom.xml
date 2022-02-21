@@ -98,6 +98,11 @@
                 <artifactId>spring-boot-starter-oauth2-client</artifactId>
                 <version>${spring-boot.version}</version>
             </dependency>
+            <!--dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+                <version>${spring-boot.version}</version>
+            </dependency-->
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-tomcat</artifactId>
@@ -239,6 +244,17 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>com.google.cloud.tools</groupId>
+                <artifactId>jib-maven-plugin</artifactId>
+                <version>3.2.0</version>
+                <configuration>
+                    <to>
+                        <image>myimage</image>
+                    </to>
+                </configuration>
             </plugin>
         </plugins>
     </build>
