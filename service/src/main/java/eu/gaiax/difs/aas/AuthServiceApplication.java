@@ -27,7 +27,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * The Application class.
  */
 @SpringBootApplication
-public class AuthServiceApplication { 
+public class AuthServiceApplication {
 
     /**
      * The main Method.

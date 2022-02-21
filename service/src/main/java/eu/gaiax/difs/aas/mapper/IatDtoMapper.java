@@ -28,8 +28,7 @@ public class IatDtoMapper {
     }
 
     public AccessResponseDto mapToResponse(Map<String, Object> map) {
-        return new AccessResponseDto()
-                .subject((String) map.getOrDefault("iss", null))
+        return new AccessResponseDto().subject((String) map.getOrDefault("iss", null))
                 .entity(mapAccessScope(map.getOrDefault("sub", null)))
                 .status(mapStatus(map.getOrDefault("status", null)))
                 .initialAccessToken((String) map.getOrDefault("iat", null))
@@ -41,8 +40,7 @@ public class IatDtoMapper {
     private ServiceAccessScopeDto mapAccessScope(Object input) {
         try {
             Map<String, String> map = (Map<String, String>) input;
-            return new ServiceAccessScopeDto()
-                    .scope(map.getOrDefault("scope", null))
+            return new ServiceAccessScopeDto().scope(map.getOrDefault("scope", null))
                     .did(map.getOrDefault("did", null));
         } catch (Exception ignored) {
             return new ServiceAccessScopeDto();
