@@ -57,7 +57,7 @@ deploy:jdk11:
 #        then echo "CI settings missing\! If deploying to GitLab Maven Repository, please see https://docs.gitlab.com/ee/user/packages/maven_repository/index.html#create-maven-packages-with-gitlab-cicd for instructions.";
 #      fi
 #    - 'mvn $MAVEN_CLI_OPTS deploy -s ci_settings.xml'
-    - echo $CI_REGISTRY_USER
+    - echo "CI USER is: $CI_REGISTRY_USER"
     - 'mvn $MAVEN_CLI_OPTS compile jib:build'
   only:
     variables:
