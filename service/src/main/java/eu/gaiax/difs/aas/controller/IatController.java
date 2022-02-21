@@ -26,8 +26,7 @@ public class IatController implements IatControllerApiDelegate {
     @Override
     public ResponseEntity<AccessResponseDto> postAccessRequest(AccessRequestDto accessRequestDto) {
 
-        Map<String, Object> evaluation = service.evaluate(
-                "GetIatProofInvitation",
+        Map<String, Object> evaluation = service.evaluate("GetIatProofInvitation",
                 mapper.requestToMap(accessRequestDto));
 
         return ResponseEntity.ok(mapper.mapToResponse(evaluation));
@@ -36,9 +35,7 @@ public class IatController implements IatControllerApiDelegate {
     @Override
     public ResponseEntity<AccessResponseDto> getAccessRequest(String requestId) {
 
-        Map<String, Object> evaluation = service.evaluate(
-                "GetIatProofResult",
-                mapper.requestToMap(requestId));
+        Map<String, Object> evaluation = service.evaluate("GetIatProofResult", mapper.requestToMap(requestId));
 
         return ResponseEntity.ok(mapper.mapToResponse(evaluation));
     }

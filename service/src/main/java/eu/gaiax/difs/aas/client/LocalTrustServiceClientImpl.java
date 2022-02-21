@@ -1,9 +1,8 @@
 package eu.gaiax.difs.aas.client;
 
 import eu.gaiax.difs.aas.properties.LocalTrustServiceClientProperties;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class LocalTrustServiceClientImpl implements TrustServiceClient {
 

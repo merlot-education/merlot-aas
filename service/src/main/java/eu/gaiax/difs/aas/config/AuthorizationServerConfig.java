@@ -49,75 +49,65 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 
-
 /**
  * The Spring Security config.
  */
 @Configuration(proxyBeanMethods = false)
-public class AuthorizationServerConfig { 
-	
-	@Bean
-	@Order(Ordered.HIGHEST_PRECEDENCE)
-	public SecurityFilterChain authServerSecurityFilterChain(HttpSecurity http) throws Exception {
-	    OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
-	    return http.formLogin(withDefaults()).build();
-	    //return http.oauth2Login(oauth2Login -> oauth2Login.loginPage("/oauth2/authorization/aas-client-oidc")).build();
-	}
+public class AuthorizationServerConfig {
 
-    
-	@Bean
-	public RegisteredClientRepository registeredClientRepository() {
-        RegisteredClient reClient = RegisteredClient.withId(UUID.randomUUID().toString())
-                .clientId("aas-app")
-                //.clientSecret("8ngxjnfoywTFd5MR8HZkLKslQpfuffKE")
-                .clientSecret("{noop}secret")
-                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+    @Bean
+    @Order(Ordered.HIGHEST_PRECEDENCE)
+    public SecurityFilterChain authServerSecurityFilterChain(HttpSecurity http) throws Exception {
+        OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
+        return http.formLogin(withDefaults()).build();
+        // return http.oauth2Login(oauth2Login ->
+        // oauth2Login.loginPage("/oauth2/authorization/aas-client-oidc")).build();
+    }
+
+    @Bean
+    public RegisteredClientRepository registeredClientRepository() {
+        RegisteredClient reClient = RegisteredClient.withId(UUID.randomUUID().toString()).clientId("aas-app")
+                // .clientSecret("8ngxjnfoywTFd5MR8HZkLKslQpfuffKE")
+                .clientSecret("{noop}secret").clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-                //.authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-                //.redirectUri("http://localhost:8990/*")
-                //.redirectUri("http://localhost:8091/authorized")
-                //.redirectUri("http://127.0.0.1:8080/login/oauth2/code/aas-app")
-    			.redirectUri("http://auth-server:8080/auth/realms/gaia-x/broker/ssi-oidc/endpoint") 
+                // .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+                // .redirectUri("http://localhost:8990/*")
+                // .redirectUri("http://localhost:8091/authorized")
+                // .redirectUri("http://127.0.0.1:8080/login/oauth2/code/aas-app")
+                .redirectUri("http://auth-server:8080/auth/realms/gaia-x/broker/ssi-oidc/endpoint")
                 .scope(OidcScopes.OPENID)
-                //.scope(OidcScopes.PROFILE)
+                // .scope(OidcScopes.PROFILE)
                 .build();
-          return new InMemoryRegisteredClientRepository(reClient);
-	}
+        return new InMemoryRegisteredClientRepository(reClient);
+    }
 
-	@Bean
-	public ProviderSettings providerSettings() {
-		return ProviderSettings.builder()
-				.issuer("http://auth-server:9000")
-				.build();
-	}
-	
-	@Bean
-	public JWKSource<SecurityContext> jwkSource() {
-	    RSAKey rsaKey = generateRsa();
-	    JWKSet jwkSet = new JWKSet(rsaKey);
-	    return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
-	}
+    @Bean
+    public ProviderSettings providerSettings() {
+        return ProviderSettings.builder().issuer("http://auth-server:9000").build();
+    }
 
-	private static RSAKey generateRsa() {
-	    KeyPair keyPair = generateRsaKey();
-	    RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
-	    RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
-	    return new RSAKey.Builder(publicKey)
-	      .privateKey(privateKey)
-	      .keyID(UUID.randomUUID().toString())
-	      .build();
-	}
+    @Bean
+    public JWKSource<SecurityContext> jwkSource() {
+        RSAKey rsaKey = generateRsa();
+        JWKSet jwkSet = new JWKSet(rsaKey);
+        return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
+    }
 
-	private static KeyPair generateRsaKey() {
-		try {
-			KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-		    keyPairGenerator.initialize(2048);
-		    return keyPairGenerator.generateKeyPair();
-		} catch (NoSuchAlgorithmException e) {
-			throw new RuntimeException(e);
-		}
-	}
-		
+    private static RSAKey generateRsa() {
+        KeyPair keyPair = generateRsaKey();
+        RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
+        RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
+        return new RSAKey.Builder(publicKey).privateKey(privateKey).keyID(UUID.randomUUID().toString()).build();
+    }
+
+    private static KeyPair generateRsaKey() {
+        try {
+            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+            keyPairGenerator.initialize(2048);
+            return keyPairGenerator.generateKeyPair();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 }
-
-

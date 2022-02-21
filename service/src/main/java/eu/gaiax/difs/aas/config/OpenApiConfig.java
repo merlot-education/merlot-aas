@@ -30,7 +30,6 @@ import org.springframework.boot.info.BuildProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-
 /**
  * The OpenApi Spring config
  */
@@ -50,13 +49,8 @@ public class OpenApiConfig {
             version = "Development Build";
         }
 
-        return new OpenAPI()
-            .info(new Info()
-                .version(version)
-                .title("GAIA-X Authentication & Authorization Service")
+        return new OpenAPI().info(new Info().version(version).title("GAIA-X Authentication & Authorization Service")
                 .description("The API to bridge existing IAM solutions with SSI-based authentication.")
-                .license(new License()
-                    .name("Apache 2.0")
-                    .url("http://www.apache.org/licenses/LICENSE-2.0")));
+                .license(new License().name("Apache 2.0").url("http://www.apache.org/licenses/LICENSE-2.0")));
     }
 }

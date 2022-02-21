@@ -1,5 +1,7 @@
 package eu.gaiax.difs.aas.client;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
@@ -7,13 +9,11 @@ import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class RestTrustServiceClientImpl implements TrustServiceClient {
 
     private final WebClient client;
-    private static final ParameterizedTypeReference<Map<String, Object>> MAP_TYPE_REF = new ParameterizedTypeReference<>() {};
+    private static final ParameterizedTypeReference<Map<String, Object>> MAP_TYPE_REF = new ParameterizedTypeReference<>() {
+    };
 
     @Value("${aas.tsa.url}")
     private String url;
@@ -27,10 +27,8 @@ public class RestTrustServiceClientImpl implements TrustServiceClient {
     private String action;
 
     public RestTrustServiceClientImpl() {
-        client = WebClient.builder()
-                .baseUrl(url)
-                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .build();
+        client = WebClient.builder().baseUrl(url)
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).build();
     }
 
     @Override
@@ -40,16 +38,11 @@ public class RestTrustServiceClientImpl implements TrustServiceClient {
         uriParams.put("repo", repo);
         uriParams.put("group", group);
         uriParams.put("policyname", policyname);
-        uriParams.put("version",version);
-        uriParams.put("action",action);
+        uriParams.put("version", version);
+        uriParams.put("action", action);
 
-        Flux<Map<String, Object>> trustServiceResponse = client
-                .post()
-                .uri(uri, uriParams)
-                .accept(MediaType.APPLICATION_JSON)
-                .bodyValue(bodyParams)
-                .retrieve()
-                .bodyToFlux(MAP_TYPE_REF);
+        Flux<Map<String, Object>> trustServiceResponse = client.post().uri(uri, uriParams)
+                .accept(MediaType.APPLICATION_JSON).bodyValue(bodyParams).retrieve().bodyToFlux(MAP_TYPE_REF);
         Map<String, Object> trustServiceResponseMap = trustServiceResponse.blockFirst();
 
         return trustServiceResponseMap;
