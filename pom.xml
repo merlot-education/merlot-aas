@@ -63,17 +63,21 @@
         <sonar.organization>gaia-x</sonar.organization>
         <sonar.projectKey>${sonar.organization}_${project.artifactId}</sonar.projectKey>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <!-- repoositiry path -->
+        <repository.path>gaia-x/data-infrastructure-federation-services/authenticationauthorization</repository.path>
+        <!--jib-->
+        <ci-registry>${env.CI_REGISTRY}/${repository.path}</ci-registry>
     </properties>
 
-    <url>https://gitlab.com/gaia-x/data-infrastructure-federation-services/authenticationauthorization</url>
+    <url>https://gitlab.com/${repository.path}</url>
     <scm>
-        <url>https://gitlab.com/gaia-x/data-infrastructure-federation-services/authenticationauthorization</url>
+        <url>https://gitlab.com/${repository.path}</url>
     </scm>
     <issueManagement>
-        <url>https://gitlab.com/gaia-x/data-infrastructure-federation-services/authenticationauthorization/-/issues</url>
+        <url>https://gitlab.com/${repository.path}/-/issues</url>
     </issueManagement>
     <ciManagement>
-        <url>https://gitlab.com/gaia-x/data-infrastructure-federation-services/authenticationauthorization/-/pipelines</url>
+        <url>https://gitlab.com/${repository.path}/-/pipelines</url>
     </ciManagement>
 
     <dependencyManagement>
@@ -260,12 +264,15 @@
                 <artifactId>jib-maven-plugin</artifactId>
                 <configuration>
                     <to>
-                        <image>${project.name}-image</image>
+                        <image>${ci-registry}/${project.name}-image</image>
+                        <auth>
+                            <username>${env.CI_REGISTRY_USER}</username>
+                            <password>${env.CI_REGISTRY_PASSWORD}</password>
+                        </auth>
                     </to>
-                    <auth>
-                        <username>${env.CI_REGISTRY_USER}</username>
-                        <password>${env.CI_REGISTRY_PASSWORD}</password>
-                    </auth>
+                    <!--container>
+                        <mainClass>eu.gaiax.difs.aas.AuthServiceApplication</mainClass>
+                    </container-->
                 </configuration>
             </plugin>
         </plugins>
