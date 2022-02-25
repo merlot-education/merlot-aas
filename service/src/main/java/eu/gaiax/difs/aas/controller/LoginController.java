@@ -1,10 +1,16 @@
 package eu.gaiax.difs.aas.controller;
 
+import java.io.ByteArrayOutputStream;
 import java.util.UUID;
 
+import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
 
 import java.awt.image.BufferedImage;
+
+import eu.gaiax.difs.aas.service.SsiBrokerService;
+import lombok.RequiredArgsConstructor;
+import org.apache.coyote.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -23,10 +29,13 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/ssi")
 public class LoginController {
     
     private final static Logger log = LoggerFactory.getLogger(LoginController.class);
+
+    private final SsiBrokerService ssiBrokerService;
     
     @GetMapping(value = "/login", produces = MediaType.TEXT_HTML_VALUE)
     @ResponseBody
@@ -35,39 +44,20 @@ public class LoginController {
         log.debug("login; got params: {}", request.getParameterMap().size());
         //log.debug("login; got state: {}", request.getParameterMap().get("state"));
 
-        String qrid = UUID.randomUUID().toString();
-        return "<html>\n" + 
-                "<header><title>SSI Login</title></header>\n" +
-                "<body>\n" +
-                    "<h1>Login with SSI</h1>\n" +
-                    //"<img alt=\"Scan QR code with SSI wallet\" src=\"/ssi/qr/" + qrid + "\" />\n" +
-                    "<form name='f' action=\"/ssi/perform_login\" method='POST'>\n" +
-                      "<table>\n" +
-                        "<tr>\n" +
-                          "<td><img alt=\"Scan QR code with your SSI wallet\" src=\"/ssi/qr/" + qrid + "\"/></td>\n" +
-                        "</tr>\n" +
-                        "<tr>\n" +
-                          "<td><input type=\"submit\" value=\"Login\"/></td>\n" +
-                        "</tr>\n" +
-                      "</table>\n" +
-                    "</form>\n" +
-                "</body>\n" + 
-            "</html>";
+        return ssiBrokerService.authorize();
     }
-    
-    @GetMapping("/qr/{qrid}") //, produces = MediaType.TEXT_HTML_VALUE)
-    public ResponseEntity<BufferedImage> getQR(@PathVariable String qrid) throws Exception {
-        QRCodeWriter barcodeWriter = new QRCodeWriter();
-        BitMatrix bitMatrix = barcodeWriter.encode(qrid, BarcodeFormat.QR_CODE, 200, 200);
-        return ResponseEntity.ok(MatrixToImageWriter.toBufferedImage(bitMatrix));        
+
+    @GetMapping(value = "/qr/{qrid}", produces = MediaType.IMAGE_PNG_VALUE)
+    public ResponseEntity<byte[]> getQR(@PathVariable String qrid) {
+
+        return ResponseEntity.ok(ssiBrokerService.getQR(qrid));
+
     }
     
     @PostMapping("/perform_login")
     public void performLogin(HttpServletRequest request) {
         
         log.debug("performLogin; got request: {}", request);
-        
-    }
-    
 
+    }
 }
