@@ -25,8 +25,4 @@ public class TrustServiceClientConfig {
         return new LocalTrustServiceClientImpl();
     }
 
-    @Bean
-    public HttpMessageConverter<BufferedImage> createImageHttpMessageConverter() {
-        return new BufferedImageHttpMessageConverter();
-    }    
 }
