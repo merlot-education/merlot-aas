@@ -9,11 +9,9 @@ import eu.gaiax.difs.aas.client.TrustServiceClient;
 import eu.gaiax.difs.aas.generated.model.AccessRequestDto;
 import eu.gaiax.difs.aas.generated.model.AccessResponseDto;
 import eu.gaiax.difs.aas.generated.model.ServiceAccessScopeDto;
-import eu.gaiax.difs.aas.mapper.IatDtoMapper;
+import eu.gaiax.difs.aas.mapper.AccessRequestMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
 
 import javax.imageio.ImageIO;
 import java.io.ByteArrayOutputStream;
@@ -24,7 +22,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class SsiBrokerService {
     private final TrustServiceClient trustServiceClient;
-    private final IatDtoMapper mapper;
+    private final AccessRequestMapper accessRequestMapper;
 
     public String authorize() {
         String requestID = generateRequestId();
@@ -37,7 +35,8 @@ public class SsiBrokerService {
     }
 
     private String getQrPage(String requestId, String url) {
-        return "<html>\n" +
+        return "<!DOCTYPE html>\n" +
+                "<html>\n" +
                 "<header><title>SSI Login</title></header>\n" +
                 "<body>\n" +
                 "<h1>Login with SSI</h1>\n" +
@@ -49,7 +48,7 @@ public class SsiBrokerService {
                 "</tr>\n" +
                 "<tr>\n" +
                 "<td><input type=\"submit\" value=\"Login\"/></td>\n" +
-                "<td><input type=\"submit\" value=\"Login\"/></td>\n" +
+                "<td><input type=\"submit\" value=\"Login with Keycloak\"/></td>\n" +
                 "</tr>\n" +
                 "</table>\n" +
                 "</form>\n" +
@@ -78,9 +77,9 @@ public class SsiBrokerService {
     }
 
     private AccessResponseDto getAccessResponseDto(AccessRequestDto accessRequestDto) {
-        return mapper.mapToResponse(trustServiceClient.evaluate(
+        return accessRequestMapper.mapTologinAccessResponse(trustServiceClient.evaluate(
                 "GetLoginProofInvitation",
-                mapper.requestToMap(accessRequestDto)));
+                accessRequestMapper.loginRequestToMap(accessRequestDto)));
     }
 
     private String generateRequestId() {
