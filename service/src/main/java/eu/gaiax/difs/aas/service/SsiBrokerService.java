@@ -11,6 +11,8 @@ import eu.gaiax.difs.aas.generated.model.AccessResponseDto;
 import eu.gaiax.difs.aas.generated.model.ServiceAccessScopeDto;
 import eu.gaiax.difs.aas.mapper.AccessRequestMapper;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
@@ -21,6 +23,9 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class SsiBrokerService {
+
+    private final static Logger log = LoggerFactory.getLogger(SsiBrokerService.class);
+
     private final TrustServiceClient trustServiceClient;
     private final AccessRequestMapper accessRequestMapper;
 
@@ -31,7 +36,7 @@ public class SsiBrokerService {
                 .entity(new ServiceAccessScopeDto()); //todo
         AccessResponseDto accessResponseDto = getAccessResponseDto(accessRequestDto);
 
-        return getQrPage(accessResponseDto.getRequestId(), null); //todo missing link as in https://seu30.gdc-leinf01.t-systems.com/confluence/pages/viewpage.action?pageId=286628681
+        return getQrPage(accessResponseDto.getRequestId(), null); //todo missing link as in https://seu30.gdc-leinf01.t-systems.com/confluence/pages/viewpage.action?pageId=286628681 maybe accessResponseDto.getPolicyEvaluationResult()
     }
 
     private String getQrPage(String requestId, String url) {
@@ -63,17 +68,17 @@ public class SsiBrokerService {
         try {
             bitMatrix = barcodeWriter.encode(qrid, BarcodeFormat.QR_CODE, 200, 200);
         } catch (WriterException e) {
-            e.printStackTrace(); //todo: make exception handling - http 500
+            e.printStackTrace();
+            log.error("QR data generation failed: " + e);
         }
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
             ImageIO.write(MatrixToImageWriter.toBufferedImage(bitMatrix), "png", baos);
         } catch (IOException e) {
-            e.printStackTrace(); //todo: make exception handling - http 500
+            e.printStackTrace();
+            log.error("Failed to generate image from QR data: " + e);
         }
-        byte[] imageData = baos.toByteArray();
-        return imageData;
-
+        return baos.toByteArray();
     }
 
     private AccessResponseDto getAccessResponseDto(AccessRequestDto accessRequestDto) {
