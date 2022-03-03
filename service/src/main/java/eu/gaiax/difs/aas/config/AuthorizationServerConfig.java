@@ -110,10 +110,7 @@ public class AuthorizationServerConfig extends OAuth2AuthorizationServerConfigur
     public ProviderSettings providerSettings() {
         return ProviderSettings.builder()
                 .issuer("http://auth-server:9000")
-                .authorizationEndpoint("/oauth2/authorize")
                 .oidcUserInfoEndpoint("/oauth2/userinfo")
-                .jwkSetEndpoint("/oauth2/jwks")
-                .tokenEndpoint("/oauth2/token")
                 .build();
     }
 
