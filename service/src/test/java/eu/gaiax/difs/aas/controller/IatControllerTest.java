@@ -1,7 +1,7 @@
 package eu.gaiax.difs.aas.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import eu.gaiax.difs.aas.client.LocalTrustServiceClientImpl;
+import eu.gaiax.difs.aas.client.TrustServiceClient;
 import eu.gaiax.difs.aas.generated.model.AccessRequestDto;
 import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
 import eu.gaiax.difs.aas.generated.model.AccessResponseDto;
@@ -15,6 +15,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -32,6 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @AutoConfigureMockMvc(addFilters = false)
+@ActiveProfiles("test, local")
 public class IatControllerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -40,13 +42,13 @@ public class IatControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    AuthService service;
+    AuthService authService;
 
     @MockBean
-    LocalTrustServiceClientImpl client;
+    TrustServiceClient trustServiceClient;
 
     @MockBean
-    LocalTrustServiceClientProperties config;
+    LocalTrustServiceClientProperties localTrustServiceClientProperties;
 
     @Test
     void getRequest_missingRequestId_404() throws Exception {
@@ -70,7 +72,7 @@ public class IatControllerTest {
                 .status(AccessRequestStatusDto.ACCEPTED)
                 .initialAccessToken("responseIat");
 
-        when(service.evaluate(eq("GetIatProofResult"), any())).thenReturn(serviceResponse);
+        when(authService.evaluate(eq("GetIatProofResult"), any())).thenReturn(serviceResponse);
 
         mockMvc.perform(
                         get("/clients/iat/requests/testRequestId")
@@ -149,7 +151,7 @@ public class IatControllerTest {
                 .requestId("responseRequestId")
                 .entity(new ServiceAccessScopeDto());
 
-        when(service.evaluate(eq("GetIatProofInvitation"), any())).thenReturn(serviceResponse);
+        when(authService.evaluate(eq("GetIatProofInvitation"), any())).thenReturn(serviceResponse);
 
         mockMvc.perform(
                         post("/clients/iat/requests")

@@ -20,8 +20,6 @@
 
 package eu.gaiax.difs.aas.config;
 
-import static org.springframework.security.config.Customizer.withDefaults;
-
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -62,7 +60,11 @@ public class AuthorizationServerConfig extends OAuth2AuthorizationServerConfigur
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public SecurityFilterChain authServerSecurityFilterChain(HttpSecurity http) throws Exception {
         applySecurity(http);
-        return http.formLogin(withDefaults()).build();
+        http.formLogin()
+                .loginPage("/ssi/login") //login.html
+                .usernameParameter("state")
+                .loginProcessingUrl("/ssi/perform_login");
+        return http.build();
 //        return http.oauth2Login(oauth2Login -> oauth2Login.loginPage("/oauth2/authorization/aas-client-oidc")).build();
     }
 

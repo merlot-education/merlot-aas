@@ -12,22 +12,38 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class IatDtoMapper {
+public class AccessRequestMapper {
 
-    public Map<String, Object> requestToMap(AccessRequestDto request) {
+    public Map<String, Object> loginRequestToMap(AccessRequestDto request) {
         Map<String, Object> map = new HashMap<>();
-        map.put("scope", List.of("openid", request.getEntity().getScope()));
+        if (request.getEntity().getScope() != null) map.put("scope", List.of("openid", request.getEntity().getScope()));
+        map.put("namespace", "Login");
+        map.put("not_older_than", ""); //TODO
+        map.put("max_age", ""); //TODO
+        return map;
+    }
+
+    public AccessResponseDto mapTologinAccessResponse(Map<String, Object> map) {
+        return new AccessResponseDto()
+                .requestId((String) map.getOrDefault("requestId", null))
+                // TODO: claims to be specified
+                .policyEvaluationResult(map.getOrDefault("link", null));
+    }
+
+    public Map<String, Object> iatRequestToMap(AccessRequestDto request) {
+        Map<String, Object> map = new HashMap<>();
+        if (request.getEntity().getScope() != null) map.put("scope", List.of("openid", request.getEntity().getScope()));
         map.put("sub", request.getEntity().getDid());
         map.put("iss", request.getSubject());
         map.put("namespace", "Access");
         return map;
     }
 
-    public Map<String, Object> requestToMap(String requestId) {
+    public Map<String, Object> iatRequestToMap(String requestId) {
         return Collections.singletonMap("requestId", requestId);
     }
 
-    public AccessResponseDto mapToResponse(Map<String, Object> map) {
+    public AccessResponseDto mapToIatAccessResponse(Map<String, Object> map) {
         return new AccessResponseDto().subject((String) map.getOrDefault("iss", null))
                 .entity(mapAccessScope(map.getOrDefault("sub", null)))
                 .status(mapStatus(map.getOrDefault("status", null)))

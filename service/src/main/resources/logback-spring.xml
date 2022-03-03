@@ -2,9 +2,9 @@
 <configuration>
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
 
-    <logger name="org.springframework.web" level="DEBUG"/>
+    <!--logger name="org.springframework.web" level="DEBUG"/>
     <logger name="org.springframework.web.servlet.mvc.method.annotation" level="INFO"/>
-    <logger name="eu.gaiax.difs.aas" level="DEBUG"/>
+    <logger name="eu.gaiax.difs.aas" level="DEBUG"/-->
 
     <springProperty scope="context" name="springAppName" source="spring.application.name"/>
 
