@@ -20,8 +20,6 @@
 
 package eu.gaiax.difs.aas.config;
 
-import static org.springframework.security.config.Customizer.withDefaults;
-
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -33,16 +31,19 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.config.annotation.ObjectPostProcessor;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
+import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
-import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.config.ProviderSettings;
+import org.springframework.security.oauth2.server.authorization.oidc.web.OidcProviderConfigurationEndpointFilter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
@@ -52,43 +53,65 @@ import com.nimbusds.jose.proc.SecurityContext;
 /**
  * The Spring Security config.
  */
-@Configuration(proxyBeanMethods = false)
-public class AuthorizationServerConfig {
+@Configuration
+public class AuthorizationServerConfig extends OAuth2AuthorizationServerConfiguration {
 
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public SecurityFilterChain authServerSecurityFilterChain(HttpSecurity http) throws Exception {
-        OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
-        //return http.formLogin(withDefaults()).build();
+        applySecurity(http);
         http.formLogin()
                 .loginPage("/ssi/login") //login.html
                 .usernameParameter("state")
                 .loginProcessingUrl("/ssi/perform_login");
         return http.build();
-        // return http.oauth2Login(oauth2Login ->
-        // oauth2Login.loginPage("/oauth2/authorization/aas-client-oidc")).build();
+//        return http.oauth2Login(oauth2Login -> oauth2Login.loginPage("/oauth2/authorization/aas-client-oidc")).build();
+    }
+
+    private void applySecurity(HttpSecurity http) throws Exception {
+        OAuth2AuthorizationServerConfigurer<HttpSecurity> authorizationServerConfigurer =
+                new OAuth2AuthorizationServerConfigurer<>();
+
+        authorizationServerConfigurer.addObjectPostProcessor(customObjectPostProcessor());
+
+        RequestMatcher endpointsMatcher = authorizationServerConfigurer.getEndpointsMatcher();
+
+        http.requestMatcher(endpointsMatcher)
+                .authorizeRequests(authorizeRequests -> authorizeRequests.anyRequest().authenticated())
+                .csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher))
+                .objectPostProcessor(customObjectPostProcessor())
+                .apply(authorizationServerConfigurer);
+    }
+
+    private ObjectPostProcessor<Object> customObjectPostProcessor() {
+        return new ObjectPostProcessor<>() {
+            @Override
+            public <O> O postProcess(O object) {
+                if (object instanceof OidcProviderConfigurationEndpointFilter) {
+                    return (O) new CustomOidcProviderConfigurationEndpointFilter(providerSettings());
+                }
+                return object;
+            }
+        };
     }
 
     @Bean
     public RegisteredClientRepository registeredClientRepository() {
         RegisteredClient reClient = RegisteredClient.withId(UUID.randomUUID().toString()).clientId("aas-app")
-                // .clientSecret("8ngxjnfoywTFd5MR8HZkLKslQpfuffKE")
-                .clientSecret("{noop}secret").clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                .clientSecret("{noop}secret")
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-                // .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-                // .redirectUri("http://localhost:8990/*")
-                // .redirectUri("http://localhost:8091/authorized")
-                // .redirectUri("http://127.0.0.1:8080/login/oauth2/code/aas-app")
                 .redirectUri("http://auth-server:8080/auth/realms/gaia-x/broker/ssi-oidc/endpoint")
-                .scope(OidcScopes.OPENID)
-                // .scope(OidcScopes.PROFILE)
                 .build();
         return new InMemoryRegisteredClientRepository(reClient);
     }
 
     @Bean
     public ProviderSettings providerSettings() {
-        return ProviderSettings.builder().issuer("http://auth-server:9000").build();
+        return ProviderSettings.builder()
+                .issuer("http://auth-server:9000")
+                .oidcUserInfoEndpoint("/oauth2/userinfo")
+                .build();
     }
 
     @Bean
@@ -102,7 +125,10 @@ public class AuthorizationServerConfig {
         KeyPair keyPair = generateRsaKey();
         RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
         RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
-        return new RSAKey.Builder(publicKey).privateKey(privateKey).keyID(UUID.randomUUID().toString()).build();
+        return new RSAKey.Builder(publicKey)
+                .privateKey(privateKey)
+                .keyID(UUID.randomUUID().toString())
+                .build();
     }
 
     private static KeyPair generateRsaKey() {
