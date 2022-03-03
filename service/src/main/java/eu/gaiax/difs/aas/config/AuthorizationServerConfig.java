@@ -59,7 +59,12 @@ public class AuthorizationServerConfig {
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public SecurityFilterChain authServerSecurityFilterChain(HttpSecurity http) throws Exception {
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
-        return http.formLogin(withDefaults()).build();
+        //return http.formLogin(withDefaults()).build();
+        http.formLogin()
+                .loginPage("/ssi/login") //login.html
+                .usernameParameter("state")
+                .loginProcessingUrl("/ssi/perform_login");
+        return http.build();
         // return http.oauth2Login(oauth2Login ->
         // oauth2Login.loginPage("/oauth2/authorization/aas-client-oidc")).build();
     }

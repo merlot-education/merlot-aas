@@ -29,6 +29,7 @@ aas:
 logging:
   level:
     root: INFO
-    org.springframework.web: INFO
+    org.springframework.web: DEBUG
     org.springframework.security: DEBUG
-    org.springframework.security.oauth2: DEBUG  
+#    org.springframework.security.oauth2: DEBUG  
+    eu.gaiax.difs.aas: DEBUG
