@@ -13,10 +13,10 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
           .authorizeRequests(authorizeRequests ->
-            authorizeRequests.anyRequest().authenticated()
+              authorizeRequests.anyRequest().authenticated()
           )
           .oauth2Login(oauth2Login ->
-            oauth2Login.loginPage("/oauth2/authorization/aas-app"))
+              oauth2Login.loginPage("/oauth2/authorization/demo-app-oidc"))
           .oauth2Client(Customizer.withDefaults());
         return http.build();
     }

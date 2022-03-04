@@ -22,60 +22,55 @@ package eu.gaiax.difs.aas.config;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
-//import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+
+import eu.gaiax.difs.aas.service.SsiAuthManager;
+import eu.gaiax.difs.aas.service.SsiAuthProvider;
+import eu.gaiax.difs.aas.service.SsiUserService;
 
 /**
  * The Spring Security config.
  */
-@EnableWebSecurity(debug = true)
-public class SecurityConfig {
+@EnableWebSecurity //(debug = true)
+public class SecurityConfig { 
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        // http.requestMatcher(EndpointRequest.toAnyEndpoint()) // actuator endpoints
-        // .authorizeRequests((requests) -> requests.anyRequest().permitAll()) //
-        // hasRole("ENDPOINT_ADMIN"));
-        // .authorizeRequests().antMatchers("*/oauth2/**").permitAll()
-        // .and()
-        // .formLogin(withDefaults())
-        // .oauth2Login(withDefaults())
-        // ;
-
-        http.csrf().disable().authorizeRequests()
+        http.csrf().disable()
+            .cors().disable()
+            .authorizeRequests()
                 .antMatchers("/api/**", "/*.ico", "/*.png", "/webjars/springfox-swagger-ui/**", "/swagger-ui.html",
                         "/swagger-ui/**", "/swagger-resources/**", "/actuator", "/actuator/**", "/oauth2/**", "/ssi/**",
-                        "/.well-known/**", "/error", "/login")
+                        "/.well-known/**", "/error", "/login") 
                 .permitAll()
+                .antMatchers("/userinfo")
+                .anonymous()
 
                 .anyRequest().authenticated()
-                //.and()
-                //.formLogin(withDefaults())
-                //.formLogin()
-                //    .loginPage("/ssi/login") //login.html
-               //     .loginProcessingUrl("/ssi/perform_login")
-                    //.defaultSuccessUrl("/homepage.html", true)
-                    //.failureUrl("/login.html?error=true")
-        // .oauth2Login(withDefaults())
-        ;
+                .and()
+                .formLogin(withDefaults());
         return http.build();
     }
     
     @Bean
     public UserDetailsService users() {
-        UserDetails user = User.withDefaultPasswordEncoder()
-          .username("admin")
-          .password("password")
-          .authorities("ROLE_ANY")
-          .build();
-        return new InMemoryUserDetailsManager(user);
+        return new SsiUserService();
+    }
+    
+    @Bean
+    public AuthenticationManager authManager() {
+        return new SsiAuthManager();
+    }
+
+    @Bean
+    public AuthenticationProvider authProvider() {
+        return new SsiAuthProvider();
     }
 
 }

@@ -37,6 +37,7 @@ import org.springframework.security.config.annotation.web.configuration.OAuth2Au
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
+import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
@@ -62,10 +63,9 @@ public class AuthorizationServerConfig extends OAuth2AuthorizationServerConfigur
         applySecurity(http);
         http.formLogin()
                 .loginPage("/ssi/login") //login.html
-                .usernameParameter("state")
-                .loginProcessingUrl("/ssi/perform_login");
+                //.loginProcessingUrl("/ssi/perform_login")
+                ;
         return http.build();
-//        return http.oauth2Login(oauth2Login -> oauth2Login.loginPage("/oauth2/authorization/aas-client-oidc")).build();
     }
 
     private void applySecurity(HttpSecurity http) throws Exception {
@@ -94,14 +94,17 @@ public class AuthorizationServerConfig extends OAuth2AuthorizationServerConfigur
             }
         };
     }
-
+    
     @Bean
     public RegisteredClientRepository registeredClientRepository() {
-        RegisteredClient reClient = RegisteredClient.withId(UUID.randomUUID().toString()).clientId("aas-app")
+        RegisteredClient reClient = RegisteredClient.withId(UUID.randomUUID().toString())
+                .clientId("aas-app")
+                // .clientSecret("8ngxjnfoywTFd5MR8HZkLKslQpfuffKE")
                 .clientSecret("{noop}secret")
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-                .redirectUri("http://auth-server:8080/auth/realms/gaia-x/broker/ssi-oidc/endpoint")
+                .redirectUri("http://key-server:8080/auth/realms/gaia-x/broker/ssi-oidc/endpoint")
+                .scope(OidcScopes.OPENID)
                 .build();
         return new InMemoryRegisteredClientRepository(reClient);
     }
@@ -110,7 +113,7 @@ public class AuthorizationServerConfig extends OAuth2AuthorizationServerConfigur
     public ProviderSettings providerSettings() {
         return ProviderSettings.builder()
                 .issuer("http://auth-server:9000")
-                .oidcUserInfoEndpoint("/oauth2/userinfo")
+                .oidcUserInfoEndpoint("/ssi/userinfo")
                 .build();
     }
 
