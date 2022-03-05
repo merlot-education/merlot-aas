@@ -38,16 +38,16 @@ import eu.gaiax.difs.aas.service.SsiUserService;
  * The Spring Security config.
  */
 @EnableWebSecurity //(debug = true)
-public class SecurityConfig { 
+public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf().disable()
-            .cors().disable()
-            .authorizeRequests()
+                .cors().disable()
+                .authorizeRequests()
                 .antMatchers("/api/**", "/*.ico", "/*.png", "/webjars/springfox-swagger-ui/**", "/swagger-ui.html",
                         "/swagger-ui/**", "/swagger-resources/**", "/actuator", "/actuator/**", "/oauth2/**", "/ssi/**",
-                        "/.well-known/**", "/error", "/login") 
+                        "/.well-known/**", "/error", "/login")
                 .permitAll()
                 .antMatchers("/userinfo")
                 .anonymous()
@@ -57,12 +57,12 @@ public class SecurityConfig {
                 .formLogin(withDefaults());
         return http.build();
     }
-    
+
     @Bean
     public UserDetailsService users() {
         return new SsiUserService();
     }
-    
+
     @Bean
     public AuthenticationManager authManager() {
         return new SsiAuthManager();
