@@ -5,6 +5,7 @@ import com.google.zxing.WriterException;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
+import com.google.zxing.qrcode.decoder.Mode;
 import eu.gaiax.difs.aas.client.TrustServiceClient;
 import eu.gaiax.difs.aas.generated.model.AccessRequestDto;
 import eu.gaiax.difs.aas.generated.model.AccessResponseDto;
@@ -27,6 +28,7 @@ import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.core.oidc.http.converter.OidcUserInfoHttpMessageConverter;
 import org.springframework.security.oauth2.server.authorization.oidc.authentication.OidcUserInfoAuthenticationToken;
 import org.springframework.stereotype.Service;
+import org.springframework.ui.Model;
 
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
@@ -46,45 +48,28 @@ public class SsiBrokerService {
     private final AccessRequestMapper accessRequestMapper;
 
     private final AuthenticationManager authenticationManager;
-    
+
     private final HttpMessageConverter<OidcUserInfo> userInfoHttpMessageConverter =
             new OidcUserInfoHttpMessageConverter();
     private final HttpMessageConverter<OAuth2Error> errorHttpResponseConverter =
             new OAuth2ErrorHttpMessageConverter();
-    
-    public String authorize() {
+
+    public String authorize(Model model) {
         String requestID = generateRequestId();
         AccessRequestDto accessRequestDto = new AccessRequestDto()
                 .subject(requestID)
                 .entity(new ServiceAccessScopeDto()); //todo
         AccessResponseDto accessResponseDto = getAccessResponseDto(accessRequestDto);
 
-        return getQrPage(accessResponseDto.getRequestId(), null); //todo missing link as in https://seu30.gdc-leinf01.t-systems.com/confluence/pages/viewpage.action?pageId=286628681 maybe accessResponseDto.getPolicyEvaluationResult()
+        return getQrPage(accessResponseDto.getRequestId(), model); //todo missing link as in https://seu30.gdc-leinf01.t-systems.com/confluence/pages/viewpage.action?pageId=286628681 maybe accessResponseDto.getPolicyEvaluationResult()
     }
 
-    private String getQrPage(String requestId, String url) {
-        return "<!DOCTYPE html>\n" +
-                "<html>\n" +
-                "<header><title>SSI Login</title></header>\n" +
-                "<body>\n" +
-                    "<h1>Login with SSI</h1>\n" +
-                    "<form name='f' action=\"/login\" method='POST'>\n" +
-                      "<table>\n" +
-                        "<tr>\n" +
-                          "<td><img alt=\"Scan QR code with your SSI wallet\" src=\"/ssi/qr/" + requestId + "\"/></td>\n" +
-                        "</tr>\n" +
-                        "<tr>\n" +
-                          "<td><input type=\"hidden\" name=\"username\" value=\"" + requestId + "\"/></td>\n" +
-                        "</tr>\n" +
-                        "<tr>\n" +
-                          "<td><input type=\"submit\" value=\"Login\"/></td>\n" +
-                          "<td><input type=\"submit\" value=\"Login with Keycloak\"/></td>\n" +
-                        "</tr>\n" +
-                      "</table>\n" +
-                    "</form>\n" +
-                "</body>\n" + 
-            "</html>";
-        //todo: should be changed by template
+    private String getQrPage(String requestId, Model model) {
+        String qrUrl = "/ssi/qr/" + requestId + "/";
+        model.addAttribute("qrUrl", qrUrl);
+        model.addAttribute("requestId", requestId);
+
+        return "login-template.html";
     }
 
     public byte[] getQR(String qrid) {
@@ -115,8 +100,8 @@ public class SsiBrokerService {
     private String generateRequestId() {
         return UUID.randomUUID().toString();
     }
-    
-    
+
+
     public void userInfo(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
             Authentication principal = SecurityContextHolder.getContext().getAuthentication();
@@ -138,9 +123,9 @@ public class SsiBrokerService {
             sendErrorResponse(response, error);
         } finally {
             SecurityContextHolder.clearContext();
-        }        
+        }
     }
-    
+
     private void sendUserInfoResponse(HttpServletResponse response, OidcUserInfo userInfo) throws IOException {
         ServletServerHttpResponse httpResponse = new ServletServerHttpResponse(response);
         this.userInfoHttpMessageConverter.write(userInfo, null, httpResponse);
@@ -157,5 +142,5 @@ public class SsiBrokerService {
         httpResponse.setStatusCode(httpStatus);
         this.errorHttpResponseConverter.write(error, null, httpResponse);
     }
-    
+
 }

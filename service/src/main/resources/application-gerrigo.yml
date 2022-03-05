@@ -6,7 +6,7 @@ server:
 #    oauth2:
 #      client:
 #        client-id: aas-app
-#        client-secret: 8ngxjnfoywTFd5MR8HZkLKslQpfuffKE
+#        client-secret: qBhoUVKaqQqD0YVgMiEyq7dYehYPNtmz
 #        registration:
 #          keycloak:
 ##            client-id: demo-app
