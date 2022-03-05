@@ -67,7 +67,7 @@ public class AuthorizationServerConfig extends OAuth2AuthorizationServerConfigur
                 ;
         return http.build();
     }
-
+    
     private void applySecurity(HttpSecurity http) throws Exception {
         OAuth2AuthorizationServerConfigurer<HttpSecurity> authorizationServerConfigurer =
                 new OAuth2AuthorizationServerConfigurer<>();
@@ -113,7 +113,7 @@ public class AuthorizationServerConfig extends OAuth2AuthorizationServerConfigur
     public ProviderSettings providerSettings() {
         return ProviderSettings.builder()
                 .issuer("http://auth-server:9000")
-                .oidcUserInfoEndpoint("/ssi/userinfo")
+                .oidcUserInfoEndpoint("http://auth-server:9000/ssi/userinfo")
                 .build();
     }
 

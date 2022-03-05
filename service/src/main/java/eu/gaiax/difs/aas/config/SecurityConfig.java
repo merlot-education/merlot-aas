@@ -49,9 +49,8 @@ public class SecurityConfig {
                         "/swagger-ui/**", "/swagger-resources/**", "/actuator", "/actuator/**", "/oauth2/**", "/ssi/**",
                         "/.well-known/**", "/error", "/login")
                 .permitAll()
-                .antMatchers("/userinfo")
-                .anonymous()
-
+                //.antMatchers("/userinfo")
+                //.anonymous()
                 .anyRequest().authenticated()
                 .and()
                 .formLogin(withDefaults());
