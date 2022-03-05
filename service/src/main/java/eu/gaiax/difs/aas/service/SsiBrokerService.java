@@ -57,11 +57,12 @@ public class SsiBrokerService {
     public String authorize(Model model) {
         String requestID = generateRequestId();
         AccessRequestDto accessRequestDto = new AccessRequestDto()
-                .subject(requestID)
+                //.subject(requestID)
                 .entity(new ServiceAccessScopeDto()); //todo
         AccessResponseDto accessResponseDto = getAccessResponseDto(accessRequestDto);
 
-        return getQrPage(accessResponseDto.getRequestId(), model); //todo missing link as in https://seu30.gdc-leinf01.t-systems.com/confluence/pages/viewpage.action?pageId=286628681 maybe accessResponseDto.getPolicyEvaluationResult()
+        //return getQrPage(accessResponseDto.getRequestId(), model); //todo missing link as in https://seu30.gdc-leinf01.t-systems.com/confluence/pages/viewpage.action?pageId=286628681 maybe accessResponseDto.getPolicyEvaluationResult()
+        return getQrPage(requestID, model);
     }
 
     private String getQrPage(String requestId, Model model) {

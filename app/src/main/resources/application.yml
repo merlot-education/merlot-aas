@@ -13,10 +13,10 @@ spring:
             provider: keycloak
             client-id: demo-app
             client-secret: secret
-            authorization-grant-type: authorization_code
-            redirect-uri: "http://key-server:8080/auth/realms/gaia-x/broker/ssi-oidc/endpoint" 
-            scope: openid
-            client-name: demo-app-oidc
+#            authorization-grant-type: authorization_code
+#            redirect-uri: "http://key-server:8080/auth/realms/gaia-x/broker/ssi-oidc/endpoint" 
+#            scope: openid
+#            client-name: demo-app-oidc
         provider:
           keycloak:
             issuer-uri: http://key-server:8080/auth/realms/gaia-x
