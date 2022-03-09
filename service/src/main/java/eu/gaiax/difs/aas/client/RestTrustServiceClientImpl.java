@@ -32,19 +32,18 @@ public class RestTrustServiceClientImpl implements TrustServiceClient {
     }
 
     @Override
-    public Map<String, Object> evaluate(String policyname, Map<String, Object> bodyParams) {
+    public Map<String, Object> evaluate(String policyName, Map<String, Object> bodyParams) {
         String uri = "/{repo}/policies/{group}/{policyname}/{version}/{action}";
         Map<String, String> uriParams = new HashMap<>();
         uriParams.put("repo", repo);
         uriParams.put("group", group);
-        uriParams.put("policyname", policyname);
+        uriParams.put("policyname", policyName);
         uriParams.put("version", version);
         uriParams.put("action", action);
 
         Flux<Map<String, Object>> trustServiceResponse = client.post().uri(uri, uriParams)
                 .accept(MediaType.APPLICATION_JSON).bodyValue(bodyParams).retrieve().bodyToFlux(MAP_TYPE_REF);
-        Map<String, Object> trustServiceResponseMap = trustServiceResponse.blockFirst();
 
-        return trustServiceResponseMap;
+        return trustServiceResponse.blockFirst();
     }
 }

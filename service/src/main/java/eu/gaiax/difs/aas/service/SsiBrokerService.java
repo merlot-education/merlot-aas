@@ -5,7 +5,6 @@ import com.google.zxing.WriterException;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
-import com.google.zxing.qrcode.decoder.Mode;
 import eu.gaiax.difs.aas.client.TrustServiceClient;
 import eu.gaiax.difs.aas.generated.model.AccessRequestDto;
 import eu.gaiax.difs.aas.generated.model.AccessResponseDto;
@@ -46,7 +45,6 @@ public class SsiBrokerService {
 
     private final TrustServiceClient trustServiceClient;
     private final AccessRequestMapper accessRequestMapper;
-
     private final AuthenticationManager authenticationManager;
 
     private final HttpMessageConverter<OidcUserInfo> userInfoHttpMessageConverter =
@@ -55,14 +53,17 @@ public class SsiBrokerService {
             new OAuth2ErrorHttpMessageConverter();
 
     public String authorize(Model model) {
-        String requestID = generateRequestId();
         AccessRequestDto accessRequestDto = new AccessRequestDto()
-                //.subject(requestID)
+                .subject(generateRequestId())
                 .entity(new ServiceAccessScopeDto()); //todo
-        AccessResponseDto accessResponseDto = getAccessResponseDto(accessRequestDto);
 
-        //return getQrPage(accessResponseDto.getRequestId(), model); //todo missing link as in https://seu30.gdc-leinf01.t-systems.com/confluence/pages/viewpage.action?pageId=286628681 maybe accessResponseDto.getPolicyEvaluationResult()
-        return getQrPage(requestID, model);
+        AccessResponseDto accessResponseDto = evaluateLogin(accessRequestDto);
+
+        return getQrPage(accessResponseDto.getRequestId(), model); //todo missing link as in https://seu30.gdc-leinf01.t-systems.com/confluence/pages/viewpage.action?pageId=286628681 maybe accessResponseDto.getPolicyEvaluationResult()
+    }
+
+    private String generateRequestId() {
+        return UUID.randomUUID().toString();
     }
 
     private String getQrPage(String requestId, Model model) {
@@ -92,16 +93,12 @@ public class SsiBrokerService {
         return baos.toByteArray();
     }
 
-    private AccessResponseDto getAccessResponseDto(AccessRequestDto accessRequestDto) {
-        return accessRequestMapper.mapTologinAccessResponse(trustServiceClient.evaluate(
-                "GetLoginProofInvitation",
-                accessRequestMapper.loginRequestToMap(accessRequestDto)));
+    private AccessResponseDto evaluateLogin(AccessRequestDto accessRequestDto) {
+        return accessRequestMapper.mapTologinAccessResponse(
+                trustServiceClient.evaluate(
+                        "GetLoginProofInvitation",
+                        accessRequestMapper.loginRequestToMap(accessRequestDto)));
     }
-
-    private String generateRequestId() {
-        return UUID.randomUUID().toString();
-    }
-
 
     public void userInfo(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {

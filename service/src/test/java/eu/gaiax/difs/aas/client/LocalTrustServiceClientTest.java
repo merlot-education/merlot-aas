@@ -11,7 +11,9 @@ import org.springframework.test.context.ActiveProfiles;
 import java.util.Collections;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("local")
@@ -27,21 +29,53 @@ public class LocalTrustServiceClientTest {
     AuthService service;
 
     @Test
-    void localTrustServiceClientTest() {
-        localTrustServiceClientProperties.getPolicyMocks().keySet().forEach(policy -> {
-            Map<String, Object> result = localTrustServiceClient.evaluate(policy, Collections.emptyMap());
-            Map<String, Object> expectedResult = localTrustServiceClientProperties.getPolicyMocks().get(policy);
+    void evaluateLoginProofInvitation() {
+        Map<String, Object> expectedResponse = localTrustServiceClientProperties.getPolicyMocks().get("GetLoginProofInvitation");
 
-            assertTrue(areEqual(result, expectedResult));
-        });
+        Map<String, Object> response = localTrustServiceClient.evaluate("GetLoginProofInvitation", Collections.emptyMap());
+
+        assertNotNull(response.get("requestId"));
+        assertEquals(expectedResponse.get("link"), response.get("link"));
     }
 
-    private boolean areEqual(Map<String, Object> first, Map<String, Object> second) {
-        if (first.size() != second.size()) {
-            return false;
-        }
+    @Test
+    void evaluateLoginProofResult() {
+        Map<String, Object> expectedResponse = localTrustServiceClientProperties.getPolicyMocks().get("GetLoginProofResult");
 
-        return first.entrySet().stream()
-                .allMatch(e -> e.getValue().equals(second.get(e.getKey())));
+        Map<String, Object> response = localTrustServiceClient.evaluate("GetLoginProofResult", Collections.emptyMap());
+
+        assertEquals(expectedResponse.get("iss"), response.get("iss"));
+        assertEquals(expectedResponse.get("sub"), response.get("sub"));
+        assertEquals(expectedResponse.get("claim1"), response.get("claim1"));
     }
+
+    @Test
+    void evaluateIatProofInvitation() {
+        Map<String, Object> response = localTrustServiceClient.evaluate("GetIatProofInvitation", Collections.emptyMap());
+
+        assertNotNull(response.get("requestId"));
+    }
+
+    @Test
+    void evaluateIatProofResult() {
+        Map<String, Object> expectedResponse = localTrustServiceClientProperties.getPolicyMocks().get("GetIatProofResult");
+
+        Map<String, Object> response = localTrustServiceClient.evaluate("GetIatProofResult", Collections.emptyMap());
+
+        assertEquals(expectedResponse.get("iss"), response.get("iss"));
+        assertEquals(expectedResponse.get("sub"), response.get("sub"));
+        assertEquals(expectedResponse.get("claim1"), response.get("claim1"));
+    }
+
+    @Test
+    void evaluateNotSameRequestId() {
+        Map<String, Object> firstResponse = localTrustServiceClient.evaluate("GetLoginProofInvitation", Collections.emptyMap());
+
+        Map<String, Object> secondResponse = localTrustServiceClient.evaluate("GetLoginProofInvitation", Collections.emptyMap());
+
+        assertNotNull(firstResponse.get("requestId"));
+        assertNotNull(secondResponse.get("requestId"));
+        assertNotEquals(firstResponse.get("requestId"), secondResponse.get("requestId"));
+    }
+
 }
