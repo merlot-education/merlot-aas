@@ -22,7 +22,9 @@ package eu.gaiax.difs.aas.config;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
+import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -47,7 +49,7 @@ public class SecurityConfig {
                 .authorizeRequests()
                 .antMatchers("/api/**", "/*.ico", "/*.png", "/webjars/springfox-swagger-ui/**", "/swagger-ui.html",
                         "/swagger-ui/**", "/swagger-resources/**", "/actuator", "/actuator/**", "/oauth2/**", "/ssi/**",
-                        "/.well-known/**", "/error", "/login")
+                        "/.well-known/**", "/error", "/login", "/**/*.{js,html,css}")
                 .permitAll()
                 //.antMatchers("/userinfo")
                 //.anonymous()
