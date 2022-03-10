@@ -1,13 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+<meta charset="UTF-8">
 <head>
     <title>Login</title>
-    <link rel="stylesheet" type="text/css" href="css/login.css" media="screen">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500&family=Overpass:wght@300;400&display=swap"
           rel="stylesheet">
-    <script src="translate.js"></script>
     <style th:inline="css">
         html {
             padding-top: 20px;
@@ -42,11 +41,59 @@
 
         .card-contents {
             margin: auto;
-            padding-top: 20px;
+            padding-top: 5px;
             width: 84%;
             display: flex;
             flex-direction: column;
         }
+
+        .language-component {
+            margin-top: 0;
+            display: flex;
+            justify-content: flex-end;
+            color: #737679;
+            font-size: 12px;
+
+        }
+
+        .locale-list {
+            margin-top: 18px;
+            padding-left: 0px;
+            list-style: none;
+            display: none;
+            position: absolute;
+            text-align: right;
+            background-color: white;
+            box-shadow: 0 0.1875rem 0.4375rem 0.1875rem rgba(3, 3, 3, 0.13);
+        }
+
+        .display-language-component {
+            padding-bottom: 2px;
+            position: absolute;
+        }
+
+        .display-language-component:hover{
+            text-decoration-line: underline;
+            text-decoration-thickness: 1.1px;
+            text-decoration-color: #737679;
+            cursor: pointer;
+        }
+
+        .language-component:hover .locale-list {
+            display: block;
+
+        }
+
+        .locale{
+            padding: 10px 10px 10px 20px;
+        }
+
+        .locale:hover {
+            background-color: #EDEDED;
+            cursor: pointer;
+        }
+
+
 
         h1, .label {
             font-weight: 300;
@@ -54,7 +101,7 @@
 
         h1 {
             font-size: 24px;
-            margin-top: 10px;
+            margin-top: 25px;
             margin-bottom: 20px;
             text-align: center;
         }
@@ -76,7 +123,7 @@
         }
 
 
-        .label, .input-box, .login_button {
+        .label, .input-box, .action_button {
             font-family: 'Overpass', sans-serif;
             font-weight: 300;
         }
@@ -104,7 +151,7 @@
 
         }
 
-        .login_button {
+        .action_button {
             width: 100%;
             padding: .375rem 0;
             margin-top: 20px;
@@ -112,6 +159,10 @@
             color: white;
             background: #283375;
             border: none;
+        }
+
+        .action_button:hover {
+            cursor: pointer;
 
         }
 
@@ -226,6 +277,18 @@
 <main>
     <div class="card">
         <div class="card-contents">
+            <div class="language-component">
+                <div class="display-language-component">
+                    <span id="display-language">English</span><span> v</span>
+                </div>
+                <ul class="locale-list">
+                    <li id="Deutsch" class="locale">Deutsch</li>
+                    <li id="English" class="locale">English</li>
+                    <li id="Français" class="locale">Français</li>
+                </ul>
+            </div>
+
+
             <h1 id="greeting">Sign in to your account</h1>
             <img th:src="${qrUrl}" alt="qr Code">
             <form th:action="@{/login}" method="post">
@@ -234,12 +297,12 @@
                         <td><input class="input-box" type='hidden' name='username' th:value='${requestId}'/></td>
                     </tr>
                     <tr>
-                        <td><input id="sign-in-button" class="login_button" name="submit" type="submit"
+                        <td><input id="sign-in-button" class="action_button" name="submit" type="submit"
                                    value="Sign In"/></td>
                     </tr>
                     <tr>
-                        <td><input id="go-back-button" class="login_button" name="submit" type="submit"
-                                   value="Back to Keycloak"/></td>
+                        <td><input id="go-back-button" class="action_button" name="submit" type="submit"
+                                   value="Back"/></td>
                     </tr>
                 </table>
             </form>
@@ -247,4 +310,50 @@
     </div>
 </main>
 </body>
+<script th:inline="javascript">
+
+    function translate(language) {
+        let displayLanguage = document.getElementById("display-language")
+        let greeting = document.getElementById("greeting")
+        let loginButton = document.getElementById("sign-in-button")
+        let backButton = document.getElementById("go-back-button")
+
+        switch (language) {
+            case "English":
+                displayLanguage.innerText = "English"
+                greeting.innerText = "Sign in to your account"
+                loginButton.setAttribute("value", "Sign In")
+                backButton.setAttribute("value", "Back")
+                break
+
+            case "Deutsch":
+                displayLanguage.innerText = "Deutsch"
+                greeting.innerText = "Bei Ihrem Konto anmelden"
+                loginButton.setAttribute("value", "Anmelden")
+                backButton.setAttribute("value", "Zurück")
+                break
+
+            case "Français":
+                displayLanguage.innerText = "Français"
+                greeting.innerText = "Connectez-vous à votre compte "
+                loginButton.setAttribute("value", "Connexion")
+                backButton.setAttribute("value", "Retourner")
+                break
+
+            default:
+                displayLanguage.innerText = "English"
+                greeting.innerText = "Sign in to your account"
+                loginButton.innerText = "Sign In"
+                backButton.setAttribute("value", "Back to Keycloak")
+                break
+
+        }
+    }
+
+    document.getElementById("Deutsch").addEventListener("click", () => translate("Deutsch"));
+    document.getElementById("English").addEventListener("click", () => translate("English"));
+    document.getElementById("Français").addEventListener("click", () => translate("Français"));
+
+
+</script>
 </html>
