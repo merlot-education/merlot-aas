@@ -17,19 +17,17 @@ public class SsiAuthProvider implements AuthenticationProvider {
     
     private static final Logger log = LoggerFactory.getLogger(SsiAuthProvider.class);
     
-
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         log.debug("authenticate.enter; got authentication: {}", authentication);
-        GrantedAuthority gr = new SimpleGrantedAuthority("ROLE_ADMIN");
-        UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken("user", //authentication.getPrincipal(), 
+        // TODO: requestId = authentication.getPrincipal()
+        // go to TSA and get user claims (evaluate LoginResultPlicy) for this requestId
+        // then store them in UserDetailService for future use
+        // if TSA returned error or timed out then throw AuthException here
+        GrantedAuthority gr = new SimpleGrantedAuthority("ROLE_ANY");
+        UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(authentication.getPrincipal(), 
                 authentication.getCredentials(), Collections.singletonList(gr));
         token.setDetails(authentication.getDetails());
-        //WebAuthenticationDetails details = (WebAuthenticationDetails) authentication.getDetails();
-        //Map<String, String> claims = new HashMap<>();
-        //claims.put("email", "test@test.com");
-        //claims.put("username", "user");
-        //token.setDetails(claims);
         log.debug("authenticate.exit; returning: {} with name: {}", token, token.getName());
         return token;
     }

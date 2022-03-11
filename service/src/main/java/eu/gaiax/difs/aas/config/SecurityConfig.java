@@ -23,53 +23,46 @@ package eu.gaiax.difs.aas.config;
 import static org.springframework.security.config.Customizer.withDefaults;
 
 import org.springframework.context.annotation.Bean;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.oauth2.server.authorization.JwtEncodingContext;
+import org.springframework.security.oauth2.server.authorization.OAuth2TokenCustomizer;
 import org.springframework.security.web.SecurityFilterChain;
 
-import eu.gaiax.difs.aas.service.SsiAuthManager;
 import eu.gaiax.difs.aas.service.SsiAuthProvider;
-import eu.gaiax.difs.aas.service.SsiUserService;
+import eu.gaiax.difs.aas.service.SsiJwtCustomizer;
 
 /**
  * The Spring Security config.
  */
 @EnableWebSecurity //(debug = true)
-public class SecurityConfig {
-
+public class SecurityConfig { 
+    
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf().disable()
                 .cors().disable()
                 .authorizeRequests()
-                .antMatchers("/api/**", "/*.ico", "/*.png", "/webjars/springfox-swagger-ui/**", "/swagger-ui.html",
-                        "/swagger-ui/**", "/swagger-resources/**", "/actuator", "/actuator/**", "/oauth2/**", "/ssi/**",
-                        "/.well-known/**", "/error", "/login")
+                .antMatchers("/api/**", "/swagger-ui/**", "/login", "/error",
+                        "/actuator", "/actuator/**", 
+                        //"/oauth2/**", "/.well-known/**", 
+                        "/ssi/**")
                 .permitAll()
-                //.antMatchers("/userinfo")
-                //.anonymous()
                 .anyRequest().authenticated()
                 .and()
                 .formLogin(withDefaults());
         return http.build();
     }
-
-    @Bean
-    public UserDetailsService users() {
-        return new SsiUserService();
-    }
-
-    @Bean
-    public AuthenticationManager authManager() {
-        return new SsiAuthManager();
-    }
-
+    
     @Bean
     public AuthenticationProvider authProvider() {
         return new SsiAuthProvider();
+    }
+    
+    @Bean
+    public OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer() {
+        return new SsiJwtCustomizer();
     }
 
 }

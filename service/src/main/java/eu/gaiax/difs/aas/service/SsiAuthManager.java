@@ -7,6 +7,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.server.authorization.oidc.authentication.OidcUserInfoAuthenticationToken;
+import org.springframework.security.oauth2.server.resource.BearerTokenAuthenticationToken;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
 public class SsiAuthManager implements AuthenticationManager {
 
@@ -15,8 +17,16 @@ public class SsiAuthManager implements AuthenticationManager {
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         log.debug("authenticate.enter; got authentication: {}", authentication);
+        // TODO: get claims from UserDetailService by requestId..?
+        String subject = "user";
+        if (authentication instanceof OidcUserInfoAuthenticationToken) {
+            subject = ((JwtAuthenticationToken) authentication.getPrincipal()).getToken().getSubject(); 
+        } else if (authentication instanceof BearerTokenAuthenticationToken) {
+            ((BearerTokenAuthenticationToken) authentication).getToken();
+        }
         OidcUserInfoAuthenticationToken token = new OidcUserInfoAuthenticationToken(authentication, 
-                OidcUserInfo.builder().name("user").email("test@test.com").subject("user").build());
+                OidcUserInfo.builder().name(subject).email(subject + "@oidc.ssi").subject(subject).build());
+        log.debug("authenticate.exit; returning: {} for subject: {}", token, subject);
         return token;
     }
 
