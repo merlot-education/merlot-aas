@@ -37,9 +37,6 @@ public class IatService {
     }
 
     private Map<String, Object> evaluate(String policy, Map<String, Object> params) {
-        Map<String, Object> evaluation = trustServiceClient.evaluate(policy, params);
-
-        return evaluation;
+        return trustServiceClient.evaluate(policy, params);
     }
-
 }
