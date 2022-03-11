@@ -2,7 +2,7 @@
 function translate(language) {
     let displayLanguage = document.getElementById("display-language")
     let greeting = document.getElementById("greeting")
-    let backButton = document.getElementById("back-button")
+    let backButton = document.getElementById("back-to-standard-login-button")
 
     switch (language) {
         case "English":

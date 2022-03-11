@@ -141,20 +141,52 @@ table {
 }
 
 .action_button {
+    margin-top: 10px;
     width: 100%;
     padding: .375rem 0;
-    margin-top: 0px;
     font-size: 14px;
     color: white;
     background: #283375;
     border: none;
 }
 
+#scan-qr-phone-button {
+    margin-top: 0;
+}
+
+
 .action_button:hover {
     cursor: pointer;
     background-color: #20295E;
 
 }
+
+#back-to-standard-login-button {
+    color: #8A8D90;
+    background: white;
+    border-style: solid;
+    border-width: 1.2px;
+    border-color: #EDEDED;
+    border-bottom-color: #8A8D90;
+
+}
+
+#back-to-standard-login-button:hover {
+    color: #283375;
+    border-bottom-width: 2px;
+    border-bottom-color: #283375;
+
+}
+
+.button-separator {
+    margin: 20px 0 10px 0;
+    padding: 0;
+    border: none;
+    border-top: 1px solid #EDEDED;
+
+
+}
+
 
 @media (max-width: 600px) {
 
