@@ -123,22 +123,6 @@ table {
     font-weight: 400;
 }
 
-.input-box {
-    display: block;
-    width: 100%;
-    border-style: solid;
-    border-width: 1px;
-    border-bottom-color: #8A8D90;
-    padding: 8px 8px;
-    margin-bottom: 15px;
-}
-
-.input-box:hover, .input-box:focus {
-    border-bottom-color: #283375;
-    border-bottom-width: 1.75px;
-    padding: 8px 8px calc(8px - 1.23px + 0.5px) 8px;
-
-}
 
 .action_button {
     margin-top: 10px;
@@ -166,14 +150,17 @@ table {
     background: white;
     border-style: solid;
     border-width: 1.2px;
+    border-bottom-width: 1.7px;
     border-color: #EDEDED;
     border-bottom-color: #8A8D90;
+
 }
 
 #back-to-standard-login-button:hover {
     color: #283375;
-    border-bottom-width: 2px;
+    border-bottom-width: 1.7px;
     border-bottom-color: #283375;
+
 
 }
 
