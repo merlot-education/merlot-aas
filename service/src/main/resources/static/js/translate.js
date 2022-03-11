@@ -25,7 +25,7 @@ function translate(language) {
 
         case "Français":
             displayLanguage.innerText = "Français"
-            greeting.innerText = "Scanner le code QR avec un smartphone"
+            greeting.innerText = "Scanner le code QR avec un mobil"
             signInButton.setAttribute("value", "Connexion")
             qrBrowserButton.setAttribute("value", "Scanner le code QR avec un navigateur")
             backButton.setAttribute("value", "Retour à Connexion standard")
