@@ -31,6 +31,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.ObjectPostProcessor;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
@@ -43,7 +44,10 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.config.ProviderSettings;
 import org.springframework.security.oauth2.server.authorization.oidc.web.OidcProviderConfigurationEndpointFilter;
+import org.springframework.security.oauth2.server.authorization.oidc.web.OidcUserInfoEndpointFilter;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import com.nimbusds.jose.jwk.JWKSet;
@@ -51,20 +55,25 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 
+import eu.gaiax.difs.aas.service.SsiAuthManager;
+
 /**
  * The Spring Security config.
  */
 @Configuration
 public class AuthorizationServerConfig extends OAuth2AuthorizationServerConfiguration {
-
+    
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
-    public SecurityFilterChain authServerSecurityFilterChain(HttpSecurity http) throws Exception {
+    @Override
+    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
         applySecurity(http);
+        http.addFilterBefore(new BearerTokenAuthenticationFilter(authenticationManager()), AnonymousAuthenticationFilter.class);
         http.formLogin()
-                .loginPage("/ssi/login") //login.html
-                //.loginProcessingUrl("/ssi/perform_login")
-                ;
+                .loginPage("/ssi/login")
+                .and()
+                .oauth2ResourceServer()
+                .jwt();
         return http.build();
     }
     
@@ -77,8 +86,12 @@ public class AuthorizationServerConfig extends OAuth2AuthorizationServerConfigur
         RequestMatcher endpointsMatcher = authorizationServerConfigurer.getEndpointsMatcher();
 
         http.requestMatcher(endpointsMatcher)
-                .authorizeRequests(authorizeRequests -> authorizeRequests.anyRequest().authenticated())
-                .csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher))
+                //.authorizeRequests(authorizeRequests -> authorizeRequests.anyRequest().authenticated())
+                .authorizeRequests()
+                .antMatchers("/oauth2/**").authenticated() //jwks?
+                .antMatchers("/.well-known/**").permitAll()
+                .and()
+                .csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher)) // do we need it?
                 .objectPostProcessor(customObjectPostProcessor())
                 .apply(authorizationServerConfigurer);
     }
@@ -86,15 +99,23 @@ public class AuthorizationServerConfig extends OAuth2AuthorizationServerConfigur
     private ObjectPostProcessor<Object> customObjectPostProcessor() {
         return new ObjectPostProcessor<>() {
             @Override
+            @SuppressWarnings("unchecked")
             public <O> O postProcess(O object) {
                 if (object instanceof OidcProviderConfigurationEndpointFilter) {
                     return (O) new CustomOidcProviderConfigurationEndpointFilter(providerSettings());
+                } else if (object instanceof OidcUserInfoEndpointFilter) {
+                    return (O) new SsiOidcUserInfoEndpointFilter(authenticationManager());
                 }
                 return object;
             }
         };
     }
     
+    @Bean
+    public AuthenticationManager authenticationManager() {
+        return new SsiAuthManager();
+    }
+
     @Bean
     public RegisteredClientRepository registeredClientRepository() {
         RegisteredClient reClient = RegisteredClient.withId(UUID.randomUUID().toString())
@@ -113,7 +134,6 @@ public class AuthorizationServerConfig extends OAuth2AuthorizationServerConfigur
     public ProviderSettings providerSettings() {
         return ProviderSettings.builder()
                 .issuer("http://auth-server:9000")
-                .oidcUserInfoEndpoint("http://auth-server:9000/ssi/userinfo")
                 .build();
     }
 
