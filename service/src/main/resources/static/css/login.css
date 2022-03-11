@@ -14,7 +14,7 @@ body {
 
 svg {
     height: 100px;
-    margin: 40px auto;
+    margin: 40px auto 35px;
 }
 
 
@@ -175,15 +175,6 @@ table {
     color: #283375;
     border-bottom-width: 2px;
     border-bottom-color: #283375;
-
-}
-
-.button-separator {
-    margin: 14px 0 5px 0;
-    padding: 0;
-    border: none;
-    border-top: 1px solid #EDEDED;
-
 
 }
 

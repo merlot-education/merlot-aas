@@ -137,17 +137,12 @@
                         <td><input class="input-box" type='hidden' name='username' th:value='${requestId}'/></td>
                     </tr>
                     <tr>
-                        <td><input id="scan-qr-phone-button" class="action_button" name="submit" type="submit"
-                                   value="Scan QR code with smartphone"/></td>
+                        <td><input id="sign-in-button" class="action_button" name="qr-smartphone-button" type="submit"
+                                   value="Sign In"/></td>
                     </tr>
                     <tr>
-                        <td><input id="scan-qr-browser-button" class="action_button" name="submit" type="submit"
+                        <td><input id="scan-qr-browser-button" class="action_button" name="qr-browser-button" type="button"
                                    value="Scan QR code with browser"/></td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <hr class="button-separator">
-                        </td>
                     </tr>
                     <tr>
                         <td><input id="back-to-standard-login-button" class="action_button bottom-button" name="back" onclick="history.back()"
