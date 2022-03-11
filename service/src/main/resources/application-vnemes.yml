@@ -9,3 +9,8 @@ spring:
         clientSecret: 1UnZxYv9h94LAZKQcyxdkS9Ua6ApdRUF
         accessTokenUri: https://localhost:8080/login/oauth/access_token
         userAuthorizationUri: https://localhost:8080/login/oauth/authorize
+
+aas:
+  keycloak:
+    url: http://localhost:8180
+    initial-token: eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICI4Mzk4M2M0Mi02YWVmLTRlMmYtODA3MS02MjRjNDI0ZTc1NmYifQ.eyJleHAiOjAsImlhdCI6MTY0NDQwNTA0MSwianRpIjoiYzEzOTA4YjktMjI5MS00ZTg5LWJkMDgtZDA0ZTRjNDg5Y2MxIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MTgwL2F1dGgvcmVhbG1zL2dhaWEteCIsImF1ZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODE4MC9hdXRoL3JlYWxtcy9nYWlhLXgiLCJ0eXAiOiJJbml0aWFsQWNjZXNzVG9rZW4ifQ.hAm8NVSixxL96zr-2cNY-n1bjEAaCa_T4lDCNJRDPQk
