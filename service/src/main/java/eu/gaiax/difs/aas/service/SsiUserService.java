@@ -6,20 +6,19 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-//import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
-//import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
-import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
-import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
-import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 
-public class SsiUserService implements UserDetailsService { //, OAuth2UserService<OidcUserRequest, OidcUser> {
+public class SsiUserService implements UserDetailsService { 
     
     private static final Logger log = LoggerFactory.getLogger(SsiUserService.class);
+    
+    // TODO: we'll need in-memory store where we'll store user claims (UserDetails?) per requestId 
+    // we can use HashMap for this, or we can investigate how InMemory.. SS classes are implemented, 
+    // may be we could use them
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         log.debug("loadUserByUserName.enter; got username: {}", username);
+        // TODO: get UserDetails from in-memory store; username = requetsId
         UserDetails ud = User.withUsername(username)
                 .password("{noop}") //password
                 .authorities("ANY")
@@ -27,13 +26,5 @@ public class SsiUserService implements UserDetailsService { //, OAuth2UserServic
         log.debug("loadUserByUserName.exit; returning: {}", ud);
         return ud;
     }
-
-    //@Override
-    //public OidcUser loadUser(OidcUserRequest userRequest) throws OAuth2AuthenticationException {
-    //    log.debug("load.enter; got user: {}", userRequest);
-    ///    UserDetails dt = loadUserByUsername("user");
-    //    return new DefaultOidcUser(dt.getAuthorities(), userRequest.getIdToken(), 
-    //            OidcUserInfo.builder().email("test@test.com").build());
-    //}
 
 }

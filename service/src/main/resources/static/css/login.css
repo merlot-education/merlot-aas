@@ -1,0 +1,211 @@
+html {
+    padding-top: 20px;
+}
+
+body {
+    margin: auto;
+    height: 1vh;
+    color: #283375;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: "Open Sans", Helvetica, Arial, sans-serif;
+}
+
+svg {
+    height: 100px;
+    margin: 40px auto 35px;
+}
+
+
+.card {
+    margin-top: 20px;
+    width: 500px;
+    padding-top: 20px;
+    padding-bottom: 30px;
+    border-top: 4px solid;
+    border-top-color: #283375;
+    box-shadow: 0 0.1875rem 0.4375rem 0.1875rem rgba(3, 3, 3, 0.13), 0 0.6875rem 1.5rem 1rem rgba(3, 3, 3, 0.12);
+
+}
+
+.card-contents {
+    margin: auto;
+    padding-top: 5px;
+    width: 84%;
+    display: flex;
+    flex-direction: column;
+}
+
+.language-component {
+    margin-top: 0;
+    display: flex;
+    justify-content: flex-end;
+    color: #737679;
+    font-size: 12px;
+
+}
+
+.locale-list {
+    margin-top: 18px;
+    padding-left: 0px;
+    list-style: none;
+    display: none;
+    position: absolute;
+    text-align: right;
+    background-color: white;
+    box-shadow: 0 0.1875rem 0.4375rem 0.1875rem rgba(3, 3, 3, 0.13);
+}
+
+.display-language-component {
+    padding-bottom: 2px;
+    position: absolute;
+}
+
+.display-language-component:hover {
+    text-decoration-line: underline;
+    text-decoration-thickness: 1.1px;
+    text-decoration-color: #737679;
+    cursor: pointer;
+}
+
+.language-component:hover .locale-list {
+    display: block;
+
+}
+
+.locale {
+    padding: 10px 10px 10px 20px;
+}
+
+.locale:hover {
+    background-color: #EDEDED;
+    cursor: pointer;
+}
+
+
+h1, .label {
+    font-weight: 300;
+}
+
+h1 {
+    font-size: 24px;
+    margin-top: 25px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+img {
+    margin: auto;
+    display: block;
+}
+
+table {
+    box-sizing: border-box;
+    width: 100%;
+    margin-top: 20px;
+
+}
+
+.table-element {
+    margin: 100px;
+}
+
+
+.label, .input-box, .action_button {
+    font-family: 'Overpass', sans-serif;
+    font-weight: 300;
+}
+
+
+.label {
+    font-size: 12px;
+    font-weight: 400;
+}
+
+
+.action_button {
+    margin-top: 10px;
+    width: 100%;
+    padding: .375rem 0;
+    font-size: 14px;
+    color: white;
+    background: #283375;
+    border: none;
+}
+
+#scan-qr-phone-button {
+    margin-top: 0;
+}
+
+
+.action_button:hover {
+    cursor: pointer;
+    background-color: #20295E;
+
+}
+
+#back-to-standard-login-button {
+    color: #8A8D90;
+    background: white;
+    border-style: solid;
+    border-width: 1.2px;
+    border-bottom-width: 1.7px;
+    border-color: #EDEDED;
+    border-bottom-color: #8A8D90;
+
+}
+
+#back-to-standard-login-button:hover {
+    color: #283375;
+    border-bottom-width: 1.7px;
+    border-bottom-color: #283375;
+
+
+}
+
+
+@media (max-width: 600px) {
+
+    body {
+        margin: 0 0 0 0;
+    }
+
+    svg {
+        height: 80px;
+        margin: 15px auto 0 auto;
+
+    }
+
+    .language-component {
+        position: relative;
+        top: -125px;
+        font-size: 10px;
+    }
+
+
+    h1 {
+        margin-top: 0px;
+        font-size: 16px;
+    }
+
+    main {
+        margin: auto;
+        width: 100%;
+    }
+
+    .card {
+        margin: 0;
+        width: 100%;
+        padding-top: 20px;
+        padding-bottom: 30px;
+        border-top: none;
+        box-shadow: none;
+    }
+
+    .card-contents {
+        margin: auto;
+        width: 94%;
+        padding-top: 5px;
+    }
+}
