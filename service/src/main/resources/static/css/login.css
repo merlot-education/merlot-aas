@@ -62,7 +62,7 @@ svg {
     position: absolute;
 }
 
-.display-language-component:hover{
+.display-language-component:hover {
     text-decoration-line: underline;
     text-decoration-thickness: 1.1px;
     text-decoration-color: #737679;
@@ -74,7 +74,7 @@ svg {
 
 }
 
-.locale{
+.locale {
     padding: 10px 10px 10px 20px;
 }
 
@@ -82,7 +82,6 @@ svg {
     background-color: #EDEDED;
     cursor: pointer;
 }
-
 
 
 h1, .label {
@@ -144,7 +143,7 @@ table {
 .action_button {
     width: 100%;
     padding: .375rem 0;
-    margin-top: 20px;
+    margin-top: 0px;
     font-size: 14px;
     color: white;
     background: #283375;
@@ -153,5 +152,51 @@ table {
 
 .action_button:hover {
     cursor: pointer;
+    background-color: #20295E;
 
+}
+
+@media (max-width: 600px) {
+
+    body {
+        margin: 0 0 0 0;
+    }
+
+    svg {
+        height: 80px;
+        margin: 15px auto 0 auto;
+
+    }
+
+    .language-component {
+        position: relative;
+        top: -125px;
+        font-size: 10px;
+    }
+
+
+    h1 {
+        margin-top: 0px;
+        font-size: 16px;
+    }
+
+    main {
+        margin: auto;
+        width: 100%;
+    }
+
+    .card {
+        margin: 0;
+        width: 100%;
+        padding-top: 20px;
+        padding-bottom: 30px;
+        border-top: none;
+        box-shadow: none;
+    }
+
+    .card-contents {
+        margin: auto;
+        width: 94%;
+        padding-top: 5px;
+    }
 }

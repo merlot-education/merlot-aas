@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500&family=Overpass:wght@300;400&display=swap"
           rel="stylesheet">
     <link th:href="@{/css/login.css}" rel="stylesheet" type="text/css"/>
-
+    <link href="../static/css/login.css" rel="stylesheet" type="text/css"/>
 </head>
 
 <body>
@@ -129,8 +129,7 @@
                 </ul>
             </div>
 
-
-            <h1 id="greeting">Sign in to your account</h1>
+            <h1 id="greeting">Scan QR code with smartphone</h1>
             <img th:src="${qrUrl}" alt="qr Code">
             <form th:action="@{/login}" method="post">
                 <table>
@@ -138,12 +137,8 @@
                         <td><input class="input-box" type='hidden' name='username' th:value='${requestId}'/></td>
                     </tr>
                     <tr>
-                        <td><input id="sign-in-button" class="action_button" name="submit" type="submit"
-                                   value="Sign In"/></td>
-                    </tr>
-                    <tr>
-                        <td><input id="go-back-button" class="action_button" name="submit" type="submit"
-                                   value="Back"/></td>
+                        <td><input id="back-button" class="action_button" name="back" onclick="history.back()"
+                                   type="button" value="Login via Browser"/></td>
                     </tr>
                 </table>
             </form>

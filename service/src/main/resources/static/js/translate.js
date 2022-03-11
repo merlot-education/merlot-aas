@@ -2,36 +2,31 @@
 function translate(language) {
     let displayLanguage = document.getElementById("display-language")
     let greeting = document.getElementById("greeting")
-    let loginButton = document.getElementById("sign-in-button")
-    let backButton = document.getElementById("go-back-button")
+    let backButton = document.getElementById("back-button")
 
     switch (language) {
         case "English":
             displayLanguage.innerText = "English"
-            greeting.innerText = "Sign in to your account"
-            loginButton.setAttribute("value", "Sign In")
-            backButton.setAttribute("value", "Back")
+            greeting.innerText = "Scan QR code with smartphone"
+            backButton.setAttribute("value", "Login via Browser")
             break
 
         case "Deutsch":
             displayLanguage.innerText = "Deutsch"
-            greeting.innerText = "Bei Ihrem Konto anmelden"
-            loginButton.setAttribute("value", "Anmelden")
-            backButton.setAttribute("value", "Zurück")
+            greeting.innerText = "QR-Code mit Smartphone scannen"
+            backButton.setAttribute("value", "Anmeldung über Browser")
             break
 
         case "Français":
             displayLanguage.innerText = "Français"
-            greeting.innerText = "Connectez-vous à votre compte "
-            loginButton.setAttribute("value", "Connexion")
-            backButton.setAttribute("value", "Retourner")
+            greeting.innerText = "Scanner le code QR avec un smartphone"
+            backButton.setAttribute("value", "Connexion via le navigateur")
             break
 
         default:
             displayLanguage.innerText = "English"
-            greeting.innerText = "Sign in to your account"
-            loginButton.innerText = "Sign In"
-            backButton.setAttribute("value", "Back to Keycloak")
+            greeting.innerText = "Scan QR code with smartphone"
+            backButton.setAttribute("value", "Login via Browser")
             break
 
     }
