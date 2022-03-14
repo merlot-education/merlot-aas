@@ -37,16 +37,16 @@ import eu.gaiax.difs.aas.service.SsiJwtCustomizer;
  * The Spring Security config.
  */
 @EnableWebSecurity //(debug = true)
-public class SecurityConfig { 
-    
+public class SecurityConfig {
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf().disable()
                 .cors().disable()
                 .authorizeRequests()
                 .antMatchers("/api/**", "/swagger-ui/**", "/login", "/error",
-                        "/actuator", "/actuator/**", 
-                        //"/oauth2/**", "/.well-known/**", 
+                        "/actuator", "/actuator/**", "/**/*.{js,html,css}",
+                        //"/oauth2/**", "/.well-known/**",
                         "/ssi/**")
                 .permitAll()
                 .anyRequest().authenticated()
@@ -54,12 +54,12 @@ public class SecurityConfig {
                 .formLogin(withDefaults());
         return http.build();
     }
-    
+
     @Bean
     public AuthenticationProvider authProvider() {
         return new SsiAuthProvider();
     }
-    
+
     @Bean
     public OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer() {
         return new SsiJwtCustomizer();

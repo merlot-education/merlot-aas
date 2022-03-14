@@ -34,14 +34,18 @@ public class SsiBrokerService {
     private final AccessRequestMapper accessRequestMapper;
 
     public String authorize(Model model) {
-        String requestID = generateRequestId();
         AccessRequestDto accessRequestDto = new AccessRequestDto()
-                //.subject(requestID)
+                .subject(generateRequestId())
                 .entity(new ServiceAccessScopeDto()); //todo
-        AccessResponseDto accessResponseDto = getAccessResponseDto(accessRequestDto);
 
-        //return getQrPage(accessResponseDto.getRequestId(), model); //todo missing link as in https://seu30.gdc-leinf01.t-systems.com/confluence/pages/viewpage.action?pageId=286628681 maybe accessResponseDto.getPolicyEvaluationResult()
-        return getQrPage(requestID, model);
+        AccessResponseDto accessResponseDto = evaluateLogin(accessRequestDto);
+
+        //todo missing link as in https://seu30.gdc-leinf01.t-systems.com/confluence/pages/viewpage.action?pageId=286628681 maybe accessResponseDto.getPolicyEvaluationResult()
+        return getQrPage(accessResponseDto.getRequestId(), model);
+    }
+
+    private String generateRequestId() {
+        return UUID.randomUUID().toString();
     }
 
     private String getQrPage(String requestId, Model model) {
@@ -71,15 +75,11 @@ public class SsiBrokerService {
         return baos.toByteArray();
     }
 
-    private AccessResponseDto getAccessResponseDto(AccessRequestDto accessRequestDto) {
-        return accessRequestMapper.mapTologinAccessResponse(trustServiceClient.evaluate(
-                "GetLoginProofInvitation",
-                accessRequestMapper.loginRequestToMap(accessRequestDto)));
+    private AccessResponseDto evaluateLogin(AccessRequestDto accessRequestDto) {
+        return accessRequestMapper.mapTologinAccessResponse(
+                trustServiceClient.evaluate(
+                        "GetLoginProofInvitation",
+                        accessRequestMapper.loginRequestToMap(accessRequestDto)));
     }
-
-    private String generateRequestId() {
-        return UUID.randomUUID().toString();
-    }
-
 
 }

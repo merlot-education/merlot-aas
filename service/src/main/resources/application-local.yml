@@ -2,14 +2,14 @@ application:
   localTrustServiceClient:
     policyMocks:
       GetLoginProofInvitation:
-        requestId: 06e81313-cc78-4408-adad-0b0b70f5d5e2
+        requestId: to-be-overwritten
         link: test-link
       GetLoginProofResult:
         iss: test-iss
         sub: test-sub
         claim1: test-claim1
       GetIatProofInvitation:
-        requestId: 06e81313-cc78-4408-adad-0b0b70f5d5e2
+        requestId: to-be-overwritten
       GetIatProofResult:
         iss: test-iss
         sub: test-sub

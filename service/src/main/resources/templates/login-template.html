@@ -1,122 +1,14 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+<meta charset="UTF-8">
 <head>
     <title>Login</title>
-    <link rel="stylesheet" type="text/css" href="css/login.css" media="screen">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500&family=Overpass:wght@300;400&display=swap"
           rel="stylesheet">
-    <script src="translate.js"></script>
-    <style th:inline="css">
-        html {
-            padding-top: 20px;
-        }
-
-        body {
-            margin: auto;
-            height: 1vh;
-            color: #283375;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            font-family: "Open Sans", Helvetica, Arial, sans-serif;
-        }
-
-        svg {
-            height: 100px;
-            margin: 40px auto;
-        }
-
-
-        .card {
-            margin-top: 20px;
-            width: 500px;
-            padding-top: 20px;
-            padding-bottom: 30px;
-            border-top: 4px solid;
-            border-top-color: #283375;
-            box-shadow: 0 0.1875rem 0.4375rem 0.1875rem rgba(3, 3, 3, 0.13), 0 0.6875rem 1.5rem 1rem rgba(3, 3, 3, 0.12);
-
-        }
-
-        .card-contents {
-            margin: auto;
-            padding-top: 20px;
-            width: 84%;
-            display: flex;
-            flex-direction: column;
-        }
-
-        h1, .label {
-            font-weight: 300;
-        }
-
-        h1 {
-            font-size: 24px;
-            margin-top: 10px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        img {
-            margin: auto;
-            display: block;
-        }
-
-        table {
-            box-sizing: border-box;
-            width: 100%;
-            margin-top: 20px;
-
-        }
-
-        .table-element {
-            margin: 100px;
-        }
-
-
-        .label, .input-box, .login_button {
-            font-family: 'Overpass', sans-serif;
-            font-weight: 300;
-        }
-
-
-        .label {
-            font-size: 12px;
-            font-weight: 400;
-        }
-
-        .input-box {
-            display: block;
-            width: 100%;
-            border-style: solid;
-            border-width: 1px;
-            border-bottom-color: #8A8D90;
-            padding: 8px 8px;
-            margin-bottom: 15px;
-        }
-
-        .input-box:hover, .input-box:focus {
-            border-bottom-color: #283375;
-            border-bottom-width: 1.75px;
-            padding: 8px 8px calc(8px - 1.23px + 0.5px) 8px;
-
-        }
-
-        .login_button {
-            width: 100%;
-            padding: .375rem 0;
-            margin-top: 20px;
-            font-size: 14px;
-            color: white;
-            background: #283375;
-            border: none;
-
-        }
-
-
-    </style>
+    <link th:href="@{/css/login.css}" rel="stylesheet" type="text/css"/>
+    <link href="../static/css/login.css" rel="stylesheet" type="text/css"/>
 </head>
 
 <body>
@@ -226,7 +118,18 @@
 <main>
     <div class="card">
         <div class="card-contents">
-            <h1 id="greeting">Sign in to your account</h1>
+            <div class="language-component">
+                <div class="display-language-component">
+                    <span id="display-language">English</span><span> v</span>
+                </div>
+                <ul class="locale-list">
+                    <li id="Deutsch" class="locale">Deutsch</li>
+                    <li id="English" class="locale">English</li>
+                    <li id="Français" class="locale">Français</li>
+                </ul>
+            </div>
+
+            <h1 id="greeting">Scan QR code with smartphone</h1>
             <img th:src="${qrUrl}" alt="qr Code">
             <form th:action="@{/login}" method="post">
                 <table>
@@ -234,17 +137,24 @@
                         <td><input class="input-box" type='hidden' name='username' th:value='${requestId}'/></td>
                     </tr>
                     <tr>
-                        <td><input id="sign-in-button" class="login_button" name="submit" type="submit"
+                        <td><input id="sign-in-button" class="action_button" name="qr-smartphone-button" type="submit"
                                    value="Sign In"/></td>
                     </tr>
                     <tr>
-                        <td><input id="go-back-button" class="login_button" name="submit" type="submit"
-                                   value="Back to Keycloak"/></td>
+                        <td><input id="scan-qr-browser-button" class="action_button" name="qr-browser-button" type="button"
+                                   value="Scan QR code with browser"/></td>
+                    </tr>
+                    <tr>
+                        <td><input id="back-to-standard-login-button" class="action_button bottom-button" name="back" onclick="history.back()"
+                                   type="button" value="Back to Standard Login"/></td>
                     </tr>
                 </table>
             </form>
         </div>
     </div>
 </main>
+
+<script type="application/javascript" th:src="@{/js/translate.js}"></script>
+
 </body>
 </html>
