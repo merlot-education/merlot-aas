@@ -33,6 +33,10 @@ aas:
     action: evaluate
   iat: temporary-iat-example
   redirect-uri: http://localhost:8080/redirect
+  iam:
+    client-id: aas-app
+    client-secret: secret
+    redirect-uri: http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint
 
 logging:
   level:
