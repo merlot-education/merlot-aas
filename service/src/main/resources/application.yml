@@ -32,6 +32,10 @@ aas:
     version: 1.0
     action: evaluate
   iat: temporary-iat-example
+  iam:
+    client-id: aas-app
+    client-secret: secret
+    redirect-uri: http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint
 
 logging:
   level:

@@ -27,6 +27,7 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -34,7 +35,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.ObjectPostProcessor;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
@@ -61,11 +61,21 @@ import eu.gaiax.difs.aas.service.SsiAuthManager;
  * The Spring Security config.
  */
 @Configuration
-public class AuthorizationServerConfig extends OAuth2AuthorizationServerConfiguration {
+public class AuthorizationServerConfig { 
+    
+    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
+    private String issuerUri;
+    
+    @Value("${aas.iam.client-id}")
+    private String clientId;
+    @Value("${aas.iam.client-secret}")
+    private String clientSecret;
+    @Value("${aas.iam.redirect-uri}")
+    private String redirectUri;
+    
     
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
-    @Override
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
         applySecurity(http);
         http.addFilterBefore(new BearerTokenAuthenticationFilter(authenticationManager()), AnonymousAuthenticationFilter.class);
@@ -86,12 +96,8 @@ public class AuthorizationServerConfig extends OAuth2AuthorizationServerConfigur
         RequestMatcher endpointsMatcher = authorizationServerConfigurer.getEndpointsMatcher();
 
         http.requestMatcher(endpointsMatcher)
-                //.authorizeRequests(authorizeRequests -> authorizeRequests.anyRequest().authenticated())
-                .authorizeRequests()
-                .antMatchers("/oauth2/**").authenticated() //jwks?
-                .antMatchers("/.well-known/**").permitAll()
-                .and()
-                .csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher)) // do we need it?
+                .authorizeRequests(authorizeRequests -> authorizeRequests.anyRequest().authenticated())
+                .csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher)) 
                 .objectPostProcessor(customObjectPostProcessor())
                 .apply(authorizationServerConfigurer);
     }
@@ -119,12 +125,11 @@ public class AuthorizationServerConfig extends OAuth2AuthorizationServerConfigur
     @Bean
     public RegisteredClientRepository registeredClientRepository() {
         RegisteredClient reClient = RegisteredClient.withId(UUID.randomUUID().toString())
-                .clientId("aas-app")
-                // .clientSecret("8ngxjnfoywTFd5MR8HZkLKslQpfuffKE")
-                .clientSecret("{noop}secret")
+                .clientId(clientId)
+                .clientSecret(clientSecret) //"{noop}secret")
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-                .redirectUri("http://key-server:8080/auth/realms/gaia-x/broker/ssi-oidc/endpoint")
+                .redirectUri(redirectUri)
                 .scope(OidcScopes.OPENID)
                 .build();
         return new InMemoryRegisteredClientRepository(reClient);
@@ -133,7 +138,7 @@ public class AuthorizationServerConfig extends OAuth2AuthorizationServerConfigur
     @Bean
     public ProviderSettings providerSettings() {
         return ProviderSettings.builder()
-                .issuer("http://auth-server:9000")
+                .issuer(issuerUri)
                 .build();
     }
 
@@ -165,3 +170,5 @@ public class AuthorizationServerConfig extends OAuth2AuthorizationServerConfigur
     }
 
 }
+
+
