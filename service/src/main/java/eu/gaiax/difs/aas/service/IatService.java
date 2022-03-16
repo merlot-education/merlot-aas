@@ -1,14 +1,16 @@
 package eu.gaiax.difs.aas.service;
 
-import eu.gaiax.difs.aas.client.KeycloakClient;
+import eu.gaiax.difs.aas.client.IamClient;
 import eu.gaiax.difs.aas.client.TrustServiceClient;
 import eu.gaiax.difs.aas.generated.model.AccessRequestDto;
 import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
 import eu.gaiax.difs.aas.generated.model.AccessResponseDto;
 import eu.gaiax.difs.aas.mapper.AccessRequestMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -17,7 +19,11 @@ public class IatService {
 
     private final TrustServiceClient trustServiceClient;
     private final AccessRequestMapper mapper;
-    private final KeycloakClient keycloakClient;
+    private final IamClient iamClient;
+
+    @Value("${aas.iam.redirect-uri}")
+    private String redirectUri;
+
 
     public AccessResponseDto evaluateGetIatProofInvitation(AccessRequestDto accessRequestDto) {
         return mapper.mapToIatAccessResponse(
@@ -31,7 +37,10 @@ public class IatService {
         );
 
         if (accessResponseDto.getStatus() == AccessRequestStatusDto.ACCEPTED) {
-            accessResponseDto.initialAccessToken(keycloakClient.registerIam(null, null, null, null));
+            accessResponseDto.initialAccessToken(
+                    (String) iamClient.registerIam(accessResponseDto.getSubject(), List.of(redirectUri))
+                            .get("registration_access_token")
+            );
         }
         return accessResponseDto;
     }

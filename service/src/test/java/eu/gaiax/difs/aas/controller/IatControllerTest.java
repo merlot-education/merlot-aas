@@ -1,7 +1,7 @@
 package eu.gaiax.difs.aas.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import eu.gaiax.difs.aas.client.KeycloakClient;
+import eu.gaiax.difs.aas.client.IamClient;
 import eu.gaiax.difs.aas.client.TrustServiceClient;
 import eu.gaiax.difs.aas.generated.model.AccessRequestDto;
 import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
@@ -44,7 +44,7 @@ public class IatControllerTest {
     TrustServiceClient trustServiceClient;
 
     @MockBean
-    KeycloakClient keycloakClient;
+    IamClient iamClient;
 
     @Test
     void getRequest_missingRequestId_404() throws Exception {
@@ -91,7 +91,7 @@ public class IatControllerTest {
                 .initialAccessToken("keycloakIat");
 
         when(trustServiceClient.evaluate(eq("GetIatProofResult"), any())).thenReturn(serviceResponse);
-        when(keycloakClient.registerIam(any(), any(), any(), any())).thenReturn("keycloakIat");
+        when(iamClient.registerIam(any(), any())).thenReturn(Map.of("registration_access_token","keycloakIat"));
 
         mockMvc.perform(
                         get("/clients/iat/requests/testRequestId")
