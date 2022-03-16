@@ -27,13 +27,13 @@ public class IatService {
 
     public AccessResponseDto evaluateGetIatProofInvitation(AccessRequestDto accessRequestDto) {
         return mapper.mapToIatAccessResponse(
-                evaluate("GetIatProofInvitation", mapper.iatRequestToMap(accessRequestDto))
+                trustServiceClient.evaluate("GetIatProofInvitation", mapper.iatRequestToMap(accessRequestDto))
         );
     }
 
     public AccessResponseDto evaluateGetIatProofResult(String requestId){
         AccessResponseDto accessResponseDto = mapper.mapToIatAccessResponse(
-                evaluate("GetIatProofResult", mapper.iatRequestToMap(requestId))
+                trustServiceClient.evaluate("GetIatProofResult", mapper.iatRequestToMap(requestId))
         );
 
         if (accessResponseDto.getStatus() == AccessRequestStatusDto.ACCEPTED) {
@@ -43,9 +43,5 @@ public class IatService {
             );
         }
         return accessResponseDto;
-    }
-
-    private Map<String, Object> evaluate(String policy, Map<String, Object> params) {
-        return trustServiceClient.evaluate(policy, params);
     }
 }
