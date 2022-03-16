@@ -1,13 +1,12 @@
 package eu.gaiax.difs.aas.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import eu.gaiax.difs.aas.client.IamClient;
 import eu.gaiax.difs.aas.client.TrustServiceClient;
 import eu.gaiax.difs.aas.generated.model.AccessRequestDto;
 import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
 import eu.gaiax.difs.aas.generated.model.AccessResponseDto;
 import eu.gaiax.difs.aas.generated.model.ServiceAccessScopeDto;
-import eu.gaiax.difs.aas.properties.LocalTrustServiceClientProperties;
-import eu.gaiax.difs.aas.service.AuthService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,13 +41,10 @@ public class IatControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    AuthService authService;
-
-    @MockBean
     TrustServiceClient trustServiceClient;
 
     @MockBean
-    LocalTrustServiceClientProperties localTrustServiceClientProperties;
+    IamClient iamClient;
 
     @Test
     void getRequest_missingRequestId_404() throws Exception {
@@ -58,21 +54,44 @@ public class IatControllerTest {
     }
 
     @Test
-    void getRequest_correctRequest_200() throws Exception {
+    void getRequest_correctRequest_pending_200() throws Exception {
         Map<String, Object> serviceResponse = Map.of(
                 "iss", "responseSubject",
                 "sub", Map.of("scope", "responseScope", "did", "responseDid"),
                 "requestId", "responseRequestId",
-                "status", "accepted",
-                "iat", "responseIat");
+                "status", "pending");
+        AccessResponseDto expectedResponse = new AccessResponseDto()
+                .subject("responseSubject")
+                .entity(new ServiceAccessScopeDto().scope("responseScope").did("responseDid"))
+                .requestId("responseRequestId")
+                .status(AccessRequestStatusDto.PENDING);
+
+        when(trustServiceClient.evaluate(eq("GetIatProofResult"), any())).thenReturn(serviceResponse);
+
+        mockMvc.perform(
+                        get("/clients/iat/requests/testRequestId")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{}"))
+                .andExpect(status().isOk())
+                .andExpect(content().json(objectMapper.writeValueAsString(expectedResponse), false));
+    }
+
+    @Test
+    void getRequest_correctRequest_accepted_200() throws Exception {
+        Map<String, Object> serviceResponse = Map.of(
+                "iss", "responseSubject",
+                "sub", Map.of("scope", "responseScope", "did", "responseDid"),
+                "requestId", "responseRequestId",
+                "status", "accepted");
         AccessResponseDto expectedResponse = new AccessResponseDto()
                 .subject("responseSubject")
                 .entity(new ServiceAccessScopeDto().scope("responseScope").did("responseDid"))
                 .requestId("responseRequestId")
                 .status(AccessRequestStatusDto.ACCEPTED)
-                .initialAccessToken("responseIat");
+                .initialAccessToken("keycloakIat");
 
-        when(authService.evaluate(eq("GetIatProofResult"), any())).thenReturn(serviceResponse);
+        when(trustServiceClient.evaluate(eq("GetIatProofResult"), any())).thenReturn(serviceResponse);
+        when(iamClient.registerIam(any(), any())).thenReturn(Map.of("registration_access_token","keycloakIat"));
 
         mockMvc.perform(
                         get("/clients/iat/requests/testRequestId")
@@ -151,7 +170,7 @@ public class IatControllerTest {
                 .requestId("responseRequestId")
                 .entity(new ServiceAccessScopeDto());
 
-        when(authService.evaluate(eq("GetIatProofInvitation"), any())).thenReturn(serviceResponse);
+        when(trustServiceClient.evaluate(eq("GetIatProofInvitation"), any())).thenReturn(serviceResponse);
 
         mockMvc.perform(
                         post("/clients/iat/requests")

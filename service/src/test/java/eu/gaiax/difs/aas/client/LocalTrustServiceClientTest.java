@@ -1,11 +1,9 @@
 package eu.gaiax.difs.aas.client;
 
 import eu.gaiax.difs.aas.properties.LocalTrustServiceClientProperties;
-import eu.gaiax.difs.aas.service.AuthService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Collections;
@@ -24,9 +22,6 @@ public class LocalTrustServiceClientTest {
 
     @Autowired
     private LocalTrustServiceClientProperties localTrustServiceClientProperties;
-
-    @MockBean
-    AuthService service;
 
     @Test
     void evaluateLoginProofInvitation() {
