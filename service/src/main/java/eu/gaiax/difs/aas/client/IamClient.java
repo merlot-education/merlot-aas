@@ -23,8 +23,8 @@ public class IamClient {
     private String baseUri;
     @Value("${aas.iam.client-registration-uri}")
     private String clientRegistrationUri;
-    @Value("${aas.iam.client-secret}")
-    private String clientSecret;
+    @Value("${aas.iam.client-iat}")
+    private String clientIat;
 
     public IamClient() {
         client = WebClient.builder()
@@ -41,7 +41,7 @@ public class IamClient {
 
         Flux<Map<String, Object>> trustServiceResponse = client.post()
                 .uri(baseUri+clientRegistrationUri)
-                .headers(h -> h.setBearerAuth(clientSecret))
+                .headers(h -> h.setBearerAuth(clientIat))
                 .accept(MediaType.APPLICATION_JSON)
                 .bodyValue(map)
                 .retrieve()

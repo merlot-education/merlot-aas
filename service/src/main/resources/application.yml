@@ -10,8 +10,8 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://auth-server:9000
-          jwk-set-uri: http://auth-server:9000/oauth2/jwks
+          issuer-uri: http://auth-server:8090
+          jwk-set-uri: http://auth-server:8090/oauth2/jwks
 
 management:
   endpoints:
@@ -32,11 +32,12 @@ aas:
     version: 1.0
     action: evaluate
   iam:
-    base-uri: http://localhost:8180
+    base-uri: http://key-server:8080
     client-registration-uri: /auth/realms/gaia-x/clients-registrations/openid-connect
     realm: gaia-x
     client-id: aas-app
-    client-secret: secret
+    client-iat: "{noop}iat"
+    client-secret: "{noop}secret"
     redirect-uri: http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint
 
 logging:

@@ -48,7 +48,7 @@ public class SecurityConfig {
                         "/actuator", "/actuator/**", "/**/*.{js,html,css}",
                         //"/oauth2/**", 
                         "/.well-known/**",
-                        "/ssi/**")
+                        "/ssi/**", "/clients/**")
                 .permitAll()
                 .anyRequest().authenticated()
                 .and()
