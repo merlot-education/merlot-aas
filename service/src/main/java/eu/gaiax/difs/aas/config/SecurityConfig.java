@@ -22,6 +22,8 @@ package eu.gaiax.difs.aas.config;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
+import eu.gaiax.difs.aas.service.UserDetailService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -36,19 +38,36 @@ import eu.gaiax.difs.aas.service.SsiJwtCustomizer;
 /**
  * The Spring Security config.
  */
-@EnableWebSecurity //(debug = true)
+@EnableWebSecurity
 public class SecurityConfig {
+
+    private final String[] ANT_MATCHERS = {
+            "/api/**",
+            "/swagger-ui/**",
+            "/login",
+            "/error",
+            "/actuator",
+            "/actuator/**",
+            "/**/*.{js,html,css}",
+            // "/oauth2/**",
+            "/.well-known/**",
+            "/ssi/**",
+            "/clients/**"
+    };
+
+    private final UserDetailService userDetailService;
+
+    @Autowired
+    public SecurityConfig(UserDetailService userDetailService) {
+        this.userDetailService = userDetailService;
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf().disable()
                 .cors().disable()
                 .authorizeRequests()
-                .antMatchers("/api/**", "/swagger-ui/**", "/login", "/error",
-                        "/actuator", "/actuator/**", "/**/*.{js,html,css}",
-                        //"/oauth2/**", 
-                        "/.well-known/**",
-                        "/ssi/**", "/clients/**")
+                .antMatchers(ANT_MATCHERS)
                 .permitAll()
                 .anyRequest().authenticated()
                 .and()
@@ -63,7 +82,7 @@ public class SecurityConfig {
 
     @Bean
     public OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer() {
-        return new SsiJwtCustomizer();
+        return new SsiJwtCustomizer(userDetailService);
     }
 
 }

@@ -68,8 +68,10 @@ public class AuthorizationServerConfig {
     
     @Value("${aas.iam.client-id}")
     private String clientId;
+
     @Value("${aas.iam.client-secret}")
     private String clientSecret;
+
     @Value("${aas.iam.redirect-uri}")
     private String redirectUri;
     
@@ -170,5 +172,3 @@ public class AuthorizationServerConfig {
     }
 
 }
-
-

@@ -19,8 +19,8 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
         if ("GetLoginProofInvitation".equals(policyName) || "GetIatProofInvitation".equals(policyName)) {
             map.put("requestId", UUID.randomUUID().toString());
         }
-        if ("GetIatProofResult".equals(policyName)) {
-            map.put("status", "accepted");
+        if ("GetLoginProofResult".equals(policyName)) {
+            map.put("sub", bodyParams.get("requestId"));
         }
         return map;
     }
