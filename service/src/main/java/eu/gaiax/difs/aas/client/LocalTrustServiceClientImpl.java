@@ -20,7 +20,10 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
             map.put("requestId", UUID.randomUUID().toString());
         }
         if ("GetLoginProofResult".equals(policyName)) {
-            map.put("sub", bodyParams.get("requestId"));
+            String requestId = (String) bodyParams.get("requestId");
+            map.put("sub", requestId);
+            map.put("email", requestId + "@oidc.ssi");
+            map.put("name", requestId);
         }
         return map;
     }

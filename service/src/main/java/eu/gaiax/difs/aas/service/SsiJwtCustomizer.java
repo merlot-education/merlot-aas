@@ -2,6 +2,7 @@ package eu.gaiax.difs.aas.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.server.authorization.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenCustomizer;
 
@@ -12,11 +13,8 @@ public class SsiJwtCustomizer implements OAuth2TokenCustomizer<JwtEncodingContex
 
     private static final Logger log = LoggerFactory.getLogger(SsiJwtCustomizer.class);
 
-    private final UserDetailService userDetailService;
-
-    public SsiJwtCustomizer(UserDetailService userDetailService) {
-        this.userDetailService = userDetailService;
-    }
+    @Autowired
+    private  SsiUserService ssiUserService;
 
     @Override
     public void customize(JwtEncodingContext context) {
@@ -25,13 +23,8 @@ public class SsiJwtCustomizer implements OAuth2TokenCustomizer<JwtEncodingContex
         String requestId = getRequestId(context);
 
         if ("id_token".equals(context.getTokenType().getValue())) {
-            Map<String, Object> userDetails = userDetailService.getUserClaims(requestId);
-
-            context.getClaims().claims(claims -> {
-                claims.put("email", requestId + "@oidc.ssi");
-                claims.put("name", requestId);
-                claims.putAll(userDetails);
-            });
+            Map<String, Object> userDetails = ssiUserService.getUserClaims(requestId);
+            context.getClaims().claims(claims -> claims.putAll(userDetails));
         }
 
         log.debug("customize.exit; got subject: {}", requestId);

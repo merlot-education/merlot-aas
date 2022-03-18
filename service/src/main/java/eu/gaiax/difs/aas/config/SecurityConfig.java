@@ -22,8 +22,6 @@ package eu.gaiax.difs.aas.config;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
-import eu.gaiax.difs.aas.service.UserDetailService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -38,7 +36,7 @@ import eu.gaiax.difs.aas.service.SsiJwtCustomizer;
 /**
  * The Spring Security config.
  */
-@EnableWebSecurity
+@EnableWebSecurity //(debug = true)
 public class SecurityConfig {
 
     private final String[] ANT_MATCHERS = {
@@ -54,13 +52,6 @@ public class SecurityConfig {
             "/ssi/**",
             "/clients/**"
     };
-
-    private final UserDetailService userDetailService;
-
-    @Autowired
-    public SecurityConfig(UserDetailService userDetailService) {
-        this.userDetailService = userDetailService;
-    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -82,7 +73,7 @@ public class SecurityConfig {
 
     @Bean
     public OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer() {
-        return new SsiJwtCustomizer(userDetailService);
+        return new SsiJwtCustomizer();
     }
 
 }

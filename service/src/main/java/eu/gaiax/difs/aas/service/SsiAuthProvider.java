@@ -35,7 +35,7 @@ public class SsiAuthProvider implements AuthenticationProvider {
     @Override
     public boolean supports(Class<?> authentication) {
         log.debug("supports.enter; got authentication: {}", authentication);
-        return true; // TODO: authentication.equals(ExternalServiceAuthenticationToken.class);
+        return authentication.equals(UsernamePasswordAuthenticationToken.class);
     }
 
 }
