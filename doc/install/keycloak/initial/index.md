@@ -13,7 +13,7 @@ Keycloak (https://www.keycloak.org/) was chosen as an IAM Platform for our servi
 - move mouse pointer to the top-left corner under the Master realm and hit the appeared Add realm button:
 - ![Keycloak Admin console](./images/image2022-2-7_15-23-15.png "Keycloak Admin console")
 - set gaia-x name for the new realm and hit Create button
-- ![Keycloak Admin console](./images/image2022-2-7_15-27-27.png "Keycloak Admin console")
+- ![Keycloak Admin console](./images/image2022-2-7_15-27-28.png "Keycloak Admin console")
 - now go to the Client Registration tab in the realm settings and press Create button in the top-right corner:
 - ![Keycloak Admin console](./images/image2022-2-7_15-46-41.png "Keycloak Admin console")
 - set Count to 1000000 and hit Save button, then copy and store the generated IAT
