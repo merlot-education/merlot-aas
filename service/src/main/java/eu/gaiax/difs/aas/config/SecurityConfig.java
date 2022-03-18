@@ -39,16 +39,26 @@ import eu.gaiax.difs.aas.service.SsiJwtCustomizer;
 @EnableWebSecurity //(debug = true)
 public class SecurityConfig {
 
+    private final String[] ANT_MATCHERS = {
+            "/api/**",
+            "/swagger-ui/**",
+            "/login",
+            "/error",
+            "/actuator",
+            "/actuator/**",
+            "/**/*.{js,html,css}",
+            // "/oauth2/**",
+            "/.well-known/**",
+            "/ssi/**",
+            "/clients/**"
+    };
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf().disable()
                 .cors().disable()
                 .authorizeRequests()
-                .antMatchers("/api/**", "/swagger-ui/**", "/login", "/error",
-                        "/actuator", "/actuator/**", "/**/*.{js,html,css}",
-                        //"/oauth2/**", 
-                        "/.well-known/**",
-                        "/ssi/**", "/clients/**")
+                .antMatchers(ANT_MATCHERS)
                 .permitAll()
                 .anyRequest().authenticated()
                 .and()

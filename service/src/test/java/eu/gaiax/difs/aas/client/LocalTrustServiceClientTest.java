@@ -37,10 +37,10 @@ public class LocalTrustServiceClientTest {
     void evaluateLoginProofResult() {
         Map<String, Object> expectedResponse = localTrustServiceClientProperties.getPolicyMocks().get("GetLoginProofResult");
 
-        Map<String, Object> response = localTrustServiceClient.evaluate("GetLoginProofResult", Collections.emptyMap());
+        Map<String, Object> response = localTrustServiceClient.evaluate("GetLoginProofResult", Map.of("requestId", "testRequestId"));
 
         assertEquals(expectedResponse.get("iss"), response.get("iss"));
-        assertEquals(expectedResponse.get("sub"), response.get("sub"));
+        assertEquals("testRequestId", response.get("sub"));
         assertEquals(expectedResponse.get("claim1"), response.get("claim1"));
     }
 

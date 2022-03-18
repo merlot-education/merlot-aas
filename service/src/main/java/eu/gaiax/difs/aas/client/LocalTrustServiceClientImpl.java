@@ -8,6 +8,8 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import static eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto.ACCEPTED;
+
 public class LocalTrustServiceClientImpl implements TrustServiceClient {
 
     @Autowired
@@ -16,12 +18,22 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
     @Override
     public Map<String, Object> evaluate(String policyName, Map<String, Object> bodyParams) {
         Map<String, Object> map = new HashMap<>(Map.copyOf(config.getPolicyMocks().get(policyName)));
+
         if ("GetLoginProofInvitation".equals(policyName) || "GetIatProofInvitation".equals(policyName)) {
             map.put("requestId", UUID.randomUUID().toString());
         }
-        if ("GetIatProofResult".equals(policyName)) {
-            map.put("status", "accepted");
+
+        if ("GetLoginProofResult".equals(policyName)) {
+            String requestId = (String) bodyParams.get("requestId");
+            map.put("sub", requestId);
+            map.put("email", requestId + "@oidc.ssi");
+            map.put("name", requestId);
         }
+
+        if ("GetLoginProofResult".equals(policyName) || "GetIatProofResult".equals(policyName)) {
+            map.put("status", ACCEPTED);
+        }
+
         return map;
     }
 }
