@@ -1,6 +1,7 @@
 package eu.gaiax.difs.aas.service;
 
 import eu.gaiax.difs.aas.client.TrustServiceClient;
+import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,13 +49,13 @@ public class SsiUserService implements UserDetailsService {
                     "GetLoginProofResult",
                     Collections.singletonMap("requestId", requestId));
 
-            switch ((String) evaluation.get("status")) {
-                case "accepted":
+            switch ((AccessRequestStatusDto) evaluation.get("status")) {
+                case ACCEPTED:
                     return evaluation;
-                case "pending":
+                case PENDING:
                     delayNextRequest();
                     break;
-                case "timeout":
+                case TIMED_OUT:
                     throw new OAuth2AuthenticationException("Exception during call evaluate of TrustServiceClient");
             }
         }

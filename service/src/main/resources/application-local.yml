@@ -5,14 +5,12 @@ application:
         requestId: to-be-overwritten
         link: test-link
       GetLoginProofResult:
-        status: accepted
         iss: test-iss
         sub: to-be-overwritten
         claim1: test-claim1
       GetIatProofInvitation:
         requestId: to-be-overwritten
       GetIatProofResult:
-        status: accepted
         iss: test-iss
         sub: test-sub
         claim1: test-claim1
