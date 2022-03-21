@@ -8,12 +8,14 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import static eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto.ACCEPTED;
+import static eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto.*;
 
 public class LocalTrustServiceClientImpl implements TrustServiceClient {
 
     @Autowired
     private LocalTrustServiceClientProperties config;
+
+    private int sendAcceptedStatusCountdown = 1;
 
     @Override
     public Map<String, Object> evaluate(String policyName, Map<String, Object> bodyParams) {
@@ -31,7 +33,12 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
         }
 
         if ("GetLoginProofResult".equals(policyName) || "GetIatProofResult".equals(policyName)) {
-            map.put("status", ACCEPTED);
+            if (sendAcceptedStatusCountdown-- > 0) {
+                map.put("status", PENDING);
+            } else {
+                map.put("status", ACCEPTED);
+                sendAcceptedStatusCountdown = 1;
+            }
         }
 
         return map;

@@ -32,6 +32,7 @@ aas:
     version: 1.0
     action: evaluate
     delay: 500 # in milliseconds
+    duration: 5000 # in milliseconds
   iam:
     base-uri: http://key-server:8080
     client-registration-uri: /auth/realms/gaia-x/clients-registrations/openid-connect
