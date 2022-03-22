@@ -14,7 +14,6 @@ services:
     restart: unless-stopped
 
     volumes:
-#      - "../keycloak/themes:/opt/keycloak/themes"
       - "../keycloak/providers:/opt/keycloak/providers"
       - "../keycloak/realms/import:/tmp/import"
 
