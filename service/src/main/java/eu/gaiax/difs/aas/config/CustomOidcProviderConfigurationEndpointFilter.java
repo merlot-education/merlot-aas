@@ -112,16 +112,11 @@ public final class CustomOidcProviderConfigurationEndpointFilter extends OncePer
     }
 
     private Consumer<List<String>> authGrantTypes() {
-        return (authorizationGrantTypes) -> {
-            authorizationGrantTypes.add(AuthorizationGrantType.AUTHORIZATION_CODE.getValue());
-            authorizationGrantTypes.add(AuthorizationGrantType.IMPLICIT.getValue());
-        };
+        return (authorizationGrantTypes) -> authorizationGrantTypes.add(AuthorizationGrantType.AUTHORIZATION_CODE.getValue());
     }
 
     private Consumer<List<String>> authResponseTypes() {
-        return (authResponseTypes) -> {
-            authResponseTypes.add(OAuth2AuthorizationResponseType.CODE.getValue());
-        };
+        return (authResponseTypes) -> authResponseTypes.add(OAuth2AuthorizationResponseType.CODE.getValue());
     }
 
     private Consumer<List<String>> signingAlgorithms() {

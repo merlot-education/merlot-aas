@@ -13,9 +13,12 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalTime;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import static java.time.temporal.ChronoUnit.MILLIS;
 
 @Service
 public class SsiUserService implements UserDetailsService {
@@ -27,6 +30,9 @@ public class SsiUserService implements UserDetailsService {
 
     @Value("${aas.tsa.delay}")
     private long millisecondsToDelay;
+
+    @Value("${aas.tsa.duration}")
+    private long requestingDuration;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -44,10 +50,18 @@ public class SsiUserService implements UserDetailsService {
     }
 
     public Map<String, Object> getUserClaims(String requestId) {
-        while (true) {
+        LocalTime requestingStart = LocalTime.now();
+        LocalTime durationRestriction = requestingStart.plusNanos(1_000_000 * requestingDuration);
+
+        while (LocalTime.now().isBefore(durationRestriction)) {
             Map<String, Object> evaluation = trustServiceClient.evaluate(
                     "GetLoginProofResult",
                     Collections.singletonMap("requestId", requestId));
+
+            if (evaluation.get("status") == null || !(evaluation.get("status") instanceof AccessRequestStatusDto)) {
+                log.error("Exception during call Evaluate of TrustServiceClient, response status is not specified: {}", evaluation.get("status"));
+                throw new OAuth2AuthenticationException("Exception during call Evaluate of TrustServiceClient");
+            }
 
             switch ((AccessRequestStatusDto) evaluation.get("status")) {
                 case ACCEPTED:
@@ -55,10 +69,15 @@ public class SsiUserService implements UserDetailsService {
                 case PENDING:
                     delayNextRequest();
                     break;
+                case REJECTED:
                 case TIMED_OUT:
-                    throw new OAuth2AuthenticationException("Exception during call evaluate of TrustServiceClient");
+                    log.error("Exception during call Evaluate of TrustServiceClient, response status: {}", evaluation.get("status"));
+                    throw new OAuth2AuthenticationException("Exception during call Evaluate of TrustServiceClient");
             }
         }
+
+        log.error("Time for calling TrustServiceClient expired, time spent: {} ms", requestingStart.until(LocalTime.now(), MILLIS));
+        throw new OAuth2AuthenticationException("Time for calling TrustServiceClient expired");
     }
 
     private void delayNextRequest() {
