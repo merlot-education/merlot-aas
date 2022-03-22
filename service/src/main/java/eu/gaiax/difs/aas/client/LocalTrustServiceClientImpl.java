@@ -15,6 +15,7 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
     @Autowired
     private LocalTrustServiceClientProperties config;
 
+    // TODO: replace with <requestId, count> map for multi-threaded tests
     private int sendAcceptedStatusCountdown = 1;
 
     @Override

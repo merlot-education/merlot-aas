@@ -18,6 +18,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static java.time.temporal.ChronoUnit.MILLIS;
+
 @Service
 public class SsiUserService implements UserDetailsService {
 
@@ -48,7 +50,8 @@ public class SsiUserService implements UserDetailsService {
     }
 
     public Map<String, Object> getUserClaims(String requestId) {
-        LocalTime durationRestriction = LocalTime.now().plusNanos(1_000_000 * requestingDuration);
+        LocalTime requestingStart = LocalTime.now();
+        LocalTime durationRestriction = requestingStart.plusNanos(1_000_000 * requestingDuration);
 
         while (LocalTime.now().isBefore(durationRestriction)) {
             Map<String, Object> evaluation = trustServiceClient.evaluate(
@@ -56,10 +59,9 @@ public class SsiUserService implements UserDetailsService {
                     Collections.singletonMap("requestId", requestId));
 
             if (evaluation.get("status") == null || !(evaluation.get("status") instanceof AccessRequestStatusDto)) {
-                log.error("Exception during call Evaluate of TrustServiceClient, response status is not specified");
+                log.error("Exception during call Evaluate of TrustServiceClient, response status is not specified: {}", evaluation.get("status"));
                 throw new OAuth2AuthenticationException("Exception during call Evaluate of TrustServiceClient");
             }
-
 
             switch ((AccessRequestStatusDto) evaluation.get("status")) {
                 case ACCEPTED:
@@ -74,7 +76,7 @@ public class SsiUserService implements UserDetailsService {
             }
         }
 
-        log.error("Time for calling TrustServiceClient expired");
+        log.error("Time for calling TrustServiceClient expired, time spent: {} ms", requestingStart.until(LocalTime.now(), MILLIS));
         throw new OAuth2AuthenticationException("Time for calling TrustServiceClient expired");
     }
 
