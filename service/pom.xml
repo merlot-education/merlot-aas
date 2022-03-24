@@ -208,7 +208,20 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.2.2</version>
+                <configuration>
+                    <includes>
+                        <include>src/**</include>
+                        <include>target/classes/**</include>
+                        <include>target/generated-sources/**</include>
+                    </includes>
+                </configuration>
+            </plugin>
         </plugins>
+
     </build>
 
 </project>

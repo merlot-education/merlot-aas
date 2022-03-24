@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+
+  ass-1:
+    container_name: "ASS-1"
+    build:
+      context: ../service
+      dockerfile: Dockerfile
+    ports:
+      - "9000:9000"
+    restart: unless-stopped
+
+  ass-2:
+    container_name: "ASS-2"
+    build:
+      context: ../service
+      dockerfile: Dockerfile
+    ports:
+      - "9001:9001"
+    restart: unless-stopped
+
+  demo-1:
+    container_name: "Demo-1"
+    build:
+      context: ../app
+      dockerfile: Dockerfile
+    ports:
+      - "8990:8990"
+    restart: unless-stopped
+
+  demo-2:
+    container_name: "Demo-2"
+    build:
+      context: ../app
+      dockerfile: Dockerfile
+    ports:
+      - "8991:8991"
+    restart: unless-stopped
+
+
+  keycloak:
+    container_name: "keycloak"
+    environment:
+      KEYCLOAK_ADMIN: "${KEYCLOAK_ADMIN}"
+      KEYCLOAK_ADMIN_PASSWORD: "${KEYCLOAK_ADMIN_PASSWORD}"
+
+    image: "quay.io/keycloak/keycloak:${KEYCLOAK_VERSION}"
+    ports:
+        - "8080:8080"
+    extra_hosts:
+      - "auth-server:host-gateway"
+    restart: unless-stopped
+
+    volumes:
+      - "../keycloak/src/main/resources/providers:/opt/keycloak/providers"
+      - "../keycloak/src/main/resources/realms/import:/tmp/import"
+
+    command:
+
+      [
+          'start-dev --auto-build',
+          '-Dkeycloak.migration.action=import',
+          '-Dkeycloak.migration.provider=dir',
+          '-Dkeycloak.migration.dir=/tmp/import',
+          '-Dkeycloak.migration.strategy=OVERWRITE_EXISTING',
+      ]
