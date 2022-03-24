@@ -2,17 +2,18 @@ version: '3.8'
 
 services:
 
-  ass-1:
-    container_name: "ASS-1"
+  aas-1:
+    container_name: "AAS-1"
     build:
       context: ../service
       dockerfile: Dockerfile
+
     ports:
       - "9000:9000"
     restart: unless-stopped
 
-  ass-2:
-    container_name: "ASS-2"
+  aas-2:
+    container_name: "AAS-2"
     build:
       context: ../service
       dockerfile: Dockerfile
