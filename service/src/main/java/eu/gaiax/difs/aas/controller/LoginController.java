@@ -2,10 +2,9 @@ package eu.gaiax.difs.aas.controller;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.web.savedrequest.DefaultSavedRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,15 +19,22 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/ssi")
 public class LoginController {
 
-    private final static Logger log = LoggerFactory.getLogger(LoginController.class);
-
     private final SsiBrokerService ssiBrokerService;
 
     @GetMapping(value = "/login")
     public String login(HttpServletRequest request, Model model) {
 
-        log.debug("login; got params: {}", request.getParameterMap().size());
-
+        DefaultSavedRequest auth = (DefaultSavedRequest) request.getSession().getAttribute("SPRING_SECURITY_SAVED_REQUEST");
+        model.addAttribute("scope", auth.getParameterValues("scope"));
+        String[] age = auth.getParameterValues("not_older_than");
+        if (age != null && age.length > 0) {
+            model.addAttribute("not_older_than", age[0]);
+        }
+        age = auth.getParameterValues("max_age");
+        if (age != null && age.length > 0) {
+            model.addAttribute("max_age", age[0]);
+        }
+        
         return ssiBrokerService.authorize(model);
     }
 
