@@ -2,12 +2,18 @@ package eu.gaiax.difs.aas.service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.UUID;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import javax.imageio.ImageIO;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
 
@@ -18,10 +24,7 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 
 import eu.gaiax.difs.aas.client.TrustServiceClient;
-import eu.gaiax.difs.aas.generated.model.AccessRequestDto;
-import eu.gaiax.difs.aas.generated.model.AccessResponseDto;
-import eu.gaiax.difs.aas.generated.model.ServiceAccessScopeDto;
-import eu.gaiax.difs.aas.mapper.AccessRequestMapper;
+import io.netty.handler.codec.base64.Base64Encoder;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -31,55 +34,64 @@ public class SsiBrokerService {
     private final static Logger log = LoggerFactory.getLogger(SsiBrokerService.class);
 
     private final TrustServiceClient trustServiceClient;
-    private final AccessRequestMapper accessRequestMapper;
 
     public String authorize(Model model) {
-        AccessRequestDto accessRequestDto = new AccessRequestDto()
-                .subject(generateRequestId())
-                .entity(new ServiceAccessScopeDto()); //todo
+        log.debug("authorize.enter; got model: {}", model);
+        
+        Map<String, Object> params = new HashMap<>();
+        params.put("namespace", "Login");
 
-        AccessResponseDto accessResponseDto = evaluateLogin(accessRequestDto);
-
-        //todo missing link as in https://seu30.gdc-leinf01.t-systems.com/confluence/pages/viewpage.action?pageId=286628681 maybe accessResponseDto.getPolicyEvaluationResult()
-        return getQrPage(accessResponseDto.getRequestId(), model);
-    }
-
-    private String generateRequestId() {
-        return UUID.randomUUID().toString();
-    }
-
-    private String getQrPage(String requestId, Model model) {
-        String qrUrl = "/ssi/qr/" + requestId + "/";
+        Set<String> scopes = new HashSet<>();
+        scopes.add("openid");
+        Object o = model.getAttribute("scope");
+        if (o != null) {
+            String[] sa = (String[]) o;
+            scopes.addAll(Arrays.asList(sa));
+        }
+        params.put("scope", scopes);
+        
+        // they can be provided in re-login scenario..
+        o = model.getAttribute("not_older_than");
+        if (o != null) {
+            params.put("not_older_than", o);
+        }
+        o = model.getAttribute("max_age");
+        if (o != null) {
+            params.put("max_age", o);
+        }
+        
+        Map<String, Object> result = trustServiceClient.evaluate("GetLoginProofInvitation", params);
+        String link = (String) result.get("link");
+        String requestId = (String) result.get("requestId");
+        
+        // encode link otherwise it'll not pass security check
+        String qrUrl = "/ssi/qr/" + Base64.getUrlEncoder().encodeToString(link.getBytes()); 
         model.addAttribute("qrUrl", qrUrl);
         model.addAttribute("requestId", requestId);
-
+        
+        log.debug("authorize.exit; returning model: {}", model);
         return "login-template.html";
     }
 
-    public byte[] getQR(String qrid) {
+    public byte[] getQR(String elink) {
+        // the incoming link is encoded, we must decode it first
+        log.debug("getQR.enter; got elink: {}", elink);
+        String link = new String(Base64.getUrlDecoder().decode(elink));
         QRCodeWriter barcodeWriter = new QRCodeWriter();
         BitMatrix bitMatrix = null;
         try {
-            bitMatrix = barcodeWriter.encode(qrid, BarcodeFormat.QR_CODE, 200, 200);
+            bitMatrix = barcodeWriter.encode(link, BarcodeFormat.QR_CODE, 200, 200);
         } catch (WriterException e) {
-            e.printStackTrace();
-            log.error("QR data generation failed: " + e);
+            log.error("getQR.error; QR data generation failed", e);
         }
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
             ImageIO.write(MatrixToImageWriter.toBufferedImage(bitMatrix), "png", baos);
         } catch (IOException e) {
-            e.printStackTrace();
-            log.error("Failed to generate image from QR data: " + e);
+            log.error("getQR.error; Failed to generate image from QR data", e);
         }
+        log.debug("getQR.exit; returning image for link: {}", link);
         return baos.toByteArray();
-    }
-
-    private AccessResponseDto evaluateLogin(AccessRequestDto accessRequestDto) {
-        return accessRequestMapper.mapTologinAccessResponse(
-                trustServiceClient.evaluate(
-                        "GetLoginProofInvitation",
-                        accessRequestMapper.loginRequestToMap(accessRequestDto)));
     }
 
 }

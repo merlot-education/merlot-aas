@@ -21,7 +21,7 @@ public class RestTrustServiceClientImpl implements TrustServiceClient {
     private String repo;
     @Value("${aas.tsa.group}")
     private String group;
-    @Value("${aas.tsa.repo}")
+    @Value("${aas.tsa.version}")
     private String version;
     @Value("${aas.tsa.action}")
     private String action;

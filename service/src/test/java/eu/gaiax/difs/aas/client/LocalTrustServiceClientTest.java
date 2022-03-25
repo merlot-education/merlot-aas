@@ -1,6 +1,5 @@
 package eu.gaiax.difs.aas.client;
 
-import eu.gaiax.difs.aas.properties.LocalTrustServiceClientProperties;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,28 +19,21 @@ public class LocalTrustServiceClientTest {
     @Autowired
     private LocalTrustServiceClientImpl localTrustServiceClient;
 
-    @Autowired
-    private LocalTrustServiceClientProperties localTrustServiceClientProperties;
-
     @Test
     void evaluateLoginProofInvitation() {
-        Map<String, Object> expectedResponse = localTrustServiceClientProperties.getPolicyMocks().get("GetLoginProofInvitation");
-
         Map<String, Object> response = localTrustServiceClient.evaluate("GetLoginProofInvitation", Collections.emptyMap());
 
         assertNotNull(response.get("requestId"));
-        assertEquals(expectedResponse.get("link"), response.get("link"));
+        assertNotNull(response.get("link"));
     }
 
     @Test
     void evaluateLoginProofResult() {
-        Map<String, Object> expectedResponse = localTrustServiceClientProperties.getPolicyMocks().get("GetLoginProofResult");
-
         Map<String, Object> response = localTrustServiceClient.evaluate("GetLoginProofResult", Map.of("requestId", "testRequestId"));
 
-        assertEquals(expectedResponse.get("iss"), response.get("iss"));
+        assertEquals("test-iss", response.get("iss"));
         assertEquals("testRequestId", response.get("sub"));
-        assertEquals(expectedResponse.get("claim1"), response.get("claim1"));
+        assertEquals("test-claim1", response.get("claim1"));
     }
 
     @Test
@@ -53,13 +45,11 @@ public class LocalTrustServiceClientTest {
 
     @Test
     void evaluateIatProofResult() {
-        Map<String, Object> expectedResponse = localTrustServiceClientProperties.getPolicyMocks().get("GetIatProofResult");
+        Map<String, Object> response = localTrustServiceClient.evaluate("GetIatProofResult", Map.of("requestId", "testRequestId"));
 
-        Map<String, Object> response = localTrustServiceClient.evaluate("GetIatProofResult", Collections.emptyMap());
-
-        assertEquals(expectedResponse.get("iss"), response.get("iss"));
-        assertEquals(expectedResponse.get("sub"), response.get("sub"));
-        assertEquals(expectedResponse.get("claim1"), response.get("claim1"));
+        assertEquals("test-iss", response.get("iss"));
+        assertEquals("testRequestId", response.get("sub"));
+        assertEquals("test-claim1", response.get("claim1"));
     }
 
     @Test
@@ -70,6 +60,7 @@ public class LocalTrustServiceClientTest {
 
         assertNotNull(firstResponse.get("requestId"));
         assertNotNull(secondResponse.get("requestId"));
+        assertNotEquals(firstResponse.get("link"), secondResponse.get("link"));
         assertNotEquals(firstResponse.get("requestId"), secondResponse.get("requestId"));
     }
 
