@@ -2,15 +2,6 @@ version: '3.8'
 
 services:
 
-#  haproxy:
-#    container_name: "load-balancer"
-#    image: "haproxy"
-#    ports:
-#      - "8404:8404"
-#    networks:
-#      - "gaia-x"
-
-
   aas-1.0.0:
     container_name: "AAS-1.0.0"
     build:
