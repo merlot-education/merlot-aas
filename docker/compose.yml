@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+
+  aas-1.0.0:
+    container_name: "AAS-1.0.0"
+    build:
+      context: ../service
+      dockerfile: Dockerfile
+    environment:
+      - "SPRING_PROFILES_ACTIVE=${PROFILES_AAS_1}"
+    ports:
+      - "9000:9000"
+    networks:
+      - "gaia-x"
+    restart: unless-stopped
+
+
+  aas-2.0.0:
+    container_name: "AAS-2.0.0"
+    build:
+      context: ../service
+      dockerfile: Dockerfile
+    environment:
+      - "SPRING_PROFILES_ACTIVE=${PROFILES_AAS_2}"
+    ports:
+      - "9009:9009"
+    networks:
+      - "gaia-x"
+    restart: unless-stopped
+
+  demo-1:
+    container_name: "Demo-1"
+    build:
+      context: ../app
+      dockerfile: Dockerfile
+    ports:
+      - "8990:8990"
+    networks:
+      - "gaia-x"
+    restart: unless-stopped
+
+  demo-2:
+    container_name: "Demo-2"
+    build:
+      context: ../app
+      dockerfile: Dockerfile
+    ports:
+      - "8999:8999"
+    networks:
+      - "gaia-x"
+    restart: unless-stopped
+
+
+  keycloak:
+    container_name: "key-server"
+    environment:
+      KEYCLOAK_ADMIN: "${KEYCLOAK_ADMIN}"
+      KEYCLOAK_ADMIN_PASSWORD: "${KEYCLOAK_ADMIN_PASSWORD}"
+
+    image: "quay.io/keycloak/keycloak:${KEYCLOAK_VERSION}"
+    ports:
+      - "8080:8080"
+    extra_hosts:
+      - "auth-server:host-gateway"
+    networks:
+      - "gaia-x"
+    restart: unless-stopped
+
+    volumes:
+      - "../keycloak/src/main/resources/providers:/opt/keycloak/providers"
+      - "../keycloak/src/main/resources/realms/import:/tmp/import"
+
+    command:
+      [
+          'start-dev --auto-build',
+          '-Dkeycloak.migration.action=import',
+          '-Dkeycloak.migration.provider=dir',
+          '-Dkeycloak.migration.dir=/tmp/import',
+          '-Dkeycloak.migration.strategy=OVERWRITE_EXISTING',
+      ]
+
+networks:
+  gaia-x:
+    driver: "bridge"
