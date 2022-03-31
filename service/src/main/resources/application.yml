@@ -1,4 +1,5 @@
 server:
+  host: localhost
   port: 8090
 
 spring:
@@ -10,9 +11,9 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://auth-server:8090
-          jwk-set-uri: http://auth-server:8090/oauth2/jwks
-
+          issuer-uri: http://${server.host}:${server.port}
+          jwk-set-uri: http://${server.host}:${server.port}/oauth2/jwks
+          
 management:
   endpoints:
     web:
