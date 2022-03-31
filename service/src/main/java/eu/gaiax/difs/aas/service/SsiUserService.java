@@ -65,7 +65,8 @@ public class SsiUserService implements UserDetailsService {
 
             switch ((AccessRequestStatusDto) evaluation.get("status")) {
                 case ACCEPTED:
-                    return evaluation;
+                    throw new OAuth2AuthenticationException("Test");
+//                    return evaluation;
                 case PENDING:
                     delayNextRequest();
                     break;

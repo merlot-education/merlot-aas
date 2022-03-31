@@ -1,9 +1,12 @@
 package eu.gaiax.difs.aas.controller;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.WebAttributes;
 import org.springframework.security.web.savedrequest.DefaultSavedRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -43,6 +46,21 @@ public class LoginController {
 
         return ResponseEntity.ok(ssiBrokerService.getQR(qrid));
 
+    }
+
+    @GetMapping("/login-error")
+    public String loginError(HttpServletRequest request, Model model) {
+        HttpSession session = request.getSession(false);
+        String errorMessage = null;
+        if (session != null) {
+            AuthenticationException ex = (AuthenticationException) session
+                    .getAttribute(WebAttributes.AUTHENTICATION_EXCEPTION);
+            if (ex != null) {
+                errorMessage = ex.getMessage();
+            }
+        }
+        model.addAttribute("errorMessage", errorMessage);
+        return "login";
     }
 
 }

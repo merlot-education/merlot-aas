@@ -48,6 +48,7 @@ import org.springframework.security.oauth2.server.authorization.oidc.web.OidcUse
 import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import com.nimbusds.jose.jwk.JWKSet;
@@ -83,11 +84,20 @@ public class AuthorizationServerConfig {
         //http.addFilterBefore(new BearerTokenAuthenticationFilter(authenticationManager()), AnonymousAuthenticationFilter.class);
         http.formLogin()
                 .loginPage("/ssi/login")
+//                .failureUrl("/login-error")
+//                .failureHandler(authenticationFailureHandler())
                 .and()
                 .oauth2ResourceServer()
                 .jwt();
         return http.build();
     }
+
+//    @Bean
+//    public AuthenticationFailureHandler authenticationFailureHandler() {
+//        CustomAuthenticationFailureHandler customAuthenticationFailureHandler = new CustomAuthenticationFailureHandler();
+//        customAuthenticationFailureHandler.setDefaultFailureUrl("/ssi/login");
+//        return customAuthenticationFailureHandler;
+//    }
     
     private void applySecurity(HttpSecurity http) throws Exception {
         OAuth2AuthorizationServerConfigurer<HttpSecurity> authorizationServerConfigurer =

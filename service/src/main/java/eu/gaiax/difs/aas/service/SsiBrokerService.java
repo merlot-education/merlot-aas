@@ -24,7 +24,6 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 
 import eu.gaiax.difs.aas.client.TrustServiceClient;
-import io.netty.handler.codec.base64.Base64Encoder;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -68,6 +67,7 @@ public class SsiBrokerService {
         String qrUrl = "/ssi/qr/" + Base64.getUrlEncoder().encodeToString(link.getBytes()); 
         model.addAttribute("qrUrl", qrUrl);
         model.addAttribute("requestId", requestId);
+//        model.addAttribute("errorMessage", errorMessage);
         
         log.debug("authorize.exit; returning model: {}", model);
         return "login-template.html";

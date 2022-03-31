@@ -1,27 +1,21 @@
 server:
-  port: 8080
+  port: 9000
 
 spring:
   security:
     oauth2:
-      client:
-        clientId: aas-app
-        clientSecret: 1UnZxYv9h94LAZKQcyxdkS9Ua6ApdRUF
-        accessTokenUri: https://localhost:8080/login/oauth/access_token
-        userAuthorizationUri: https://localhost:8080/login/oauth/authorize
-
+      resourceserver:
+        jwt:
+          issuer-uri: http://auth-server:9000
+          jwk-set-uri: http://auth-server:9000/oauth2/jwks
 aas:
   tsa:
     url: http://trustservice/api
-    repo: aisbl
-    group: aisbl
-    version: 1.0
-    action: evaluate
   iam:
-    base-uri: http://localhost:8180
+    base-uri: http://key-server:8080
     client-registration-uri: /auth/realms/gaia-x/clients-registrations/openid-connect
     realm: gaia-x
     client-id: aas-app
-    client-iat: eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICI4Mzk4M2M0Mi02YWVmLTRlMmYtODA3MS02MjRjNDI0ZTc1NmYifQ.eyJleHAiOjAsImlhdCI6MTY0NDQwNTA0MSwianRpIjoiYzEzOTA4YjktMjI5MS00ZTg5LWJkMDgtZDA0ZTRjNDg5Y2MxIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MTgwL2F1dGgvcmVhbG1zL2dhaWEteCIsImF1ZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODE4MC9hdXRoL3JlYWxtcy9nYWlhLXgiLCJ0eXAiOiJJbml0aWFsQWNjZXNzVG9rZW4ifQ.hAm8NVSixxL96zr-2cNY-n1bjEAaCa_T4lDCNJRDPQk
+    client-iat: eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIyYTczZjczNi1hM2FjLTQ2MjAtYTBhZC0zZDQzMjQ3OTU0NGEifQ.eyJleHAiOjAsImlhdCI6MTY0ODA0MzQzNCwianRpIjoiYWJhNjFkMjgtMGZiOS00YTk0LWIwNGYtOGE3YmM0NDE5NTllIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgwL3JlYWxtcy9nYWlhLXgiLCJhdWQiOiJodHRwOi8vbG9jYWxob3N0OjgwODAvcmVhbG1zL2dhaWEteCIsInR5cCI6IkluaXRpYWxBY2Nlc3NUb2tlbiJ9.KWf9DSLKbExyhxKKxH7vkZaInl5MIed9ZhrxK93x5SU
     client-secret: "{noop}secret"
-    redirect-uri: http://localhost:8180/auth/realms/gaia-x/broker/ssi-oidc/endpoint
+    redirect-uri: http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint

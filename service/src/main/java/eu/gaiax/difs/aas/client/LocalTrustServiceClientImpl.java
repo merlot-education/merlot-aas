@@ -33,12 +33,12 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
             if (sendAcceptedStatusCountdown-- > 0) {
                 map.put("status", PENDING);
             } else {
-                map.put("status", ACCEPTED);
-                sendAcceptedStatusCountdown = 1;
-                if ("GetLoginProofResult".equals(policyName) ) {
-                    map.put("email", requestId + "@oidc.ssi");
-                    map.put("name", requestId);
-                }
+                map.put("status", PENDING);
+//                sendAcceptedStatusCountdown = 1;
+//                if ("GetLoginProofResult".equals(policyName) ) {
+//                    map.put("email", requestId + "@oidc.ssi");
+//                    map.put("name", requestId);
+//                }
             }
             map.put("sub", requestId);
             map.put("iss", "test-iss");
