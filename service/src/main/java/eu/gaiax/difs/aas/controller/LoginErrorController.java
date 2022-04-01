@@ -14,22 +14,23 @@ import javax.servlet.http.HttpSession;
 
 @Controller
 @RequiredArgsConstructor
+//@RequestMapping("/ssi")
 public class LoginErrorController implements ErrorController {
 
     private final SsiBrokerService ssiBrokerService;
 
-    @RequestMapping("/error")
-    public String loginError(HttpServletRequest request, Model model) {
-        HttpSession session = request.getSession(false);
-        String errorMessage = null;
-        if (session != null) {
-            OAuth2AuthenticationException ex = (OAuth2AuthenticationException) session
-                    .getAttribute(WebAttributes.AUTHENTICATION_EXCEPTION);
-            if (ex != null) {
-                errorMessage = ex.getError().getErrorCode();
-            }
-        }
-        model.addAttribute("errorMessage", errorMessage);
-        return ssiBrokerService.authorize(model);
-    }
+//    @RequestMapping("/error")
+//    public String loginError(HttpServletRequest request, Model model) {
+//        HttpSession session = request.getSession(false);
+//        String errorMessage = null;
+//        if (session != null) {
+//            OAuth2AuthenticationException ex = (OAuth2AuthenticationException) session
+//                    .getAttribute(WebAttributes.AUTHENTICATION_EXCEPTION);
+//            if (ex != null) {
+//                errorMessage = ex.getError().getErrorCode();
+//            }
+//        }
+//        model.addAttribute("errorMessage", errorMessage);
+//        return ssiBrokerService.authorize(model);
+//    }
 }
