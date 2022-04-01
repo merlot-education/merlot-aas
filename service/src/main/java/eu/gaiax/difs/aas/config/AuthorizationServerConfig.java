@@ -84,20 +84,11 @@ public class AuthorizationServerConfig {
         //http.addFilterBefore(new BearerTokenAuthenticationFilter(authenticationManager()), AnonymousAuthenticationFilter.class);
         http.formLogin()
                 .loginPage("/ssi/login")
-//                .failureUrl("/login-error")
-//                .failureHandler(authenticationFailureHandler())
                 .and()
                 .oauth2ResourceServer()
                 .jwt();
         return http.build();
     }
-
-//    @Bean
-//    public AuthenticationFailureHandler authenticationFailureHandler() {
-//        CustomAuthenticationFailureHandler customAuthenticationFailureHandler = new CustomAuthenticationFailureHandler();
-//        customAuthenticationFailureHandler.setDefaultFailureUrl("/ssi/login");
-//        return customAuthenticationFailureHandler;
-//    }
     
     private void applySecurity(HttpSecurity http) throws Exception {
         OAuth2AuthorizationServerConfigurer<HttpSecurity> authorizationServerConfigurer =

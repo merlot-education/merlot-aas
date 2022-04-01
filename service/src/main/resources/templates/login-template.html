@@ -13,7 +13,7 @@
 
 <body>
 <header>
-    <p class="error-message">${errorMessage}<p>
+    <p class="error-message" th:if= "${errorMessage != null}" th:text="${errorMessage}"><p>
     <svg class="logo-gaia-full" viewBox="0 0 156 86.8" xmlns="http://www.w3.org/2000/svg">
         <defs>
             <style type="text/css"> .st0 {
@@ -150,6 +150,7 @@
                                    type="button" value="Back to Standard Login"/></td>
                     </tr>
                 </table>
+                <input type="hidden"/>
             </form>
         </div>
     </div>

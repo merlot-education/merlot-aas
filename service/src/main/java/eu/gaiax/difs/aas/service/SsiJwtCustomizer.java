@@ -20,20 +20,12 @@ public class SsiJwtCustomizer implements OAuth2TokenCustomizer<JwtEncodingContex
     public void customize(JwtEncodingContext context) {
         log.debug("customize.enter; got context: {}", context);
 
-        String requestId = getRequestId(context);
-
         if ("id_token".equals(context.getTokenType().getValue())) {
-            Map<String, Object> userDetails = ssiUserService.getUserClaims(requestId);
+            Map<String, Object> userDetails = ssiUserService.getUserClaims();
             context.getClaims().claims(claims -> claims.putAll(userDetails));
         }
 
-        log.debug("customize.exit; got subject: {}", requestId);
-    }
-
-    private String getRequestId(JwtEncodingContext context) {
-        AtomicReference<String> requestId = new AtomicReference<>();
-        context.getClaims().claims(claims -> requestId.set((String) claims.get("sub")));
-        return requestId.get();
+        log.debug("customize.exit;");
     }
 
 }

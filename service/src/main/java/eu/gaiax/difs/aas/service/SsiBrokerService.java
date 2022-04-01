@@ -67,7 +67,6 @@ public class SsiBrokerService {
         String qrUrl = "/ssi/qr/" + Base64.getUrlEncoder().encodeToString(link.getBytes()); 
         model.addAttribute("qrUrl", qrUrl);
         model.addAttribute("requestId", requestId);
-//        model.addAttribute("errorMessage", errorMessage);
         
         log.debug("authorize.exit; returning model: {}", model);
         return "login-template.html";

@@ -1,38 +1,29 @@
 package eu.gaiax.difs.aas.service;
 
-import eu.gaiax.difs.aas.client.TrustServiceClient;
-import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalTime;
-import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import static java.time.temporal.ChronoUnit.MILLIS;
 
 @Service
 public class SsiUserService implements UserDetailsService {
 
     private static final Logger log = LoggerFactory.getLogger(SsiUserService.class);
 
-    @Autowired
-    private TrustServiceClient trustServiceClient;
+    private Map<String, Object> userClaims;
 
-    @Value("${aas.tsa.delay}")
-    private long millisecondsToDelay;
+    public Map<String, Object> getUserClaims() {
+        return userClaims;
+    }
 
-    @Value("${aas.tsa.duration}")
-    private long requestingDuration;
+    public void setUserClaims(Map<String, Object> userClaims) {
+        this.userClaims = userClaims;
+    }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -48,45 +39,4 @@ public class SsiUserService implements UserDetailsService {
         log.debug("loadUserByUserName.exit; returning: {}", ud);
         return ud;
     }
-
-    public Map<String, Object> getUserClaims(String requestId) {
-        LocalTime requestingStart = LocalTime.now();
-        LocalTime durationRestriction = requestingStart.plusNanos(1_000_000 * requestingDuration);
-
-        while (LocalTime.now().isBefore(durationRestriction)) {
-            Map<String, Object> evaluation = trustServiceClient.evaluate(
-                    "GetLoginProofResult",
-                    Collections.singletonMap("requestId", requestId));
-
-            if (evaluation.get("status") == null || !(evaluation.get("status") instanceof AccessRequestStatusDto)) {
-                log.error("Exception during call Evaluate of TrustServiceClient, response status is not specified: {}", evaluation.get("status"));
-                throw new OAuth2AuthenticationException("Exception during call Evaluate of TrustServiceClient");
-            }
-
-            switch ((AccessRequestStatusDto) evaluation.get("status")) {
-                case ACCEPTED:
-                    throw new OAuth2AuthenticationException("Test");
-//                    return evaluation;
-                case PENDING:
-                    delayNextRequest();
-                    break;
-                case REJECTED:
-                case TIMED_OUT:
-                    log.error("Exception during call Evaluate of TrustServiceClient, response status: {}", evaluation.get("status"));
-                    throw new OAuth2AuthenticationException("Exception during call Evaluate of TrustServiceClient");
-            }
-        }
-
-        log.error("Time for calling TrustServiceClient expired, time spent: {} ms", requestingStart.until(LocalTime.now(), MILLIS));
-        throw new OAuth2AuthenticationException("Time for calling TrustServiceClient expired");
-    }
-
-    private void delayNextRequest() {
-        try {
-            TimeUnit.MILLISECONDS.sleep(millisecondsToDelay);
-        } catch (InterruptedException ie) {
-            Thread.currentThread().interrupt();
-        }
-    }
-
 }
