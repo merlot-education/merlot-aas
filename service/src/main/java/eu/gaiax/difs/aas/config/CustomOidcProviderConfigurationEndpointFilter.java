@@ -95,12 +95,7 @@ public final class CustomOidcProviderConfigurationEndpointFilter extends OncePer
     }
 
     private Consumer<List<String>> clientAuthenticationMethods() {
-        return (authenticationMethods) -> {
-            authenticationMethods.add(ClientAuthenticationMethod.CLIENT_SECRET_BASIC.getValue());
-            authenticationMethods.add(ClientAuthenticationMethod.CLIENT_SECRET_POST.getValue());
-            authenticationMethods.add(ClientAuthenticationMethod.CLIENT_SECRET_JWT.getValue());
-            authenticationMethods.add(ClientAuthenticationMethod.PRIVATE_KEY_JWT.getValue());
-        };
+        return (authenticationMethods) -> authenticationMethods.add(ClientAuthenticationMethod.CLIENT_SECRET_BASIC.getValue());
     }
 
     private Consumer<List<String>> oidcScopes() {
@@ -120,15 +115,12 @@ public final class CustomOidcProviderConfigurationEndpointFilter extends OncePer
     }
 
     private Consumer<List<String>> signingAlgorithms() {
-        return (signingAlgorithms) -> {
-            signingAlgorithms.add(SignatureAlgorithm.RS256.getName());
-            signingAlgorithms.add("HS256");
-        };
+        return (signingAlgorithms) -> signingAlgorithms.add(SignatureAlgorithm.RS256.getName());
     }
 
     private Consumer<Map<String, Object>> claims() {
         return (claims) -> {
-            claims.put("userinfo_signing_alg_values_supported", List.of("RS256", "HS256"));
+            claims.put("userinfo_signing_alg_values_supported", List.of("RS256"));
             claims.put("display_values_supported", List.of("page", "popup"));
             claims.put("claims_supported", List.of(
                     "sub",
