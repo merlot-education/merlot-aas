@@ -33,7 +33,7 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
             if (sendAcceptedStatusCountdown-- > 0) {
                 map.put("status", PENDING);
             } else {
-                map.put("status", PENDING);
+                map.put("status", ACCEPTED);
                 sendAcceptedStatusCountdown = 1;
                 if ("GetLoginProofResult".equals(policyName) ) {
                     map.put("email", requestId + "@oidc.ssi");
