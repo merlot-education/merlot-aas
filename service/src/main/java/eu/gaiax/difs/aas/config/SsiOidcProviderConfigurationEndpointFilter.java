@@ -28,7 +28,7 @@ import org.springframework.util.Assert;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.UriComponentsBuilder;
 
-public final class CustomOidcProviderConfigurationEndpointFilter extends OncePerRequestFilter {
+public final class SsiOidcProviderConfigurationEndpointFilter extends OncePerRequestFilter {
 
     /**
      * The default endpoint {@code URI} for OpenID Provider Configuration requests.
@@ -40,7 +40,7 @@ public final class CustomOidcProviderConfigurationEndpointFilter extends OncePer
     private final OidcProviderConfigurationHttpMessageConverter providerConfigurationHttpMessageConverter =
             new OidcProviderConfigurationHttpMessageConverter();
 
-    public CustomOidcProviderConfigurationEndpointFilter(ProviderSettings providerSettings) {
+    public SsiOidcProviderConfigurationEndpointFilter(ProviderSettings providerSettings) {
         Assert.notNull(providerSettings, "providerSettings cannot be null");
         this.providerSettings = providerSettings;
         this.requestMatcher = new AntPathRequestMatcher(

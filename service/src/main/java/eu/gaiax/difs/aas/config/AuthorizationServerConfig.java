@@ -45,9 +45,7 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.config.ProviderSettings;
 import org.springframework.security.oauth2.server.authorization.oidc.web.OidcProviderConfigurationEndpointFilter;
 import org.springframework.security.oauth2.server.authorization.oidc.web.OidcUserInfoEndpointFilter;
-import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import com.nimbusds.jose.jwk.JWKSet;
@@ -93,24 +91,24 @@ public class AuthorizationServerConfig {
         OAuth2AuthorizationServerConfigurer<HttpSecurity> authorizationServerConfigurer =
                 new OAuth2AuthorizationServerConfigurer<>();
 
-        authorizationServerConfigurer.addObjectPostProcessor(customObjectPostProcessor());
+        authorizationServerConfigurer.addObjectPostProcessor(ssiObjectPostProcessor());
 
         RequestMatcher endpointsMatcher = authorizationServerConfigurer.getEndpointsMatcher();
 
         http.requestMatcher(endpointsMatcher)
                 .authorizeRequests(authorizeRequests -> authorizeRequests.anyRequest().authenticated())
                 .csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher)) 
-                .objectPostProcessor(customObjectPostProcessor())
+                .objectPostProcessor(ssiObjectPostProcessor())
                 .apply(authorizationServerConfigurer);
     }
 
-    private ObjectPostProcessor<Object> customObjectPostProcessor() {
+    private ObjectPostProcessor<Object> ssiObjectPostProcessor() {
         return new ObjectPostProcessor<>() {
             @Override
             @SuppressWarnings("unchecked")
             public <O> O postProcess(O object) {
                 if (object instanceof OidcProviderConfigurationEndpointFilter) {
-                    return (O) new CustomOidcProviderConfigurationEndpointFilter(providerSettings());
+                    return (O) new SsiOidcProviderConfigurationEndpointFilter(providerSettings());
                 } else if (object instanceof OidcUserInfoEndpointFilter) {
                     return (O) new SsiOidcUserInfoEndpointFilter(authenticationManager());
                 }
