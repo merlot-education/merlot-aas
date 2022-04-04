@@ -13,7 +13,8 @@ spring:
         jwt:
           issuer-uri: http://${server.host}:${server.port}
           jwk-set-uri: http://${server.host}:${server.port}/oauth2/jwks
-          
+  messages:
+    encoding: UTF-8
 management:
   endpoints:
     web:
