@@ -2,8 +2,8 @@ package eu.gaiax.difs.aas.client;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Collections;
 import java.util.Map;
@@ -13,9 +13,11 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("local")
 public class LocalTrustServiceClientTest {
 
+    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
+    private String issuerUri;
+    
     @Autowired
     private LocalTrustServiceClientImpl localTrustServiceClient;
 
@@ -31,7 +33,7 @@ public class LocalTrustServiceClientTest {
     void evaluateLoginProofResult() {
         Map<String, Object> response = localTrustServiceClient.evaluate("GetLoginProofResult", Map.of("requestId", "testRequestId"));
 
-        assertEquals("test-iss", response.get("iss"));
+        assertEquals(issuerUri, response.get("iss"));
         assertEquals("testRequestId", response.get("sub"));
         assertEquals("test-claim1", response.get("claim1"));
     }
@@ -47,7 +49,7 @@ public class LocalTrustServiceClientTest {
     void evaluateIatProofResult() {
         Map<String, Object> response = localTrustServiceClient.evaluate("GetIatProofResult", Map.of("requestId", "testRequestId"));
 
-        assertEquals("test-iss", response.get("iss"));
+        assertEquals(issuerUri, response.get("iss"));
         assertEquals("testRequestId", response.get("sub"));
         assertEquals("test-claim1", response.get("claim1"));
     }

@@ -4,10 +4,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import static eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto.*;
 
 public class LocalTrustServiceClientImpl implements TrustServiceClient {
 
+    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
+    private String issuerUri;
+    
     // TODO: replace with <requestId, count> map for multi-threaded tests
     private int sendAcceptedStatusCountdown = 1;
 
@@ -41,7 +46,7 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
                 }
             }
             map.put("sub", requestId);
-            map.put("iss", "test-iss");
+            map.put("iss", issuerUri);
             map.put("claim1", "test-claim1");
        }
 
