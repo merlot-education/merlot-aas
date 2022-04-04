@@ -124,13 +124,13 @@
                     <span id="display-language">English</span><span> v</span>
                 </div>
                 <ul class="locale-list">
-                    <li id="Deutsch" class="locale">Deutsch</li>
-                    <li id="English" class="locale">English</li>
-                    <li id="Français" class="locale">Français</li>
+                    <li id="Deutsch" class="locale" >Deutsch</li>
+                    <li id="English" class="locale" >English</li>
+                    <li id="Français" class="locale" >Français</li>
                 </ul>
             </div>
 
-            <h1 id="greeting">Scan QR code with smartphone</h1>
+            <h1 id="greeting" th:text="#{greeting}"></h1>
             <img th:src="${qrUrl}" alt="qr Code">
             <form th:action="@{/login}" method="post">
                 <table>
@@ -139,15 +139,15 @@
                     </tr>
                     <tr>
                         <td><input id="sign-in-button" class="action_button" name="qr-smartphone-button" type="submit"
-                                   value="Sign In"/></td>
+                                   th:value="#{signIn}"/></td>
                     </tr>
                     <tr>
                         <td><input id="scan-qr-browser-button" class="action_button" name="qr-browser-button" type="button"
-                                   value="Scan QR code with browser"/></td>
+                                   th:value="#{scanWithBrowser}"/></td>
                     </tr>
                     <tr>
                         <td><input id="back-to-standard-login-button" class="action_button bottom-button" name="back" onclick="history.back()"
-                                   type="button" value="Back to Standard Login"/></td>
+                                   type="button" th:value="#{backToLogin}"/></td>
                     </tr>
                 </table>
             </form>
@@ -155,7 +155,7 @@
     </div>
 </main>
 
-<script type="application/javascript" th:src="@{/js/translate.js}"></script>
+<!--<script type="application/javascript" th:src="@{/js/translate.js}"></script>-->
 
 </body>
 </html>
