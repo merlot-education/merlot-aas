@@ -54,10 +54,7 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
     }
 
     private synchronized boolean isPending(String requestId) {
-        if (!countdowns.containsKey(requestId)) {
-            countdowns.put(requestId, PENDING_REQUESTS_COUNT);
-        }
-        int pendingCount = countdowns.get(requestId);
+        int pendingCount = countdowns.getOrDefault(requestId, PENDING_REQUESTS_COUNT);
         if (pendingCount <= 0) {
             countdowns.remove(requestId);
             return false;
