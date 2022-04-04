@@ -1,9 +1,12 @@
 package eu.gaiax.difs.aas.controller;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.web.WebAttributes;
 import org.springframework.security.web.savedrequest.DefaultSavedRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -45,4 +48,18 @@ public class LoginController {
 
     }
 
+    @GetMapping("/error")
+    public String loginError(HttpServletRequest request, Model model) {
+        HttpSession session = request.getSession(false);
+        String errorMessage = null;
+        if (session != null) {
+            OAuth2AuthenticationException ex = (OAuth2AuthenticationException) session
+                    .getAttribute(WebAttributes.AUTHENTICATION_EXCEPTION);
+            if (ex != null) {
+                errorMessage = ex.getError().getErrorCode();
+            }
+        }
+        model.addAttribute("errorMessage", errorMessage);
+        return ssiBrokerService.authorize(model);
+    }
 }

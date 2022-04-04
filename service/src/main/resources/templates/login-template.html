@@ -8,10 +8,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500&family=Overpass:wght@300;400&display=swap"
           rel="stylesheet">
     <link th:href="@{/css/login.css}" rel="stylesheet" type="text/css"/>
+    <link href="../static/css/login.css" rel="stylesheet" type="text/css"/>
 </head>
 
 <body>
-<header class="logo">
+<header>
+    <p class="error-message" th:if= "${errorMessage != null}" th:text="${errorMessage}"><p>
     <svg class="logo-gaia-full" viewBox="0 0 156 86.8" xmlns="http://www.w3.org/2000/svg">
         <defs>
             <style type="text/css"> .st0 {

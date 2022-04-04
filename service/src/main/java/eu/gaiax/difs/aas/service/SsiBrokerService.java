@@ -24,7 +24,6 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 
 import eu.gaiax.difs.aas.client.TrustServiceClient;
-import io.netty.handler.codec.base64.Base64Encoder;
 import lombok.RequiredArgsConstructor;
 
 @Service
