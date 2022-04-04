@@ -3,6 +3,7 @@ package eu.gaiax.difs.aas.client;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Value;
 
@@ -14,7 +15,7 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
     private String issuerUri;
 
     private static final int PENDING_REQUESTS_COUNT = 2;
-    private final Map<String, Integer> countdowns = new HashMap<>();
+    private final Map<String, Integer> countdowns = new ConcurrentHashMap<>();
 
     @Override
     public Map<String, Object> evaluate(String policyName, Map<String, Object> bodyParams) {
@@ -56,11 +57,12 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
         if (!countdowns.containsKey(requestId)) {
             countdowns.put(requestId, PENDING_REQUESTS_COUNT);
         }
-        if (countdowns.get(requestId) <= 0) {
+        int pendingCount = countdowns.get(requestId);
+        if (pendingCount <= 0) {
             countdowns.remove(requestId);
             return false;
         }
-        countdowns.put(requestId, countdowns.get(requestId) - 1);
+        countdowns.put(requestId, pendingCount - 1);
         return true;
     }
 }
