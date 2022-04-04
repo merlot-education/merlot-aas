@@ -42,8 +42,6 @@ public class SecurityConfig {
     private final String[] ANT_MATCHERS = {
             "/api/**",
             "/swagger-ui/**",
-            "/login",
-            "/error",
             "/actuator",
             "/actuator/**",
             "/**/*.{js,html,css}",

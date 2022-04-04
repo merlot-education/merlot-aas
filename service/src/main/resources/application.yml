@@ -1,6 +1,8 @@
 server:
   host: localhost
   port: 8090
+  error:
+    path: /ssi/error
 
 spring:
   profiles:
