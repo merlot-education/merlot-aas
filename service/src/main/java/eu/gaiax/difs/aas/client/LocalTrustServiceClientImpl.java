@@ -13,7 +13,7 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
     @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
     private String issuerUri;
 
-    private static final int PENDING_REQUESTS_COUNT = 1;
+    private static final int PENDING_REQUESTS_COUNT = 2;
     private final Map<String, Integer> countdowns = new HashMap<>();
 
     @Override
@@ -56,10 +56,11 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
         if (!countdowns.containsKey(requestId)) {
             countdowns.put(requestId, PENDING_REQUESTS_COUNT);
         }
-        Integer previousValue = countdowns.put(requestId, countdowns.get(requestId) - 1);
-        if (previousValue == 0) {
+        if (countdowns.get(requestId) <= 0) {
             countdowns.remove(requestId);
+            return false;
         }
-        return previousValue > 0;
+        countdowns.put(requestId, countdowns.get(requestId) - 1);
+        return true;
     }
 }
