@@ -12,9 +12,9 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
 
     @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
     private String issuerUri;
-    
-    // TODO: replace with <requestId, count> map for multi-threaded tests
-    private int sendAcceptedStatusCountdown = 1;
+
+    private static final int PENDING_REQUESTS_COUNT = 1;
+    private final Map<String, Integer> countdowns = new HashMap<>();
 
     @Override
     public Map<String, Object> evaluate(String policyName, Map<String, Object> bodyParams) {
@@ -28,19 +28,18 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
         if ("GetIatProofInvitation".equals(policyName)) {
             return map;
         }
-        
+
         if ("GetLoginProofInvitation".equals(policyName)) {
             map.put("link", "uri://" + requestId);
             return map;
         }
-        
+
         if ("GetLoginProofResult".equals(policyName) || "GetIatProofResult".equals(policyName)) {
-            if (sendAcceptedStatusCountdown-- > 0) {
+            if (isPending(requestId)) {
                 map.put("status", PENDING);
             } else {
                 map.put("status", ACCEPTED);
-                sendAcceptedStatusCountdown = 1;
-                if ("GetLoginProofResult".equals(policyName) ) {
+                if ("GetLoginProofResult".equals(policyName)) {
                     map.put("email", requestId + "@oidc.ssi");
                     map.put("name", requestId);
                 }
@@ -48,8 +47,19 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
             map.put("sub", requestId);
             map.put("iss", issuerUri);
             map.put("claim1", "test-claim1");
-       }
+        }
 
         return map;
+    }
+
+    private synchronized boolean isPending(String requestId) {
+        if (!countdowns.containsKey(requestId)) {
+            countdowns.put(requestId, PENDING_REQUESTS_COUNT);
+        }
+        Integer previousValue = countdowns.put(requestId, countdowns.get(requestId) - 1);
+        if (previousValue == 0) {
+            countdowns.remove(requestId);
+        }
+        return previousValue > 0;
     }
 }
