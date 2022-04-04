@@ -3,7 +3,7 @@ package eu.gaiax.difs.aas.controller;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+//import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -26,14 +26,14 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
-@AutoConfigureMockMvc //(addFilters = false)
+@AutoConfigureMockMvc
 public class AuthenticationFlowTest {
     
     @Autowired
     private MockMvc mockMvc;
     
     @Test
-    void authorize() throws Exception {
+    void testLoginlow() throws Exception {
         MvcResult result = mockMvc.perform(
                 get("/oauth2/authorize?scope={scope}&state={state}&response_type={type}&client_id={id}&redirect_uri={uri}&nonce={nonce}", 
                     "openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app", 
