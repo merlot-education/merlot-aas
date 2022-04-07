@@ -12,23 +12,26 @@ services:
       - "9000"
     networks:
       - "gaia-x"
+    depends_on:
+      - nginx
     restart: unless-stopped
 
-  demo:
-    build:
-      context: ../app
-      dockerfile: Dockerfile
-    expose:
-      - "8990"
-    networks:
-      - "gaia-x"
-    restart: unless-stopped
+#  demo:
+#    build:
+#      context: ../app
+#      dockerfile: Dockerfile
+#    expose:
+#      - "8990"
+#    networks:
+#      - "gaia-x"
+#    restart: unless-stopped
 
   keycloak:
     container_name: "key-server"
     environment:
       KEYCLOAK_ADMIN: "${KEYCLOAK_ADMIN}"
       KEYCLOAK_ADMIN_PASSWORD: "${KEYCLOAK_ADMIN_PASSWORD}"
+      PROXY_ADDRESS_FORWARDING: "${PROXY_ADDRESS_FORWARDING}"
 
     image: "quay.io/keycloak/keycloak:${KEYCLOAK_VERSION}"
     ports:
@@ -56,13 +59,9 @@ services:
     image: nginx:latest
     volumes:
       - "./nginx.conf:/etc/nginx/nginx.conf:ro"
-    depends_on:
-      - aas
-      - demo
-      - keycloak
     ports:
-      - "4000:4000"
-      - "5000:5000"
+      - "9000:9000"
+#      - "5000:5000"
     networks:
       - "gaia-x"
 
