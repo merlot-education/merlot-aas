@@ -132,7 +132,7 @@
 
             <h1 id="greeting" th:text="#{greeting}"></h1>
             <img th:src="${qrUrl}" alt="qr Code">
-            <form th:action="@{/login}" method="post">
+            <form th:action="@{/ssi/login}" method="post">
                 <table>
                     <tr>
                         <td><input class="input-box" type='hidden' name='username' th:value='${requestId}'/></td>
@@ -150,6 +150,7 @@
                                    type="button" th:value="#{backToLogin}"/></td>
                     </tr>
                 </table>
+                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
             </form>
         </div>
     </div>
