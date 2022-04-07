@@ -16,16 +16,6 @@ services:
       - nginx
     restart: unless-stopped
 
-#  demo:
-#    build:
-#      context: ../app
-#      dockerfile: Dockerfile
-#    expose:
-#      - "8990"
-#    networks:
-#      - "gaia-x"
-#    restart: unless-stopped
-
   keycloak:
     container_name: "key-server"
     environment:
@@ -61,7 +51,6 @@ services:
       - "./nginx.conf:/etc/nginx/nginx.conf:ro"
     ports:
       - "9000:9000"
-#      - "5000:5000"
     networks:
       - "gaia-x"
 
