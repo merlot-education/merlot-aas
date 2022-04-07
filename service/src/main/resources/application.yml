@@ -42,6 +42,23 @@ aas:
     client-iat: "{noop}iat"
     client-secret: "{noop}secret"
     redirect-uri: http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint
+  scopes:
+    openid:
+      - sub
+      - iss
+      - auth_time
+    profile:
+      - name
+      - given_name
+      - family_name
+      - middle_name
+      - preferred_username
+      - gender
+      - birtdate
+      - updated_at
+    email:
+      - email
+      - email_verified
 
 logging:
   level:

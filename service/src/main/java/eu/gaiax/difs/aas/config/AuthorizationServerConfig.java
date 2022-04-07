@@ -25,9 +25,10 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
-import java.util.List;
 import java.util.UUID;
 
+import eu.gaiax.difs.aas.properties.ScopeProperties;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -75,8 +76,14 @@ public class AuthorizationServerConfig {
 
     @Value("${aas.iam.redirect-uri}")
     private String redirectUri;
-    
-    
+
+    private final ScopeProperties scopeProperties;
+
+    @Autowired
+    public AuthorizationServerConfig(ScopeProperties scopeProperties) {
+        this.scopeProperties = scopeProperties;
+    }
+
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
@@ -110,7 +117,7 @@ public class AuthorizationServerConfig {
             @SuppressWarnings("unchecked")
             public <O> O postProcess(O object) {
                 if (object instanceof OidcProviderConfigurationEndpointFilter) {
-                    return (O) new SsiOidcProviderConfigurationEndpointFilter(providerSettings());
+                    return (O) new SsiOidcProviderConfigurationEndpointFilter(providerSettings(), scopeProperties);
                 } else if (object instanceof OidcUserInfoEndpointFilter) {
                     return (O) new SsiOidcUserInfoEndpointFilter(authenticationManager());
                 }
