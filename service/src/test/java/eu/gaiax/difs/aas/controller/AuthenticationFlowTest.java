@@ -63,7 +63,7 @@ public class AuthenticationFlowTest {
         
         String userId = (String) result.getModelAndView().getModel().get("requestId");
         result = mockMvc.perform(
-                post("/ssi/login")
+                post("/login")
                 .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .cookie(new Cookie("JSESSIONID", session.getId()))
