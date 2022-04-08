@@ -34,7 +34,7 @@
         <file>${catalina.base:-.}/logs/${LOG_FILE_TS}.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>${catalina.base:-.}/logs/${LOG_FILE_TS}-%d{yyyy-MM-dd}.log</fileNamePattern>
-            <maxHistory>10</maxHistory>
+            <maxHistory>2</maxHistory>
         </rollingPolicy>
         <append>true</append>
         <immediateFlush>true</immediateFlush>
