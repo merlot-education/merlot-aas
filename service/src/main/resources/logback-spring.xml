@@ -2,10 +2,6 @@
 <configuration>
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
 
-    <!--logger name="org.springframework.web" level="DEBUG"/>
-    <logger name="org.springframework.web.servlet.mvc.method.annotation" level="INFO"/>
-    <logger name="eu.gaiax.difs.aas" level="DEBUG"/-->
-
     <springProperty scope="context" name="springAppName" source="spring.application.name"/>
 
     <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
@@ -18,10 +14,11 @@
         </encoder>
     </appender>
 
+    <property name="LOG_FILE" value="aas" />
     <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${catalina.base:-.}/logs/aas.log</file>
+        <file>${catalina.base:-.}/logs/${LOG_FILE}.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${catalina.base:-.}/logs/aas-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>${catalina.base:-.}/logs/${LOG_FILE}-%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <append>true</append>
@@ -31,6 +28,25 @@
             <charset>utf8</charset>
         </encoder>
     </appender>
+
+    <property name="LOG_FILE_TS" value="tsclaims" />
+    <appender name="tsclaims" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${catalina.base:-.}/logs/${LOG_FILE_TS}.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${catalina.base:-.}/logs/${LOG_FILE_TS}-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>2</maxHistory>
+        </rollingPolicy>
+        <append>true</append>
+        <immediateFlush>true</immediateFlush>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>utf8</charset>
+        </encoder>
+    </appender>
+
+    <logger name="tsclaims" level="debug" additivity="false">
+        <appender-ref ref="tsclaims"/>
+    </logger>
 
     <!--springProfile name="dev"-->
         <root level="INFO">

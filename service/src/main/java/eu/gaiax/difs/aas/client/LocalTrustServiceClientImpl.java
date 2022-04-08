@@ -5,11 +5,15 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 
 import static eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto.*;
 
 public class LocalTrustServiceClientImpl implements TrustServiceClient {
+
+    private static final Logger log = LoggerFactory.getLogger("tsclaims");
 
     @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
     private String issuerUri;
@@ -49,6 +53,11 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
             map.put("iss", issuerUri);
             map.put("claim1", "test-claim1");
         }
+
+        log.debug("\nCalled local trust service client: \n" +
+                "policy: {} \n" +
+                "params: {} \n" +
+                "result: {} ", policyName, bodyParams, map);
 
         return map;
     }
