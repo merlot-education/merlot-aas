@@ -39,7 +39,7 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
             if (isPending(requestId)) {
                 map.put("status", PENDING);
             } else {
-                map.put("status", REJECTED); //ACCEPTED);
+                map.put("status", ACCEPTED);
                 if ("GetLoginProofResult".equals(policyName)) {
                     map.put("email", requestId + "@oidc.ssi");
                     map.put("name", requestId);
