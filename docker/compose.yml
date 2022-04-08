@@ -2,61 +2,26 @@ version: '3.8'
 
 services:
 
-  aas-1.0.0:
-    container_name: "AAS-1.0.0"
+  aas:
     build:
       context: ../service
       dockerfile: Dockerfile
     environment:
-      - "SPRING_PROFILES_ACTIVE=${PROFILES_AAS_1}"
-    ports:
-      - "9000:9000"
+      - "SPRING_PROFILES_ACTIVE=${PROFILES_AAS}"
+    expose:
+      - "9000"
     networks:
       - "gaia-x"
+    depends_on:
+      - nginx
     restart: unless-stopped
-
-
-  aas-2.0.0:
-    container_name: "AAS-2.0.0"
-    build:
-      context: ../service
-      dockerfile: Dockerfile
-    environment:
-      - "SPRING_PROFILES_ACTIVE=${PROFILES_AAS_2}"
-    ports:
-      - "9009:9009"
-    networks:
-      - "gaia-x"
-    restart: unless-stopped
-
-  demo-1:
-    container_name: "Demo-1"
-    build:
-      context: ../app
-      dockerfile: Dockerfile
-    ports:
-      - "8990:8990"
-    networks:
-      - "gaia-x"
-    restart: unless-stopped
-
-  demo-2:
-    container_name: "Demo-2"
-    build:
-      context: ../app
-      dockerfile: Dockerfile
-    ports:
-      - "8999:8999"
-    networks:
-      - "gaia-x"
-    restart: unless-stopped
-
 
   keycloak:
     container_name: "key-server"
     environment:
       KEYCLOAK_ADMIN: "${KEYCLOAK_ADMIN}"
       KEYCLOAK_ADMIN_PASSWORD: "${KEYCLOAK_ADMIN_PASSWORD}"
+      PROXY_ADDRESS_FORWARDING: "${PROXY_ADDRESS_FORWARDING}"
 
     image: "quay.io/keycloak/keycloak:${KEYCLOAK_VERSION}"
     ports:
@@ -79,6 +44,15 @@ services:
           '-Dkeycloak.migration.dir=/tmp/import',
           '-Dkeycloak.migration.strategy=OVERWRITE_EXISTING',
       ]
+
+  nginx:
+    image: nginx:latest
+    volumes:
+      - "./nginx.conf:/etc/nginx/nginx.conf:ro"
+    ports:
+      - "9000:9000"
+    networks:
+      - "gaia-x"
 
 networks:
   gaia-x:

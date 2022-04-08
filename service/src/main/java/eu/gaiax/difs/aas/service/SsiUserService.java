@@ -35,7 +35,7 @@ public class SsiUserService implements UserDetailsService {
     @Value("${aas.tsa.duration}")
     private long requestingDuration;
 
-    private Map<String, Map<String, Object>> userClaimsCache = new ConcurrentHashMap<>();
+    private final Map<String, Map<String, Object>> userClaimsCache = new ConcurrentHashMap<>();
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -55,8 +55,7 @@ public class SsiUserService implements UserDetailsService {
     public Map<String, Object> getUserClaims(String requestId) {
         if (!userClaimsCache.containsKey(requestId)) {
             return userClaimsCache.put(requestId, loadUserClaims(requestId));
-        }
-        else {
+        } else {
             return userClaimsCache.get(requestId);
         }
     }

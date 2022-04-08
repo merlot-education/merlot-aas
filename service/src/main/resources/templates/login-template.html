@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500&family=Overpass:wght@300;400&display=swap"
           rel="stylesheet">
     <link th:href="@{/css/login.css}" rel="stylesheet" type="text/css"/>
-    <link href="../static/css/login.css" rel="stylesheet" type="text/css"/>
+    <!--link href="../static/css/login.css" rel="stylesheet" type="text/css"/-->
 </head>
 
 <body>
@@ -124,39 +124,38 @@
                     <span id="display-language">English</span><span> v</span>
                 </div>
                 <ul class="locale-list">
-                    <li id="Deutsch" class="locale" >Deutsch</li>
-                    <li id="English" class="locale" >English</li>
-                    <li id="Français" class="locale" >Français</li>
+                    <li id="Deutsch" class="locale">Deutsch</li>
+                    <li id="English" class="locale">English</li>
+                    <li id="Français" class="locale">Français</li>
                 </ul>
             </div>
 
-            <h1 id="greeting" th:text="#{greeting}"></h1>
+            <h1 id="greeting">Scan QR code with smartphone</h1>
             <img th:src="${qrUrl}" alt="qr Code">
-            <form th:action="@{/ssi/login}" method="post">
+            <form th:action="@{/login}" method="post">
                 <table>
                     <tr>
                         <td><input class="input-box" type='hidden' name='username' th:value='${requestId}'/></td>
                     </tr>
                     <tr>
                         <td><input id="sign-in-button" class="action_button" name="qr-smartphone-button" type="submit"
-                                   th:value="#{signIn}"/></td>
+                                   value="Sign In"/></td>
                     </tr>
                     <tr>
                         <td><input id="scan-qr-browser-button" class="action_button" name="qr-browser-button" type="button"
-                                   th:value="#{scanWithBrowser}"/></td>
+                                   value="Scan QR code with browser"/></td>
                     </tr>
                     <tr>
                         <td><input id="back-to-standard-login-button" class="action_button bottom-button" name="back" onclick="history.back()"
-                                   type="button" th:value="#{backToLogin}"/></td>
+                                   type="button" value="Back to Standard Login"/></td>
                     </tr>
                 </table>
-                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}"/>
             </form>
         </div>
     </div>
 </main>
 
-<!--<script type="application/javascript" th:src="@{/js/translate.js}"></script>-->
+<script type="application/javascript" th:src="@{/js/translate.js}"></script>
 
 </body>
 </html>

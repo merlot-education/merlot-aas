@@ -25,27 +25,20 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
-import java.util.List;
-import java.util.Properties;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
-import org.springframework.security.authentication.event.AuthenticationFailureBadCredentialsEvent;
 import org.springframework.security.config.annotation.ObjectPostProcessor;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
-import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
@@ -63,6 +56,7 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 
+import eu.gaiax.difs.aas.properties.ScopeProperties;
 import eu.gaiax.difs.aas.service.SsiAuthManager;
 
 /**
@@ -83,22 +77,12 @@ public class AuthorizationServerConfig {
     @Value("${aas.iam.redirect-uri}")
     private String redirectUri;
 
-//    @Autowired
-//    private ApplicationEventPublisher publisher;
-//
-//    @Bean
-//    public AuthenticationEventPublisher authenticationEventPublisher() {
-//        final Properties properties = new Properties();
-//        properties.put(
-//                OAuth2AuthenticationException.class.getCanonicalName(),
-//                AuthenticationFailureBadCredentialsEvent.class.getCanonicalName());
-//
-//        final DefaultAuthenticationEventPublisher eventPublisher = new DefaultAuthenticationEventPublisher(publisher);
-//
-//        eventPublisher.setAdditionalExceptionMappings(properties);
-//
-//        return eventPublisher;
-//    }
+    private final ScopeProperties scopeProperties;
+
+    @Autowired
+    public AuthorizationServerConfig(ScopeProperties scopeProperties) {
+        this.scopeProperties = scopeProperties;
+    }
 
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -106,7 +90,6 @@ public class AuthorizationServerConfig {
         applySecurity(http);
         http.formLogin()
                 .loginPage("/ssi/login")
-                .loginProcessingUrl("/ssi/login") //TODO: Viktor: not working POST (should trigger SsiAuthProvider.auth method)
                 .and()
                 .oauth2ResourceServer()
                 .jwt();
@@ -134,7 +117,7 @@ public class AuthorizationServerConfig {
             @SuppressWarnings("unchecked")
             public <O> O postProcess(O object) {
                 if (object instanceof OidcProviderConfigurationEndpointFilter) {
-                    return (O) new SsiOidcProviderConfigurationEndpointFilter(providerSettings());
+                    return (O) new SsiOidcProviderConfigurationEndpointFilter(providerSettings(), scopeProperties);
                 } else if (object instanceof OidcUserInfoEndpointFilter) {
                     return (O) new SsiOidcUserInfoEndpointFilter(authenticationManager());
                 }

@@ -3,6 +3,7 @@ package eu.gaiax.difs.aas.client;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Value;
 
@@ -12,9 +13,9 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
 
     @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
     private String issuerUri;
-    
-    // TODO: replace with <requestId, count> map for multi-threaded tests
-    private int sendAcceptedStatusCountdown = 1;
+
+    private static final int PENDING_REQUESTS_COUNT = 2;
+    private final Map<String, Integer> countdowns = new ConcurrentHashMap<>();
 
     @Override
     public Map<String, Object> evaluate(String policyName, Map<String, Object> bodyParams) {
@@ -28,19 +29,18 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
         if ("GetIatProofInvitation".equals(policyName)) {
             return map;
         }
-        
+
         if ("GetLoginProofInvitation".equals(policyName)) {
             map.put("link", "uri://" + requestId);
             return map;
         }
-        
+
         if ("GetLoginProofResult".equals(policyName) || "GetIatProofResult".equals(policyName)) {
-            if (sendAcceptedStatusCountdown-- > 0) {
+            if (isPending(requestId)) {
                 map.put("status", PENDING);
             } else {
-                map.put("status", ACCEPTED);
-                sendAcceptedStatusCountdown = 1;
-                if ("GetLoginProofResult".equals(policyName) ) {
+                map.put("status", REJECTED); //ACCEPTED);
+                if ("GetLoginProofResult".equals(policyName)) {
                     map.put("email", requestId + "@oidc.ssi");
                     map.put("name", requestId);
                 }
@@ -48,8 +48,18 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
             map.put("sub", requestId);
             map.put("iss", issuerUri);
             map.put("claim1", "test-claim1");
-       }
+        }
 
         return map;
+    }
+
+    private synchronized boolean isPending(String requestId) {
+        int pendingCount = countdowns.getOrDefault(requestId, PENDING_REQUESTS_COUNT);
+        if (pendingCount <= 0) {
+            countdowns.remove(requestId);
+            return false;
+        }
+        countdowns.put(requestId, pendingCount - 1);
+        return true;
     }
 }
