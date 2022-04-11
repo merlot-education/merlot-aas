@@ -2,6 +2,9 @@ package eu.gaiax.difs.aas.client;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
@@ -10,6 +13,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 
 public class RestTrustServiceClientImpl implements TrustServiceClient {
+
+    private static final Logger log = LoggerFactory.getLogger("tsclaims");
 
     private final WebClient client;
     private static final ParameterizedTypeReference<Map<String, Object>> MAP_TYPE_REF = new ParameterizedTypeReference<>() {
@@ -44,6 +49,13 @@ public class RestTrustServiceClientImpl implements TrustServiceClient {
         Flux<Map<String, Object>> trustServiceResponse = client.post().uri(uri, uriParams)
                 .accept(MediaType.APPLICATION_JSON).bodyValue(bodyParams).retrieve().bodyToFlux(MAP_TYPE_REF);
 
-        return trustServiceResponse.blockFirst();
+        Map<String, Object> result = trustServiceResponse.blockFirst();
+
+        log.debug("\nCalled trust service client: \n" +
+                "policy: {} \n" +
+                "params: {} \n" +
+                "result: {} ", policyName, bodyParams, result);
+
+        return result;
     }
 }

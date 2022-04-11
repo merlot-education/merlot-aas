@@ -7,23 +7,12 @@ spring:
     active: default
   application:
     name: auth-service
-  security:    
+  security:
     oauth2:
       resourceserver:
         jwt:
           issuer-uri: http://${server.host}:${server.port}
           jwk-set-uri: http://${server.host}:${server.port}/oauth2/jwks
-          
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "*"
-
-springdoc:
-  api-docs:
-    path: /api/docs
-    enabled: true
 
 aas:
   tsa:
@@ -43,27 +32,9 @@ aas:
     client-secret: "{noop}secret"
     redirect-uri: http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint
   scopes:
-    openid:
-      - sub
-      - iss
-      - auth_time
-    profile:
-      - name
-      - given_name
-      - family_name
-      - middle_name
-      - preferred_username
-      - gender
-      - birtdate
-      - updated_at
-    email:
-      - email
-      - email_verified
-
-logging:
-  level:
-    root: INFO
-    org.springframework.web: DEBUG
-    org.springframework.security: DEBUG
-    org.springframework.web.client.RestTemplate: DEBUG    
-    eu.gaiax.difs.aas: DEBUG
+    first:
+      - one
+      - two
+    second:
+      - two
+      - three
