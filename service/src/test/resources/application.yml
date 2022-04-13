@@ -1,0 +1,40 @@
+server:
+  host: localhost
+  port: 8090
+
+spring:
+  profiles:
+    active: default
+  application:
+    name: auth-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://${server.host}:${server.port}
+          jwk-set-uri: http://${server.host}:${server.port}/oauth2/jwks
+
+aas:
+  tsa:
+    url: http://trustservice/api
+    repo: aisbl
+    group: aisbl
+    version: 1.0
+    action: evaluate
+    delay: 500 # in milliseconds
+    duration: 5000 # in milliseconds
+  iam:
+    base-uri: http://key-server:8080
+    client-registration-uri: /auth/realms/gaia-x/clients-registrations/openid-connect
+    realm: gaia-x
+    client-id: aas-app
+    client-iat: "{noop}iat"
+    client-secret: "{noop}secret"
+    redirect-uri: http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint
+  scopes:
+    first:
+      - one
+      - two
+    second:
+      - two
+      - three
