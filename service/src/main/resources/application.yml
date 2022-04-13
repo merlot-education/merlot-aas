@@ -1,6 +1,8 @@
 server:
   host: localhost
   port: 8090
+  error:
+    path: /ssi/error
 
 spring:
   profiles:
@@ -13,7 +15,8 @@ spring:
         jwt:
           issuer-uri: http://${server.host}:${server.port}
           jwk-set-uri: http://${server.host}:${server.port}/oauth2/jwks
-          
+  messages:
+    encoding: UTF-8
 management:
   endpoints:
     web:

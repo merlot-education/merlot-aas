@@ -37,7 +37,11 @@ public class LoginController {
         if (age != null && age.length > 0) {
             model.addAttribute("max_age", age[0]);
         }
-        
+
+        String errorMessage = (String) request.getSession().getAttribute("AUTH_ERROR");
+        if (errorMessage != null) {
+            model.addAttribute("errorMessage", errorMessage);
+        }
         return ssiBrokerService.authorize(model);
     }
 
@@ -48,18 +52,4 @@ public class LoginController {
 
     }
 
-    @GetMapping("/error")
-    public String loginError(HttpServletRequest request, Model model) {
-        HttpSession session = request.getSession(false);
-        String errorMessage = null;
-        if (session != null) {
-            OAuth2AuthenticationException ex = (OAuth2AuthenticationException) session
-                    .getAttribute(WebAttributes.AUTHENTICATION_EXCEPTION);
-            if (ex != null) {
-                errorMessage = ex.getError().getErrorCode();
-            }
-        }
-        model.addAttribute("errorMessage", errorMessage);
-        return ssiBrokerService.authorize(model);
-    }
 }

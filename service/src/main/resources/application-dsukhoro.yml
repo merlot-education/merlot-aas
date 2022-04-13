@@ -20,4 +20,4 @@ aas:
     client-id: aas-app
     client-iat: eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIwMjU1ODM2Mi04Njk5LTRhYTQtOTc1NC1iZjE0ZjMyM2E4ZGIifQ.eyJleHAiOjAsImlhdCI6MTY0Nzk0OTQ1NiwianRpIjoiYzAzNmU4ZGMtYjcwNy00ZDIzLTlmMjMtOTYzYWY2ZDBiNmJhIiwiaXNzIjoiaHR0cDovL2tleS1zZXJ2ZXI6ODA4MC9yZWFsbXMvZ2FpYS14IiwiYXVkIjoiaHR0cDovL2tleS1zZXJ2ZXI6ODA4MC9yZWFsbXMvZ2FpYS14IiwidHlwIjoiSW5pdGlhbEFjY2Vzc1Rva2VuIn0.8sxiBToCnlRQsYaMeQ5A7BH72F0zuICelKZHGhd96mc
     client-secret: "{noop}secret"
-    redirect-uri: http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint
+    redirect-uri: ${aas.iam.base-uri}/realms/gaia-x/broker/ssi-oidc/endpoint
