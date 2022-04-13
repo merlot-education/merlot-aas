@@ -70,20 +70,7 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
                 .and()
                 .formLogin()
-                .failureHandler(new AuthenticationFailureHandler() {
-                    
-                    @Override
-                    public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
-                            AuthenticationException exception) throws IOException, ServletException {
-                        String error = exception.getMessage();
-                        if (error == null && exception instanceof OAuth2AuthenticationException) {
-                            error = ((OAuth2AuthenticationException) exception).getError().getErrorCode();
-                        }
-                        request.getSession().setAttribute("AUTH_ERROR", error);
-                        String redirectUrl = request.getContextPath() + "/ssi/login";
-                        response.sendRedirect(redirectUrl);
-                    }
-                });
+                .failureHandler(ssiAuthenticationFailureHandler());
         return http.build();
     }
 
@@ -97,4 +84,20 @@ public class SecurityConfig {
         return new SsiJwtCustomizer();
     }
 
+    private AuthenticationFailureHandler ssiAuthenticationFailureHandler() {
+        return new AuthenticationFailureHandler() {
+
+            @Override
+            public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
+                                                AuthenticationException exception) throws IOException, ServletException {
+                String error = exception.getMessage();
+                if (error == null && exception instanceof OAuth2AuthenticationException) {
+                    error = ((OAuth2AuthenticationException) exception).getError().getErrorCode();
+                }
+                request.getSession().setAttribute("AUTH_ERROR", error);
+                String redirectUrl = request.getContextPath() + "/ssi/login";
+                response.sendRedirect(redirectUrl);
+            }
+        };
+    }
 }
