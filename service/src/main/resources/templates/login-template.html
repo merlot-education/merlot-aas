@@ -88,7 +88,7 @@
         <hr class="card-divider">
         <div class="card-bottom">
             <div class="card-bottom-contents">
-                <h2 id="greeting" th:text="#{qrTitle}>Scan the QR code with your mobile device</h2>
+                <h2 id="greeting" th:text="#{qrTitle}">Scan the QR code with your mobile device</h2>
                 <img th:src="${qrUrl}" alt="qr Code">
                 <form th:action="@{/login}" method="post">
                     <table>

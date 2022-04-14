@@ -176,7 +176,7 @@ public class AuthenticationFlowTest {
                 .andReturn();
         session = result.getRequest().getSession(false);
 
-        assertEquals(session.getAttribute("AUTH_ERROR"), "Login expired");
+        assertEquals(session.getAttribute("AUTH_ERROR"), "Login Expired");
     }
 
     @Test
@@ -224,7 +224,7 @@ public class AuthenticationFlowTest {
                 .andReturn();
         session = result.getRequest().getSession(false);
 
-        assertEquals(session.getAttribute("AUTH_ERROR"), "Login rejected");
+        assertEquals(session.getAttribute("AUTH_ERROR"), "Login Rejected");
     }
 
     private void setupTrustService(AccessRequestStatusDto status) {
