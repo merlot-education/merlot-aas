@@ -3,6 +3,8 @@ package eu.gaiax.difs.aas.controller;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import eu.gaiax.difs.aas.service.SsiUserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -17,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import eu.gaiax.difs.aas.service.SsiBrokerService;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Locale;
+
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/ssi")
@@ -24,9 +28,11 @@ public class LoginController {
 
     private final SsiBrokerService ssiBrokerService;
 
+    private final SsiUserService ssiUserService;
+
     @GetMapping(value = "/login")
     public String login(HttpServletRequest request, Model model) {
-
+        ssiUserService.loadRequestLocale(request);
         DefaultSavedRequest auth = (DefaultSavedRequest) request.getSession().getAttribute("SPRING_SECURITY_SAVED_REQUEST");
         model.addAttribute("scope", auth.getParameterValues("scope"));
         String[] age = auth.getParameterValues("not_older_than");
