@@ -28,12 +28,7 @@ public class SsiUserService implements UserDetailsService {
     @Autowired
     private TrustServiceClient trustServiceClient;
 
-    private ResourceBundle message;
     private static final Logger log = LoggerFactory.getLogger(SsiUserService.class);
-
-    public void loadRequestLocale(HttpServletRequest request) {
-        this.message = ResourceBundle.getBundle("language/messages", request.getLocale());
-    }
 
     @Value("${aas.tsa.delay}")
     private long millisecondsToDelay;
@@ -78,7 +73,7 @@ public class SsiUserService implements UserDetailsService {
 
             if (evaluation.get("status") == null || !(evaluation.get("status") instanceof AccessRequestStatusDto)) {
                 log.error("Exception during call Evaluate of TrustServiceClient, response status is not specified: {}", evaluation.get("status"));
-                throw new OAuth2AuthenticationException(message.getString("loginFailed"));
+                throw new OAuth2AuthenticationException("loginFailed");
             }
 
             switch ((AccessRequestStatusDto) evaluation.get("status")) {
@@ -88,15 +83,15 @@ public class SsiUserService implements UserDetailsService {
                     delayNextRequest();
                     break;
                 case REJECTED:
-                    throw new OAuth2AuthenticationException(message.getString("loginRejected"));
+                    throw new OAuth2AuthenticationException("loginRejected");
                 case TIMED_OUT:
                     log.error("Exception during call Evaluate of TrustServiceClient, response status: {}", evaluation.get("status"));
-                    throw new OAuth2AuthenticationException(message.getString("loginExpired"));
+                    throw new OAuth2AuthenticationException("loginExpired");
             }
         }
 
         log.error("Time for calling TrustServiceClient expired, time spent: {} ms", requestingStart.until(LocalTime.now(), MILLIS));
-        throw new OAuth2AuthenticationException(message.getString("loginExpired"));
+        throw new OAuth2AuthenticationException("loginExpired");
     }
 
     private void delayNextRequest() {

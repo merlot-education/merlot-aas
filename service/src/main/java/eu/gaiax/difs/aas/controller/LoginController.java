@@ -1,14 +1,11 @@
 package eu.gaiax.difs.aas.controller;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 
 import eu.gaiax.difs.aas.service.SsiUserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.commons.lang3.LocaleUtils;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
-import org.springframework.security.web.WebAttributes;
 import org.springframework.security.web.savedrequest.DefaultSavedRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import eu.gaiax.difs.aas.service.SsiBrokerService;
 import lombok.RequiredArgsConstructor;
 
-import java.util.Locale;
+import java.util.ResourceBundle;
 
 @Controller
 @RequiredArgsConstructor
@@ -32,7 +29,6 @@ public class LoginController {
 
     @GetMapping(value = "/login")
     public String login(HttpServletRequest request, Model model) {
-        ssiUserService.loadRequestLocale(request);
         DefaultSavedRequest auth = (DefaultSavedRequest) request.getSession().getAttribute("SPRING_SECURITY_SAVED_REQUEST");
         model.addAttribute("scope", auth.getParameterValues("scope"));
         String[] age = auth.getParameterValues("not_older_than");
@@ -46,7 +42,10 @@ public class LoginController {
 
         String errorMessage = (String) request.getSession().getAttribute("AUTH_ERROR");
         if (errorMessage != null) {
-            model.addAttribute("errorMessage", errorMessage);
+            ResourceBundle resourceBundle = ResourceBundle.getBundle("language/messages", request.getLocale());
+//            ResourceBundle resourceBundle = ResourceBundle.getBundle("language/messages", LocaleUtils.toLocale((String) request.getSession().getAttribute("session.current.locale")));
+
+            model.addAttribute("errorMessage", resourceBundle.getString(errorMessage));
         }
         return ssiBrokerService.authorize(model);
     }
