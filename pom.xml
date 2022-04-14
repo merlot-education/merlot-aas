@@ -52,6 +52,7 @@
         <plugin.sonar.version>3.9.1.2184</plugin.sonar.version>
         <plugin.jacoco.version>0.8.7</plugin.jacoco.version>
         <plugin.os-maven.version>1.7.0</plugin.os-maven.version>
+        <owasp.version>7.0.4</owasp.version>
         <!-- license -->
         <license.projectName>GAIA-X Authentication and Authorization Service</license.projectName>
         <license.inceptionYear>2021</license.inceptionYear>
@@ -266,6 +267,22 @@
                         <mainClass>eu.gaiax.difs.aas.AuthServiceApplication</mainClass>
                     </container-->
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>${owasp.version}</version>
+                <configuration>
+                    <suppressionFile>./owasp/suppressions.xml</suppressionFile>
+                    <failBuildOnAnyVulnerability>false</failBuildOnAnyVulnerability>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
