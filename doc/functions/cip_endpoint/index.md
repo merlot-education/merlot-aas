@@ -9,4 +9,4 @@ The SSI Backchannel login flow. Participants are:
 - App: test app protected by IAM Platform. 
 - IAM Platform: Identity and Access Management solution like keycloak, Gluu, WSO2, etc. 
 
-![SSI Backhannel login](./images/ssi_backchannel_login.jpg "SSI Backchannel login")
+![SSI Backhannel login](./images/ssi_ciba_login.png "SSI Backchannel login")
