@@ -1,12 +1,3 @@
-## SSI Backhannel login
+## Claims Information Point
 
-
-The SSI Backchannel login flow. Participants are:
-
-- User agent: browser. 
-- SSI Broker: the SSI OIDC Broker component to be implemented in the GAIA-X AAS. 
-- Trust Services: LOT4 service from GAIA-X
-- App: test app protected by IAM Platform. 
-- IAM Platform: Identity and Access Management solution like keycloak, Gluu, WSO2, etc. 
-
-![SSI Backhannel login](./images/ssi_ciba_login.png "SSI Backchannel login")
+AAS implements CIP in order to provide an ability to resolve permissions in IAM (keycloak) dynamically. This is done with help of keycloak [Policy Enforcers](http://www.keycloak.org/docs/latest/authorization_services/index.html#_enforcer_overview) functionality. 
