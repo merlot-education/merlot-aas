@@ -1,5 +1,4 @@
-## Overview
+## Installation & Configuration Guide
 
-- [Architecture](./overview)
-- [Installation](./install)
-- [Service Functions](./topics)
+- [AAS Installation](./aas)
+- [Keycloak setup](./keycloak)

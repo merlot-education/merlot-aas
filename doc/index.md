@@ -1,5 +1,5 @@
 ## Overview
 
-- [AAS Architecture](./architecure)
+- [AAS Architecture](./architecture)
 - [AAS Functions](./functions)
 - [Installation & Configuration](./install)
