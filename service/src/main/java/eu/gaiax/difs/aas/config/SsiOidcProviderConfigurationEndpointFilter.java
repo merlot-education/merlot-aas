@@ -4,12 +4,14 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import eu.gaiax.difs.aas.properties.ScopeProperties;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.ServletServerHttpResponse;
@@ -17,7 +19,6 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationResponseType;
 import org.springframework.security.oauth2.core.oidc.OidcProviderConfiguration;
-import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.core.oidc.http.converter.OidcProviderConfigurationHttpMessageConverter;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.server.authorization.config.ProviderSettings;
@@ -28,7 +29,7 @@ import org.springframework.util.Assert;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.UriComponentsBuilder;
 
-public final class CustomOidcProviderConfigurationEndpointFilter extends OncePerRequestFilter {
+public final class SsiOidcProviderConfigurationEndpointFilter extends OncePerRequestFilter {
 
     /**
      * The default endpoint {@code URI} for OpenID Provider Configuration requests.
@@ -36,13 +37,15 @@ public final class CustomOidcProviderConfigurationEndpointFilter extends OncePer
     private static final String DEFAULT_OIDC_PROVIDER_CONFIGURATION_ENDPOINT_URI = "/.well-known/openid-configuration";
 
     private final ProviderSettings providerSettings;
+    private final ScopeProperties scopeProperties;
     private final RequestMatcher requestMatcher;
     private final OidcProviderConfigurationHttpMessageConverter providerConfigurationHttpMessageConverter =
             new OidcProviderConfigurationHttpMessageConverter();
 
-    public CustomOidcProviderConfigurationEndpointFilter(ProviderSettings providerSettings) {
+    public SsiOidcProviderConfigurationEndpointFilter(ProviderSettings providerSettings, ScopeProperties scopeProperties) {
         Assert.notNull(providerSettings, "providerSettings cannot be null");
         this.providerSettings = providerSettings;
+        this.scopeProperties = scopeProperties;
         this.requestMatcher = new AntPathRequestMatcher(
                 DEFAULT_OIDC_PROVIDER_CONFIGURATION_ENDPOINT_URI,
                 HttpMethod.GET.name()
@@ -95,60 +98,35 @@ public final class CustomOidcProviderConfigurationEndpointFilter extends OncePer
     }
 
     private Consumer<List<String>> clientAuthenticationMethods() {
-        return (authenticationMethods) -> {
-            authenticationMethods.add(ClientAuthenticationMethod.CLIENT_SECRET_BASIC.getValue());
-            authenticationMethods.add(ClientAuthenticationMethod.CLIENT_SECRET_POST.getValue());
-            authenticationMethods.add(ClientAuthenticationMethod.CLIENT_SECRET_JWT.getValue());
-            authenticationMethods.add(ClientAuthenticationMethod.PRIVATE_KEY_JWT.getValue());
-        };
+        return (authenticationMethods) -> authenticationMethods.add(ClientAuthenticationMethod.CLIENT_SECRET_BASIC.getValue());
     }
 
     private Consumer<List<String>> oidcScopes() {
-        return (oidcScopes) -> {
-            oidcScopes.add(OidcScopes.OPENID);
-            oidcScopes.add(OidcScopes.PROFILE);
-            oidcScopes.add(OidcScopes.EMAIL);
-        };
+        return (oidcScopes) -> oidcScopes.addAll(scopeProperties.getScopes().keySet());
     }
 
     private Consumer<List<String>> authGrantTypes() {
-        return (authorizationGrantTypes) -> {
-            authorizationGrantTypes.add(AuthorizationGrantType.AUTHORIZATION_CODE.getValue());
-            authorizationGrantTypes.add(AuthorizationGrantType.IMPLICIT.getValue());
-        };
+        return (authorizationGrantTypes) -> authorizationGrantTypes.add(AuthorizationGrantType.AUTHORIZATION_CODE.getValue());
     }
 
     private Consumer<List<String>> authResponseTypes() {
-        return (authResponseTypes) -> {
-            authResponseTypes.add(OAuth2AuthorizationResponseType.CODE.getValue());
-        };
+        return (authResponseTypes) -> authResponseTypes.add(OAuth2AuthorizationResponseType.CODE.getValue());
     }
 
     private Consumer<List<String>> signingAlgorithms() {
-        return (signingAlgorithms) -> {
-            signingAlgorithms.add(SignatureAlgorithm.RS256.getName());
-            signingAlgorithms.add("HS256");
-        };
+        return (signingAlgorithms) -> signingAlgorithms.add(SignatureAlgorithm.RS256.getName());
     }
 
     private Consumer<Map<String, Object>> claims() {
+        List<String> supportedClaims = scopeProperties.getScopes()
+                .values().stream().flatMap(List::stream)
+                .distinct().sorted()
+                .collect(Collectors.toList());
+
         return (claims) -> {
-            claims.put("userinfo_signing_alg_values_supported", List.of("RS256", "HS256"));
+            claims.put("userinfo_signing_alg_values_supported", List.of("RS256"));
             claims.put("display_values_supported", List.of("page", "popup"));
-            claims.put("claims_supported", List.of(
-                    "sub",
-                    "iss",
-                    "auth_time",
-                    "name",
-                    "given_name",
-                    "family_name",
-                    "nickname",
-                    "profile",
-                    "picture",
-                    "website",
-                    "email",
-                    "email_verified"
-            ));
+            claims.put("claims_supported", supportedClaims);
             claims.put("claims_locales_supported", List.of("en"));
             claims.put("ui_locales_supported", List.of("en", "de", "fr"));
         };

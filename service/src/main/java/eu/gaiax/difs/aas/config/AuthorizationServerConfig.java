@@ -27,6 +27,7 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,15 +40,15 @@ import org.springframework.security.config.annotation.web.configurers.oauth2.ser
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
+import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
+import org.springframework.security.oauth2.server.authorization.config.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.config.ProviderSettings;
 import org.springframework.security.oauth2.server.authorization.oidc.web.OidcProviderConfigurationEndpointFilter;
 import org.springframework.security.oauth2.server.authorization.oidc.web.OidcUserInfoEndpointFilter;
-import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import com.nimbusds.jose.jwk.JWKSet;
@@ -55,6 +56,7 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 
+import eu.gaiax.difs.aas.properties.ScopeProperties;
 import eu.gaiax.difs.aas.service.SsiAuthManager;
 
 /**
@@ -74,13 +76,18 @@ public class AuthorizationServerConfig {
 
     @Value("${aas.iam.redirect-uri}")
     private String redirectUri;
-    
-    
+
+    private final ScopeProperties scopeProperties;
+
+    @Autowired
+    public AuthorizationServerConfig(ScopeProperties scopeProperties) {
+        this.scopeProperties = scopeProperties;
+    }
+
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
         applySecurity(http);
-        http.addFilterBefore(new BearerTokenAuthenticationFilter(authenticationManager()), AnonymousAuthenticationFilter.class);
         http.formLogin()
                 .loginPage("/ssi/login")
                 .and()
@@ -93,24 +100,24 @@ public class AuthorizationServerConfig {
         OAuth2AuthorizationServerConfigurer<HttpSecurity> authorizationServerConfigurer =
                 new OAuth2AuthorizationServerConfigurer<>();
 
-        authorizationServerConfigurer.addObjectPostProcessor(customObjectPostProcessor());
+        authorizationServerConfigurer.addObjectPostProcessor(ssiObjectPostProcessor());
 
         RequestMatcher endpointsMatcher = authorizationServerConfigurer.getEndpointsMatcher();
 
         http.requestMatcher(endpointsMatcher)
                 .authorizeRequests(authorizeRequests -> authorizeRequests.anyRequest().authenticated())
                 .csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher)) 
-                .objectPostProcessor(customObjectPostProcessor())
+                .objectPostProcessor(ssiObjectPostProcessor())
                 .apply(authorizationServerConfigurer);
     }
 
-    private ObjectPostProcessor<Object> customObjectPostProcessor() {
+    private ObjectPostProcessor<Object> ssiObjectPostProcessor() {
         return new ObjectPostProcessor<>() {
             @Override
             @SuppressWarnings("unchecked")
             public <O> O postProcess(O object) {
                 if (object instanceof OidcProviderConfigurationEndpointFilter) {
-                    return (O) new CustomOidcProviderConfigurationEndpointFilter(providerSettings());
+                    return (O) new SsiOidcProviderConfigurationEndpointFilter(providerSettings(), scopeProperties);
                 } else if (object instanceof OidcUserInfoEndpointFilter) {
                     return (O) new SsiOidcUserInfoEndpointFilter(authenticationManager());
                 }
@@ -128,11 +135,17 @@ public class AuthorizationServerConfig {
     public RegisteredClientRepository registeredClientRepository() {
         RegisteredClient reClient = RegisteredClient.withId(UUID.randomUUID().toString())
                 .clientId(clientId)
-                .clientSecret(clientSecret) //"{noop}secret")
+                .clientSecret(clientSecret) 
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .redirectUri(redirectUri)
+                //.scopes(c -> c.addAll(List.of(OidcScopes.OPENID, OidcScopes.PROFILE, OidcScopes.EMAIL)))
                 .scope(OidcScopes.OPENID)
+                .clientSettings(ClientSettings.builder()
+                        .tokenEndpointAuthenticationSigningAlgorithm(SignatureAlgorithm.RS256)
+                        // my be we'll use it later on..
+                        //.tokenEndpointAuthenticationSigningAlgorithm(MacAlgorithm.HS256)
+                        .build())
                 .build();
         return new InMemoryRegisteredClientRepository(reClient);
     }
@@ -141,6 +154,9 @@ public class AuthorizationServerConfig {
     public ProviderSettings providerSettings() {
         return ProviderSettings.builder()
                 .issuer(issuerUri)
+                // could be added later. but ClientRegistrationEndpoint is not present in OidcProviderConfiguration (yet?)
+                // so it is not clear, how should we expose it
+                //.oidcClientRegistrationEndpoint("/clients/registration")
                 .build();
     }
 

@@ -1,16 +1,21 @@
 server:
   port: 9000
 
-#spring:
-#  security:
-#    oauth2:
-#      client:
-#        client-id: aas-app
-#        client-secret: qBhoUVKaqQqD0YVgMiEyq7dYehYPNtmz
-#        registration:
-#          keycloak:
-##            client-id: demo-app
-#            client-id: aas-app
-#            scope:
-#              - openid
-##              - profile
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://auth-server:9000
+          jwk-set-uri: http://auth-server:9000/oauth2/jwks
+aas:
+  tsa:
+    url: http://trustservice/api
+  iam:
+    base-uri: http://key-server:8080
+    client-registration-uri: /realms/gaia-x/clients-registrations/openid-connect
+    realm: gaia-x
+    client-id: aas-app
+    client-iat: eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIwMjU1ODM2Mi04Njk5LTRhYTQtOTc1NC1iZjE0ZjMyM2E4ZGIifQ.eyJleHAiOjAsImlhdCI6MTY0NzQzODk5MiwianRpIjoiM2M0Njg1ZTQtMmUwZS00MDIxLTk4ZGYtMzk4M2U1ZWQ3ZDBhIiwiaXNzIjoiaHR0cDovL2tleS1zZXJ2ZXI6ODA4MC9yZWFsbXMvZ2FpYS14IiwiYXVkIjoiaHR0cDovL2tleS1zZXJ2ZXI6ODA4MC9yZWFsbXMvZ2FpYS14IiwidHlwIjoiSW5pdGlhbEFjY2Vzc1Rva2VuIn0.Ob_j8v8cgZvooT1tiTwE9SpktEvoYmS6bOJPPT0ScTE
+    client-secret: "{noop}secret"
+    redirect-uri: http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint

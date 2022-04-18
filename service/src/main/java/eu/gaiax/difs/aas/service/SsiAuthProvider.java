@@ -4,6 +4,7 @@ import java.util.Collections;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -14,6 +15,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 public class SsiAuthProvider implements AuthenticationProvider {
 
     private static final Logger log = LoggerFactory.getLogger(SsiAuthProvider.class);
+
+    @Autowired
+    private SsiUserService ssiUserService;
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
@@ -28,6 +32,8 @@ public class SsiAuthProvider implements AuthenticationProvider {
 
         token.setDetails(authentication.getDetails());
 
+        ssiUserService.getUserClaims((String) authentication.getPrincipal());
+
         log.debug("authenticate.exit; returning: {} with name: {}", token, token.getName());
         return token;
     }
@@ -37,5 +43,4 @@ public class SsiAuthProvider implements AuthenticationProvider {
         log.debug("supports.enter; got authentication: {}", authentication);
         return authentication.equals(UsernamePasswordAuthenticationToken.class);
     }
-
 }
