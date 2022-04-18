@@ -12,4 +12,4 @@ The components are:
 - Organization Credential Manager: GAIA-X LOT3 implementation
 - Trust Services API: GAIA-X LOT4 implementation
 
-The Authentication Server is implemented as a regular Spring Boot Java application. Required OpenID/OAuth2 functionality is provided by [Spring Authorization Server](https://docs.spring.io/spring-security-oauth2-boot/docs/2.2.x-SNAPSHOT/reference/html/boot-features-security-oauth2-authorization-server.html) with help of Spring Security components. AAS implements several interfaces, more details about their functionality and implementation can be found in the [AAS Functions section](../functions)
+The Authentication Server is implemented as a regular Spring Boot Java application. Required OpenID/OAuth2 functionality is provided by [Spring Authorization Server](https://docs.spring.io/spring-security-oauth2-boot/docs/2.2.x-SNAPSHOT/reference/html/boot-features-security-oauth2-authorization-server.html){:target="_blank"} with help of Spring Security components. AAS implements several interfaces, more details about their functionality and implementation can be found in the [AAS Functions section](../functions)
