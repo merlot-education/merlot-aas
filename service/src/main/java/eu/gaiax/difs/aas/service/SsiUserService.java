@@ -38,7 +38,6 @@ public class SsiUserService implements UserDetailsService {
 
     private final Map<String, Map<String, Object>> userClaimsCache = new ConcurrentHashMap<>();
 
-
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         log.debug("loadUserByUserName.enter; got username: {}", username);

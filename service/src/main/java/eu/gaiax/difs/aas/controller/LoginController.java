@@ -2,8 +2,6 @@ package eu.gaiax.difs.aas.controller;
 
 import javax.servlet.http.HttpServletRequest;
 
-import eu.gaiax.difs.aas.service.SsiUserService;
-import org.apache.commons.lang3.LocaleUtils;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.web.savedrequest.DefaultSavedRequest;
@@ -25,8 +23,6 @@ import java.util.ResourceBundle;
 public class LoginController {
 
     private final SsiBrokerService ssiBrokerService;
-
-    private final SsiUserService ssiUserService;
 
     @GetMapping(value = "/login")
     public String login(HttpServletRequest request, Model model) {
