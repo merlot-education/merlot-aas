@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import eu.gaiax.difs.aas.service.SsiBrokerService;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Locale;
 import java.util.ResourceBundle;
 
 @Controller
@@ -42,8 +43,7 @@ public class LoginController {
 
         String errorMessage = (String) request.getSession().getAttribute("AUTH_ERROR");
         if (errorMessage != null) {
-            ResourceBundle resourceBundle = ResourceBundle.getBundle("language/messages", request.getLocale());
-//            ResourceBundle resourceBundle = ResourceBundle.getBundle("language/messages", LocaleUtils.toLocale((String) request.getSession().getAttribute("session.current.locale")));
+            ResourceBundle resourceBundle = ResourceBundle.getBundle("language/messages", (Locale) request.getSession().getAttribute("session.current.locale"));
 
             model.addAttribute("errorMessage", resourceBundle.getString(errorMessage));
         }

@@ -20,7 +20,7 @@ public class LocaleConfiguration implements WebMvcConfigurer {
         ResourceBundleMessageSource messageSource =
                 new ResourceBundleMessageSource();
         messageSource.setBasenames("language/messages");
-        messageSource.setDefaultEncoding("UTF-8");
+        messageSource.setDefaultEncoding("ISO-8859-1");
         return messageSource;
     }
 
