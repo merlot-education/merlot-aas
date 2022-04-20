@@ -39,7 +39,8 @@ public class LoginController {
 
         String errorMessage = (String) request.getSession().getAttribute("AUTH_ERROR");
         if (errorMessage != null) {
-            ResourceBundle resourceBundle = ResourceBundle.getBundle("language/messages", (Locale) request.getSession().getAttribute("session.current.locale"));
+            Locale locale = (Locale) request.getSession().getAttribute("session.current.locale");
+            ResourceBundle resourceBundle = ResourceBundle.getBundle("language/messages", locale != null ? locale : Locale.getDefault());
 
             model.addAttribute("errorMessage", resourceBundle.getString(errorMessage));
         }
