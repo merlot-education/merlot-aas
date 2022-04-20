@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<meta charset="UTF-8">
+<meta charset="ISO-8859-1">
 <head>
     <title>Login</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -9,11 +9,19 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700&display=swap" rel="stylesheet">
     <link th:href="@{/css/login.css}" rel="stylesheet" type="text/css"/>
+    <link href=../static/css/login.css rel="stylesheet" type="text/css"/>
 </head>
-
 <body>
 <header>
     <p class="error-message" th:if= "${errorMessage != null}" th:text="${errorMessage}"></p>
+    <div class="modal show-modal">
+        <div class="modal-content">
+            <h1 class="modal-title" th:text="#{modalTitle}">Login failed</h1>
+            <hr class="modal-divider">
+            <p class="modal-message" th:text="#{modalMessage}">You need to install a wallet browser extension to login with your credentials.</p>
+            <button class="modal-button" th:text="#{closeModal}">Close</button>
+        </div>
+    </div>
     <div class="navigation-bar">
         <svg width="107" height="59" viewBox="0 0 107 59" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M50.9988 48.3137H47.5141C47.1721 48.3137 46.8882 48.5977 46.8882 48.9397C46.8882 49.301 47.1657 49.5914 47.5141 49.5914H50.9988C51.3537 49.5914 51.6247 49.3139 51.6247 48.9397C51.6312 48.5912 51.3537 48.3137 50.9988 48.3137Z" fill="#000094"/>
@@ -61,11 +69,11 @@
             <path d="M9.35695 48.9203C9.35695 51.2951 7.56945 53.2245 5.36896 53.2245C3.18137 53.2245 1.40031 51.2951 1.40031 48.9203C1.40031 46.5714 3.18137 44.6613 5.36896 44.6613C7.563 44.6549 9.35695 46.5714 9.35695 48.9203ZM10.0732 43.261C9.6796 43.261 9.3505 43.5707 9.3505 43.9579V45.1388C8.35027 43.9579 6.89187 43.261 5.3625 43.261C2.40699 43.261 0 45.7971 0 48.9203C0 52.0501 2.40699 54.599 5.3625 54.599C6.90478 54.599 8.36318 53.9086 9.3505 52.7276V53.6311C9.3505 55.8574 7.59526 57.5997 5.3625 57.5997C4.79463 57.5997 4.28484 57.49 3.74923 57.2512C3.20717 57.0125 2.78773 56.7156 2.43281 56.3349C2.31665 56.1865 2.14887 56.0961 1.96819 56.0832C1.7875 56.0768 1.58746 56.1413 1.44549 56.2768C1.1551 56.522 1.17446 56.9544 1.38096 57.2642C1.86494 57.7546 2.39409 58.1482 2.9297 58.4128L2.99422 58.4644C3.03294 58.4838 3.07167 58.4967 3.11038 58.5096L3.24589 58.5677C3.29106 58.5935 3.33624 58.6128 3.38786 58.6322C4.0009 58.8774 4.65266 59 5.32378 59C5.69161 59 6.06588 58.9613 6.44016 58.8839L6.48533 58.8774C6.84671 58.8 7.16291 58.7032 7.47265 58.5741C7.75659 58.4515 8.03407 58.3031 8.29865 58.1289C8.37608 58.0772 8.45352 58.0192 8.53096 57.9546L8.62775 57.8772C8.75681 57.7804 8.87942 57.6771 9.00203 57.5739C9.13109 57.4513 9.2537 57.3222 9.37631 57.1867C9.41502 57.1415 9.47956 57.0641 9.47956 57.0641C10.312 56.0768 10.7508 54.8894 10.7508 53.6375V43.9708C10.7508 43.5836 10.4346 43.261 10.0732 43.261Z" fill="#000094"/>
         </svg>
         <div class="navigation-links">
-            <a class="navigation-link">Data</a>
-            <a class="navigation-link">Provider</a>
+            <a class="navigation-link" th:text="#{data}"></a>
+            <a class="navigation-link" th:text="#{provider}"></a>
             <div class="language-component">
                 <div class="display-language-component navigation-link">
-                    <span id="display-language">English</span><span> v</span>
+                    <span id="display-language" th:text="#{displayLanguage}"></span><span> v</span>
                 </div>
                 <ul class="locale-list">
                     <li id="Deutsch" class="locale">Deutsch</li>
@@ -81,13 +89,13 @@
 <main>
     <div class="card">
         <div class="card-top">
-            <h1>Welcome to Gaia-X</h1>
-            <p>Sign in to continue</p>
+            <h1 th:text="#{title}">Welcome to Gaia-X</h1>
+            <p th:text="#{subtitle}">Sign in to continue</p>
         </div>
         <hr class="card-divider">
         <div class="card-bottom">
             <div class="card-bottom-contents">
-                <h2 id="greeting">Scan the QR code with your mobile device</h2>
+                <h2 id="greeting" th:text="#{qrTitle}">Scan the QR code with your mobile device</h2>
                 <img th:src="${qrUrl}" alt="qr Code">
                 <form th:action="@{/login}" method="post">
                     <table>
@@ -96,26 +104,28 @@
                         </tr>
                         <tr>
                             <td><input id="sign-in-button" class="action_button" name="qr-smartphone-button" type="submit"
-                                       value="Login"/></td>
+                                       th:value="#{login}"/></td>
                         </tr>
                         <tr>
                             <td><input id="scan-qr-browser-button" class="action_button" name="qr-browser-button" type="button"
-                                       value="Scan QR code with browser"/></td>
+                                       th:value="#{scanWithBrowser}"/></td>
                         </tr>
                         <tr>
                             <td><input id="back-to-standard-login-button" class="action_button bottom-button" name="back" onclick="history.back()"
-                                       type="button" value="FAQ & Support"/></td>
+                                       type="button" th:value="#{faq}"/></td>
                         </tr>
                     </table>
                 </form>
-                <p class="account-registration">Don't have an account?</p>
-                <a class="account-registration-link">Register now</a>
+                <p class="account-registration" th:text="#{noAccount}"></p>
+                <a class="account-registration-link" th:text="#{register}"></a>
             </div>
         </div>
     </div>
 </main>
 
 <script type="application/javascript" th:src="@{/js/translate.js}"></script>
+<script type="application/javascript" th:src="@{/js/modal.js}"></script>
+
 </body>
 <footer>
     <div class="footer-top">
@@ -170,17 +180,17 @@
     <div class="footer-bottom">
         <p class="copyright">© 2020 Deutsche Telekom IoT GmbH</p>
         <div class="bottom-nav-bar">
-            <a>Imprint</a>
-            <a>Privacy Policy</a>
-            <a>Cookie Settings</a>
-            <a>Terms & Conditions</a>
-            <a>Contact</a>
-            <a>Help</a>
+            <a th:text="#{imprint}"></a>
+            <a th:text="#{privacyPolicy}"></a>
+            <a th:text="#{cookies}"></a>
+            <a th:text="#{terms}"></a>
+            <a th:text="#{contact}"></a>
+            <a th:text="#{help}"></a>
         </div>
 
     </div>
     <div class="footer-end-of-page">
-        <p>Gaia-X – For business customers only</p>
+        <p th:text="#{footnote}"></p>
     </div>
 </footer>
 

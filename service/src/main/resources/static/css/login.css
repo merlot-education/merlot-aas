@@ -2,9 +2,82 @@ html {
     font-family: 'Titillium Web', sans-serif;
     letter-spacing: 0.25px;
     height: 1vh;
-
-
 }
+
+.modal {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    visibility: hidden;
+    opacity: 0;
+}
+
+.show-modal {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    width: 634px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 16px 24px 36px 24px;
+    border-radius: 4px;
+}
+
+.modal-title {
+    font-weight: 400;
+    font-size: 24px;
+    line-height: 36px;
+    letter-spacing: 0.25px;
+    text-align: left;
+}
+
+.modal-message {
+    margin-top: 0;
+    padding-top: 36px;
+    inline-size: 366px;
+    overflow-wrap: break-word;
+    font-size: 18px;
+    font-weight: 400;
+    font-size: 18px;
+    line-height: 24px;
+    letter-spacing: 0.25px;
+    color: #4B4B4B;
+}
+
+.modal-button {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 20px;
+    width: 125px;
+    height: 33px;
+    text-align: center;
+    gap: 8px;
+    color: #000094;
+    background-color: #FFFFFF;
+    border: 2.5px solid #000094;
+    border-radius: 5px;
+}
+
+.modal-button:hover {
+    color: #000094;
+    background-color: #FFFFFF;
+}
+
+.modal-divider {
+    width: 100%;
+    border-top: 0px solid #E8E8E8;
+    margin: 0;
+}
+
 
 .logo-header {
     fill: red;
@@ -17,23 +90,21 @@ header {
     border-top-color: #000094;
     border-bottom: 1px solid;
     border-bottom-color: #E8E8E8;
-    height: 82px;
     font-weight: 700;
     font-size: 18px;
     line-height: 24px;
     letter-spacing: 0.25px;
-
 }
 
 .navigation-bar {
-    margin:auto;
-    padding-top: 14px;
-    padding-bottom: 8px;
-    width: 980px;
+    margin: auto;
+    padding: 14px 15px 8px 15px;
+    max-width: 980px;
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
+
 .navigation-links {
     display: flex;
     flex-direction: row;
@@ -41,12 +112,9 @@ header {
     justify-content: space-around;
 }
 
-
-
-
 .navigation-link {
-
     padding: 0 16px;
+    white-space: nowrap;
 }
 
 body {
@@ -56,22 +124,20 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-
-
 }
 
 .error-message {
     position: absolute;
     margin-top: 0;
     top: 15px;
+    left: 15px;
     padding: 10px 18px;
     color: #ef6351;
     background-color: #FFFFFF;
     border: 2.5px solid #ef6351;
     border-radius: 5px;
     box-shadow: 0 0.1875rem 0.4375rem 0.1875rem rgba(3, 3, 3, 0.13);
-    animation: fade 4s linear forwards;
-
+    animation: fade 6s linear forwards;
 }
 
 .logo-gaia-full {
@@ -83,7 +149,6 @@ body {
 }
 
 
-
 .card {
     margin: 80px 0;
     width: 635px;
@@ -93,18 +158,17 @@ body {
     background-color: #FFFFFF;
     box-shadow: 0.1rem 0.1875rem 0.475rem 0.1875rem rgba(3, 3, 3, 0.05);
     border-radius: 4px 4px 4px 4px;
-
 }
+
 .card-top {
     width: 100%;
     border-radius: 4px 4px 0px 0px;
     font-weight: 700;
     text-align: center;
-
 }
+
 .card-top h1 {
     margin-bottom: 0;
-
 }
 
 .card-top p {
@@ -115,14 +179,13 @@ body {
 
 .card-divider {
     width: 95%;
-    border-top: 1px solid #E8E8E8;
+    border-top: 0px solid #E8E8E8;
 }
 
 
 .card-bottom {
     color: black;
     width: 100%;
-
 }
 
 .card-bottom-contents {
@@ -182,14 +245,12 @@ h2 {
     font-weight: 400;
     font-size: 24px;
     text-align: center;
-
 }
 
 img {
     margin: auto;
     display: block;
     border: 1px solid #E8E8E8;
-
 }
 
 table {
@@ -209,8 +270,6 @@ table {
 }
 
 
-
-
 .action_button {
     margin: 8px 16px 8px 16px;
     font-size: 18px;
@@ -219,7 +278,7 @@ table {
     width: 240px;
     height: 33px;
     text-align: center;
-    gap: 8px ;
+    gap: 8px;
     color: #000094;
     background-color: #FFFFFF;
     border: 2.5px solid #000094;
@@ -227,12 +286,10 @@ table {
 }
 
 
-
-.action_button:hover {
+.action_button:hover, .modal-button:hover {
     cursor: pointer;
     color: #FFFFFF;
     background-color: #000094;
-
 }
 
 #back-to-standard-login-button {
@@ -240,68 +297,59 @@ table {
     background: #E8E8E8;
     border-style: solid;
     border: 2.5px solid #E8E8E8;
-
-
 }
 
 #back-to-standard-login-button:hover {
-
     background: #c9c9c9;
     border: 2.5px solid #c9c9c9;
-
 }
-.account-registration{
+
+.account-registration {
     margin-top: 8px;
 }
+
 .account-registration, .account-registration-link {
     font-weight: 400;
     font-size: 18px;
     line-height: 24px;
     margin-bottom: 0;
 }
+
 .account-registration-link {
     font-weight: 700;
     text-decoration: underline;
     margin-bottom: 40px;
 }
 
-footer{
-    margin:auto;
+footer {
+    margin: auto;
     width: 100%;
     background-color: #000094;
     color: #FFFFFF;
-
-
-
 }
 
 
 .footer-top, .footer-bottom {
     margin: auto;
-    width: 960px;
+    max-width: 960px;
     display: flex;
     justify-content: space-between;
-    align-items: center;
-
+    align-items: center
 }
 
 .footer-top {
-    padding-top: 24px;
-    padding-bottom: 12px;
+    padding: 24px 15px 12px 15px;
     margin-bottom: 0;
 }
 
 .footer-bottom {
-    padding-top: 21px;
-    padding-bottom: 31px;
+    padding: 21px 15px 31px 15px;
     margin-top: 0;
     margin-bottom: 0;
 }
 
-.footer-divider{
+.footer-divider {
     margin: 0 auto;
-
-    width: 960px;
     border-color: #737373
 }
 
@@ -313,22 +361,21 @@ footer{
 }
 
 .copyright {
- font-weight: 700;
+    font-weight: 700;
 }
+
 .bottom-nav-bar a {
     font-weight: 400;
     margin-left: 24px;
-
 }
 
 .copyright, .bottom-nav-bar {
     font-size: 15px;
     line-height: 20px;
     letter-spacing: 0.25px;
-
 }
 
-.footer-end-of-page p{
+.footer-end-of-page p {
     text-align: center;
     background-color: #0C1B5A;
     font-weight: 400;
@@ -340,12 +387,16 @@ footer{
 }
 
 
-
-
 @keyframes fade {
-    0% { opacity: 1 }
-    75% { opacity: 1 }
-    100% { opacity: 0 }
+    0% {
+        opacity: 1
+    }
+    75% {
+        opacity: 1
+    }
+    100% {
+        opacity: 0
+    }
 }
 
 
@@ -355,16 +406,13 @@ footer{
         margin: 0 0 0 0;
     }
 
-
-
-    h1 {
-        margin-top: 0px;
-        font-size: 16px;
-    }
-
     main {
         margin: auto;
         width: 100%;
+    }
+
+    .card {
+        width: auto;
     }
 
     .card-bottom {
@@ -380,5 +428,15 @@ footer{
         margin: auto;
         width: 94%;
         padding-top: 5px;
+    }
+
+    .navigation-bar,
+    .footer-top,
+    .footer-bottom {
+        flex-direction: column;
+    }
+
+    .bottom-nav-bar a {
+        display: flex;
     }
 }
