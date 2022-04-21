@@ -41,10 +41,16 @@ aas:
     base-uri: http://key-server:8080
     client-registration-uri: /auth/realms/gaia-x/clients-registrations/openid-connect
     realm: gaia-x
-    client-id: aas-app
     client-iat: "{noop}iat"
-    client-secret: "{noop}secret"
-    redirect-uri: http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint
+    clients:
+      oidc:
+        id: aas-app-oidc
+        secret: "{noop}secret"
+        redirect-uri: http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint
+      siop:
+        id: aas-app-siop
+        secret: "{noop}secret2"
+        redirect-uri: http://key-server:8080/realms/gaia-x/broker/ssi-siop/endpoint
   scopes:
     openid:
       - sub

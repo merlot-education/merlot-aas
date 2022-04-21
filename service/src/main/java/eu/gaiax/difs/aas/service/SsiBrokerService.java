@@ -2,18 +2,14 @@ package eu.gaiax.difs.aas.service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.imageio.ImageIO;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
 
@@ -32,14 +28,56 @@ public class SsiBrokerService {
 
     private final static Logger log = LoggerFactory.getLogger(SsiBrokerService.class);
 
+    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
+    private String issuerUri;
+
+    @Value("${server.host}")
+    private String serverHost;
+
+    @Value("${server.port}")
+    private String serverPort;
+
     private final TrustServiceClient trustServiceClient;
 
     public String authorize(Model model) {
         log.debug("authorize.enter; got model: {}", model);
-        
+
         Map<String, Object> params = new HashMap<>();
         params.put("namespace", "Login");
 
+        processScopes(model, params);
+
+        // they can be provided in re-login scenario..
+        processAttribute(model, params, "not_older_than");
+        processAttribute(model, params, "max_age");
+
+        Map<String, Object> result = trustServiceClient.evaluate("GetLoginProofInvitation", params);
+        String link = (String) result.get("link");
+        String requestId = (String) result.get("requestId");
+
+        // encode link otherwise it'll not pass security check
+        String qrUrl = "/ssi/qr/" + Base64.getUrlEncoder().encodeToString(link.getBytes());
+        model.addAttribute("qrUrl", qrUrl);
+        model.addAttribute("requestId", requestId);
+
+        log.debug("authorize.exit; returning model: {}", model);
+        return "login-template.html";
+    }
+
+    public String siopAuthorize(Model model) {
+        log.debug("siopAuthorize.enter; got model: {}", model);
+
+        UUID requestId = UUID.randomUUID();
+        model.addAttribute("requestId", requestId);
+
+        String qrUrl = Base64.getUrlEncoder().encodeToString(buildRequestString(model, requestId).getBytes());
+        model.addAttribute("qrUrl", qrUrl);
+
+        log.debug("siopAuthorize.exit; returning model: {}", model);
+        return "login-template.html";
+    }
+
+    private Set<String> processScopes(Model model, Map<String, Object> params) {
         Set<String> scopes = new HashSet<>();
         scopes.add("openid");
         Object o = model.getAttribute("scope");
@@ -48,28 +86,27 @@ public class SsiBrokerService {
             scopes.addAll(Arrays.asList(sa));
         }
         params.put("scope", scopes);
-        
-        // they can be provided in re-login scenario..
-        o = model.getAttribute("not_older_than");
+        return scopes;
+    }
+
+    private void processAttribute(Model model, Map<String, Object> params, String attribute) {
+        Object o = model.getAttribute(attribute);
         if (o != null) {
-            params.put("not_older_than", o);
+            params.put(attribute, o);
         }
-        o = model.getAttribute("max_age");
-        if (o != null) {
-            params.put("max_age", o);
-        }
-        
-        Map<String, Object> result = trustServiceClient.evaluate("GetLoginProofInvitation", params);
-        String link = (String) result.get("link");
-        String requestId = (String) result.get("requestId");
-        
-        // encode link otherwise it'll not pass security check
-        String qrUrl = "/ssi/qr/" + Base64.getUrlEncoder().encodeToString(link.getBytes()); 
-        model.addAttribute("qrUrl", qrUrl);
-        model.addAttribute("requestId", requestId);
-        
-        log.debug("authorize.exit; returning model: {}", model);
-        return "login-template.html";
+    }
+
+    private String buildRequestString(Model model, UUID requestId) {
+        List<String> params = new ArrayList<>();
+
+        processScopes(model, new HashMap<>()).forEach(scope -> params.add("scope=" + scope));
+        params.add("response_type=id_token");
+        params.add("client_id=" + issuerUri);
+        params.add("redirect_uri=http://" + serverHost + ":" + serverPort + "/ssi/siop-cb");
+        params.add("response_mode=post");
+        params.add("nonce=" + requestId);
+
+        return "openid://?" + String.join("&", params);
     }
 
     public byte[] getQR(String elink) {
