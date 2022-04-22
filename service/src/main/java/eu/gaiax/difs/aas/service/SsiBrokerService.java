@@ -70,7 +70,7 @@ public class SsiBrokerService {
         UUID requestId = UUID.randomUUID();
         model.addAttribute("requestId", requestId);
 
-        String qrUrl = Base64.getUrlEncoder().encodeToString(buildRequestString(model, requestId).getBytes());
+        String qrUrl = "/ssi/qr/" + Base64.getUrlEncoder().encodeToString(buildRequestString(model, requestId).getBytes());
         model.addAttribute("qrUrl", qrUrl);
 
         log.debug("siopAuthorize.exit; returning model: {}", model);

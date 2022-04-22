@@ -1,6 +1,6 @@
 server:
-  host: localhost
-  port: 8090
+  host: auth-server
+  port: 9000
   error:
     path: /ssi/error
 
@@ -46,11 +46,11 @@ aas:
       oidc:
         id: aas-app-oidc
         secret: "{noop}secret"
-        redirect-uri: http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint
+        redirect-uri: ${aas.iam.base-uri}/realms/gaia-x/broker/ssi-oidc/endpoint
       siop:
         id: aas-app-siop
         secret: "{noop}secret2"
-        redirect-uri: http://key-server:8080/realms/gaia-x/broker/ssi-siop/endpoint
+        redirect-uri: ${aas.iam.base-uri}/realms/gaia-x/broker/ssi-siop/endpoint
   scopes:
     openid:
       - sub
