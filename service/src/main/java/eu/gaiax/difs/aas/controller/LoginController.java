@@ -37,11 +37,18 @@ public class LoginController {
         DefaultSavedRequest auth = (DefaultSavedRequest) request.getSession().getAttribute("SPRING_SECURITY_SAVED_REQUEST");
         model.addAttribute("scope", auth.getParameterValues("scope"));
 
+        String errorMessage = (String) request.getSession().getAttribute("AUTH_ERROR");
+        if (errorMessage != null) {
+            Locale locale = (Locale) request.getSession().getAttribute("session.current.locale");
+            ResourceBundle resourceBundle = ResourceBundle.getBundle("language/messages", locale != null ? locale : Locale.getDefault());
+            model.addAttribute("errorMessage", resourceBundle.getString(errorMessage));
+        }
+
         String[] clientId = auth.getParameterValues("client_id");
 
         if (clientId != null && clientId.length > 0) {
             if ("aas-app-oidc".equals(clientId[0])) {
-                return oidcLogin(request, model, auth);
+                return oidcLogin(model, auth);
             }
             if ("aas-app-siop".equals(clientId[0])) {
                 return ssiBrokerService.siopAuthorize(model);
@@ -51,7 +58,7 @@ public class LoginController {
         throw new OAuth2AuthenticationException("unknown client: " + (clientId == null ? "null" : Arrays.toString(clientId)));
     }
 
-    private String oidcLogin(HttpServletRequest request, Model model, DefaultSavedRequest auth) {
+    private String oidcLogin(Model model, DefaultSavedRequest auth) {
         String[] age = auth.getParameterValues("max_age");
         if (age != null && age.length > 0) {
             model.addAttribute("max_age", age[0]);
@@ -65,14 +72,7 @@ public class LoginController {
             }
         }
 
-        String errorMessage = (String) request.getSession().getAttribute("AUTH_ERROR");
-        if (errorMessage != null) {
-            Locale locale = (Locale) request.getSession().getAttribute("session.current.locale");
-            ResourceBundle resourceBundle = ResourceBundle.getBundle("language/messages", locale != null ? locale : Locale.getDefault());
-
-            model.addAttribute("errorMessage", resourceBundle.getString(errorMessage));
-        }
-        return ssiBrokerService.authorize(model);
+        return ssiBrokerService.oidcAuthorize(model);
     }
 
     private String getSubject(String idToken) {

@@ -1,8 +1,6 @@
 server:
   host: auth-server
   port: 9000
-  error:
-    path: /ssi/error
   servlet:
     session:
       timeout: 10m

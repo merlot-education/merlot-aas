@@ -39,7 +39,7 @@ public class SsiBrokerService {
 
     private final TrustServiceClient trustServiceClient;
 
-    public String authorize(Model model) {
+    public String oidcAuthorize(Model model) {
         log.debug("authorize.enter; got model: {}", model);
 
         Map<String, Object> params = new HashMap<>();

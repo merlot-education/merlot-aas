@@ -51,7 +51,7 @@ public class AuthenticationFlowTest {
     private MockMvc mockMvc;
 
     @Test
-    void testLoginFlow() throws Exception {
+    void testOidcLoginFlow() throws Exception {
 
         setupTrustService(ACCEPTED);
 
