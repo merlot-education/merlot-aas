@@ -25,6 +25,7 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.time.Duration;
 import java.util.UUID;
 
 import eu.gaiax.difs.aas.properties.ClientsProperties;
@@ -48,6 +49,7 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.config.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.config.ProviderSettings;
+import org.springframework.security.oauth2.server.authorization.config.TokenSettings;
 import org.springframework.security.oauth2.server.authorization.oidc.web.OidcProviderConfigurationEndpointFilter;
 import org.springframework.security.oauth2.server.authorization.oidc.web.OidcUserInfoEndpointFilter;
 import org.springframework.security.web.SecurityFilterChain;
@@ -70,6 +72,9 @@ public class AuthorizationServerConfig {
     @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
     private String issuerUri;
 
+    @Value("${aas.iam.ttl}")
+    private Duration ttl;
+    
     private final ScopeProperties scopeProperties;
 
     private final ClientsProperties clientsProperties;
@@ -147,6 +152,9 @@ public class AuthorizationServerConfig {
                         .tokenEndpointAuthenticationSigningAlgorithm(SignatureAlgorithm.RS256)
                         // maybe we'll use it later on..
                         //.tokenEndpointAuthenticationSigningAlgorithm(MacAlgorithm.HS256)
+                        .build())
+                .tokenSettings(TokenSettings.builder()
+                        .accessTokenTimeToLive(ttl)
                         .build())
                 .build();
     }

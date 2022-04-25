@@ -48,7 +48,7 @@ public class SsiBrokerService {
         processScopes(model, params);
 
         // they can be provided in re-login scenario..
-        processAttribute(model, params, "not_older_than");
+        processAttribute(model, params, "sub");
         processAttribute(model, params, "max_age");
 
         Map<String, Object> result = trustServiceClient.evaluate("GetLoginProofInvitation", params);

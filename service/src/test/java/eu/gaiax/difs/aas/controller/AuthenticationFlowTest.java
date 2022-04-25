@@ -3,6 +3,8 @@ package eu.gaiax.difs.aas.controller;
 import static eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto.*;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -25,6 +27,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
+import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -109,16 +113,47 @@ public class AuthenticationFlowTest {
                 post("/oauth2/token")
                 .header("Authorization", "Basic YWFzLWFwcDpzZWNyZXQ=")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("code", code)
-                .param("grant_type", "authorization_code")
-                .param("redirect_uri", "http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint"))
+                .param(OAuth2ParameterNames.CODE, code)
+                .param(OAuth2ParameterNames.GRANT_TYPE, "authorization_code")
+                .param(OAuth2ParameterNames.REDIRECT_URI, "http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint"))
             .andExpect(status().isOk())
             .andReturn();
 
         String jwtStr = result.getResponse().getContentAsString();
         JacksonJsonParser jsonParser = new JacksonJsonParser();
-        String token = jsonParser.parseMap(jwtStr).get("access_token").toString();
+        Map<String, Object> jwt = jsonParser.parseMap(jwtStr);
+        assertNotNull(jwt.get(OAuth2ParameterNames.ACCESS_TOKEN));
+        assertNotNull(jwt.get(OidcParameterNames.ID_TOKEN));
+        assertNotNull(jwt.get(OAuth2ParameterNames.EXPIRES_IN));
+        assertNotNull(jwt.get(OAuth2ParameterNames.TOKEN_TYPE));
+        assertTrue(((Integer) jwt.get(OAuth2ParameterNames.EXPIRES_IN)) > 500); // default is 300, we set it to 600
+        assertEquals("Bearer", jwt.get(OAuth2ParameterNames.TOKEN_TYPE));
+        // check session.getMaxInactiveInterval() too?
 
+        String accessToken = jwt.get(OAuth2ParameterNames.ACCESS_TOKEN).toString();
+        String idToken = jwt.get(OidcParameterNames.ID_TOKEN).toString();
+
+        // now test session evaluation..
+        result = mockMvc.perform(
+                get("/oauth2/authorize?scope={scope}&state={state}&response_type={type}&client_id={id}&redirect_uri={uri}&nonce={nonce}" +
+                        "&max_age={age}&id_token_hint={hint}", 
+                    "openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app", 
+                    "http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "10", idToken)
+                .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
+                //.session((MockHttpSession) session)
+                )
+            .andExpect(status().is3xxRedirection())
+            .andExpect(header().string("Location", containsString("/ssi/login")))
+            .andReturn();
+
+        session = result.getRequest().getSession(false);
+        result = mockMvc.perform(
+                get("/ssi/login")
+                .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
+                .session((MockHttpSession) session))
+            .andExpect(status().isOk())
+            .andReturn();
+        
         // TODO: call to /userinfo doesn't work because of auth issue on /jwks endpoint
         // but it works from oidc auth flow, and we do provide /userinfo endpoint
         // so, will investigate it later..
