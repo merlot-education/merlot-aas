@@ -12,7 +12,7 @@ spring:
     active: default
   application:
     name: auth-service
-  security:    
+  security:
     oauth2:
       resourceserver:
         jwt:
@@ -78,5 +78,5 @@ logging:
     root: INFO
     org.springframework.web: DEBUG
     org.springframework.security: DEBUG
-    org.springframework.web.client.RestTemplate: DEBUG    
+    org.springframework.web.client.RestTemplate: DEBUG
     eu.gaiax.difs.aas: DEBUG

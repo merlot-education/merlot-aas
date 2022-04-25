@@ -106,6 +106,8 @@ public class AuthenticationFlowTest {
             .andExpect(header().string("Location", containsString("/gaia-x/broker/ssi-oidc/endpoint")))
             .andReturn();
 
+        // TODO: till here was fine before
+
         String reUrl = result.getResponse().getRedirectedUrl();
         MultiValueMap<String, String> params = UriComponentsBuilder.fromUriString(reUrl).build().getQueryParams();
         String code = params.getFirst("code");
@@ -136,8 +138,8 @@ public class AuthenticationFlowTest {
         // now test session evaluation..
         result = mockMvc.perform(
                 get("/oauth2/authorize?scope={scope}&state={state}&response_type={type}&client_id={id}&redirect_uri={uri}&nonce={nonce}" +
-                        "&max_age={age}&id_token_hint={hint}", 
-                    "openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app", 
+                        "&max_age={age}&id_token_hint={hint}",
+                    "openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc",
                     "http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "10", idToken)
                 .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
                 //.session((MockHttpSession) session)

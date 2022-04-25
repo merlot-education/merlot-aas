@@ -51,7 +51,7 @@ public class LoginController {
         throw new RuntimeException("unknown client" + Arrays.toString(clientId));
     }
 
-    private String oidcLogin(HttpServletRequest request, Model model, DefaultSavedRequest auth){
+    private String oidcLogin(HttpServletRequest request, Model model, DefaultSavedRequest auth) {
         String[] age = auth.getParameterValues("max_age");
         if (age != null && age.length > 0) {
             model.addAttribute("max_age", age[0]);

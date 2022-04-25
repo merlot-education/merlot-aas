@@ -74,7 +74,7 @@ public class AuthorizationServerConfig {
 
     @Value("${aas.iam.ttl}")
     private Duration ttl;
-    
+
     private final ScopeProperties scopeProperties;
 
     private final ClientsProperties clientsProperties;

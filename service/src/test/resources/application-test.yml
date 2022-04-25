@@ -28,6 +28,7 @@ aas:
     client-registration-uri: /auth/realms/gaia-x/clients-registrations/openid-connect
     realm: gaia-x
     client-iat: "{noop}iat"
+    ttl: 10m
     clients:
       oidc:
         id: aas-app-oidc
