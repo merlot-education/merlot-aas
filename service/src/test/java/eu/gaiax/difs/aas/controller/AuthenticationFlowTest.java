@@ -106,14 +106,12 @@ public class AuthenticationFlowTest {
             .andExpect(header().string("Location", containsString("/gaia-x/broker/ssi-oidc/endpoint")))
             .andReturn();
 
-        // TODO: till here was fine before
-
         String reUrl = result.getResponse().getRedirectedUrl();
         MultiValueMap<String, String> params = UriComponentsBuilder.fromUriString(reUrl).build().getQueryParams();
         String code = params.getFirst("code");
         result = mockMvc.perform(
                 post("/oauth2/token")
-                .header("Authorization", "Basic YWFzLWFwcDpzZWNyZXQ=")
+                .header("Authorization", "Basic YWFzLWFwcC1vaWRjOnNlY3JldA==")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .param(OAuth2ParameterNames.CODE, code)
                 .param(OAuth2ParameterNames.GRANT_TYPE, "authorization_code")

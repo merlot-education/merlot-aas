@@ -5,6 +5,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.springframework.boot.json.JacksonJsonParser;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.security.web.savedrequest.DefaultSavedRequest;
 import org.springframework.stereotype.Controller;
@@ -47,8 +48,7 @@ public class LoginController {
             }
         }
 
-        // TODO: sJavorsky - specify exception
-        throw new RuntimeException("unknown client" + Arrays.toString(clientId));
+        throw new OAuth2AuthenticationException("unknown client: " + (clientId == null ? "null" : Arrays.toString(clientId)));
     }
 
     private String oidcLogin(HttpServletRequest request, Model model, DefaultSavedRequest auth) {

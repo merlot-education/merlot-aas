@@ -43,8 +43,7 @@ public class OidcDiscoveryTest {
                 .elements()
                 .forEachRemaining(jsonNode -> supportedScopes.add(jsonNode.asText()));
 
-        // TODO: fix me!
-        //assertEquals(List.of("first", "second"), supportedScopes);
+        assertEquals(List.of("first", "second"), supportedScopes);
     }
 
     @Test
@@ -60,8 +59,7 @@ public class OidcDiscoveryTest {
                 .elements()
                 .forEachRemaining(jsonNode -> supportedClaims.add(jsonNode.asText()));
 
-        // TODO: fix me!
-        //assertEquals(List.of("one", "three", "two"), supportedClaims);
+        assertEquals(List.of("one", "three", "two"), supportedClaims);
     }
 
 }

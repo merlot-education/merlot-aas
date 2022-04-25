@@ -38,7 +38,6 @@ aas:
         id: aas-app-siop
         secret: "{noop}secret2"
         redirect-uri: ${aas.iam.base-uri}/realms/gaia-x/broker/ssi-siop/endpoint
-
   scopes:
     first:
       - one
