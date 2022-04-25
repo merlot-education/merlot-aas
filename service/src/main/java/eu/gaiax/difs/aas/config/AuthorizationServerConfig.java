@@ -25,6 +25,7 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.time.Duration;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +47,7 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.config.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.config.ProviderSettings;
+import org.springframework.security.oauth2.server.authorization.config.TokenSettings;
 import org.springframework.security.oauth2.server.authorization.oidc.web.OidcProviderConfigurationEndpointFilter;
 import org.springframework.security.oauth2.server.authorization.oidc.web.OidcUserInfoEndpointFilter;
 import org.springframework.security.web.SecurityFilterChain;
@@ -77,6 +79,9 @@ public class AuthorizationServerConfig {
     @Value("${aas.iam.redirect-uri}")
     private String redirectUri;
 
+    @Value("${aas.iam.ttl}")
+    private Duration ttl;
+    
     private final ScopeProperties scopeProperties;
 
     @Autowired
@@ -145,6 +150,9 @@ public class AuthorizationServerConfig {
                         .tokenEndpointAuthenticationSigningAlgorithm(SignatureAlgorithm.RS256)
                         // my be we'll use it later on..
                         //.tokenEndpointAuthenticationSigningAlgorithm(MacAlgorithm.HS256)
+                        .build())
+                .tokenSettings(TokenSettings.builder()
+                        .accessTokenTimeToLive(ttl)
                         .build())
                 .build();
         return new InMemoryRegisteredClientRepository(reClient);

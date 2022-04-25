@@ -125,7 +125,7 @@ public final class SsiOidcProviderConfigurationEndpointFilter extends OncePerReq
 
         return (claims) -> {
             claims.put("userinfo_signing_alg_values_supported", List.of("RS256"));
-            claims.put("display_values_supported", List.of("page", "popup"));
+            claims.put("display_values_supported", List.of("page"));
             claims.put("claims_supported", supportedClaims);
             claims.put("claims_locales_supported", List.of("en"));
             claims.put("ui_locales_supported", List.of("en", "de", "fr"));
