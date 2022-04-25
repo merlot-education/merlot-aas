@@ -46,18 +46,18 @@ public class AuthenticationFlowTest {
 
     @MockBean
     private TrustServiceClient mockLocalTrustServiceClient;
-    
+
     @Autowired
     private MockMvc mockMvc;
-    
+
     @Test
-    void testLoginFlow() throws Exception {
+    void testOidcLoginFlow() throws Exception {
 
         setupTrustService(ACCEPTED);
 
         MvcResult result = mockMvc.perform(
-                get("/oauth2/authorize?scope={scope}&state={state}&response_type={type}&client_id={id}&redirect_uri={uri}&nonce={nonce}", 
-                    "openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app", 
+                get("/oauth2/authorize?scope={scope}&state={state}&response_type={type}&client_id={id}&redirect_uri={uri}&nonce={nonce}",
+                    "openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc",
                     "http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg")
                 .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML))
             .andExpect(status().is3xxRedirection())
@@ -73,7 +73,7 @@ public class AuthenticationFlowTest {
             .andExpect(status().isOk())
             .andReturn();
         session = result.getRequest().getSession(false);
-        
+
         String qrUrl = (String) result.getModelAndView().getModel().get("qrUrl");
         mockMvc.perform(
                 get(qrUrl)
@@ -81,7 +81,7 @@ public class AuthenticationFlowTest {
                 .cookie(new Cookie("JSESSIONID", session.getId()))
                 .session((MockHttpSession) session))
             .andExpect(status().isOk());
-        
+
         String userId = (String) result.getModelAndView().getModel().get("requestId");
         result = mockMvc.perform(
                 post("/login")
@@ -96,8 +96,8 @@ public class AuthenticationFlowTest {
         session = result.getRequest().getSession(false);
 
         result = mockMvc.perform(
-                get("/oauth2/authorize?scope={scope}&state={state}&response_type={type}&client_id={id}&redirect_uri={uri}&nonce={nonce}", 
-                    "openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app", 
+                get("/oauth2/authorize?scope={scope}&state={state}&response_type={type}&client_id={id}&redirect_uri={uri}&nonce={nonce}",
+                    "openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc",
                     "http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg")
                 .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
                 .cookie(new Cookie("JSESSIONID", session.getId()))
@@ -105,20 +105,20 @@ public class AuthenticationFlowTest {
             .andExpect(status().is3xxRedirection())
             .andExpect(header().string("Location", containsString("/gaia-x/broker/ssi-oidc/endpoint")))
             .andReturn();
-        
+
         String reUrl = result.getResponse().getRedirectedUrl();
         MultiValueMap<String, String> params = UriComponentsBuilder.fromUriString(reUrl).build().getQueryParams();
         String code = params.getFirst("code");
         result = mockMvc.perform(
                 post("/oauth2/token")
-                .header("Authorization", "Basic YWFzLWFwcDpzZWNyZXQ=")
+                .header("Authorization", "Basic YWFzLWFwcC1vaWRjOnNlY3JldA==")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                 .param(OAuth2ParameterNames.CODE, code)
                 .param(OAuth2ParameterNames.GRANT_TYPE, "authorization_code")
                 .param(OAuth2ParameterNames.REDIRECT_URI, "http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint"))
             .andExpect(status().isOk())
             .andReturn();
-        
+
         String jwtStr = result.getResponse().getContentAsString();
         JacksonJsonParser jsonParser = new JacksonJsonParser();
         Map<String, Object> jwt = jsonParser.parseMap(jwtStr);
@@ -136,8 +136,8 @@ public class AuthenticationFlowTest {
         // now test session evaluation..
         result = mockMvc.perform(
                 get("/oauth2/authorize?scope={scope}&state={state}&response_type={type}&client_id={id}&redirect_uri={uri}&nonce={nonce}" +
-                        "&max_age={age}&id_token_hint={hint}", 
-                    "openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app", 
+                        "&max_age={age}&id_token_hint={hint}",
+                    "openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc",
                     "http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "10", idToken)
                 .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
                 //.session((MockHttpSession) session)
@@ -173,7 +173,7 @@ public class AuthenticationFlowTest {
 
         MvcResult result = mockMvc.perform(
                         get("/oauth2/authorize?scope={scope}&state={state}&response_type={type}&client_id={id}&redirect_uri={uri}&nonce={nonce}",
-                                "openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app",
+                                "openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc",
                                 "http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg")
                                 .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML))
                 .andExpect(status().is3xxRedirection())
@@ -221,7 +221,7 @@ public class AuthenticationFlowTest {
 
         MvcResult result = mockMvc.perform(
                         get("/oauth2/authorize?scope={scope}&state={state}&response_type={type}&client_id={id}&redirect_uri={uri}&nonce={nonce}",
-                                "openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app",
+                                "openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc",
                                 "http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg")
                                 .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML))
                 .andExpect(status().is3xxRedirection())
@@ -263,10 +263,10 @@ public class AuthenticationFlowTest {
     }
 
     private void setupTrustService(AccessRequestStatusDto status) {
-        LocalTrustServiceClientImpl realLocaltrustServiceClient = new LocalTrustServiceClientImpl();
+        LocalTrustServiceClientImpl realLocalTrustServiceClient = new LocalTrustServiceClientImpl();
 
-        Map<String, Object> loginInvitation = realLocaltrustServiceClient.evaluate("GetLoginProofInvitation", new HashMap<>());
-        Map<String, Object> loginResult = realLocaltrustServiceClient.evaluate("GetLoginProofResult", new HashMap<>());
+        Map<String, Object> loginInvitation = realLocalTrustServiceClient.evaluate("GetLoginProofInvitation", new HashMap<>());
+        Map<String, Object> loginResult = realLocalTrustServiceClient.evaluate("GetLoginProofResult", new HashMap<>());
         loginResult.put("status", status);
 
         when(mockLocalTrustServiceClient.evaluate(eq("GetLoginProofInvitation"), anyMap()))

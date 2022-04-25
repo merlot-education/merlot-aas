@@ -5,6 +5,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.springframework.boot.json.JacksonJsonParser;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.security.web.savedrequest.DefaultSavedRequest;
 import org.springframework.stereotype.Controller;
@@ -19,6 +20,7 @@ import com.nimbusds.jwt.JWTParser;
 import eu.gaiax.difs.aas.service.SsiBrokerService;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -34,11 +36,34 @@ public class LoginController {
     public String login(HttpServletRequest request, Model model) {
         DefaultSavedRequest auth = (DefaultSavedRequest) request.getSession().getAttribute("SPRING_SECURITY_SAVED_REQUEST");
         model.addAttribute("scope", auth.getParameterValues("scope"));
+
+        String errorMessage = (String) request.getSession().getAttribute("AUTH_ERROR");
+        if (errorMessage != null) {
+            Locale locale = (Locale) request.getSession().getAttribute("session.current.locale");
+            ResourceBundle resourceBundle = ResourceBundle.getBundle("language/messages", locale != null ? locale : Locale.getDefault());
+            model.addAttribute("errorMessage", resourceBundle.getString(errorMessage));
+        }
+
+        String[] clientId = auth.getParameterValues("client_id");
+
+        if (clientId != null && clientId.length > 0) {
+            if ("aas-app-oidc".equals(clientId[0])) {
+                return oidcLogin(model, auth);
+            }
+            if ("aas-app-siop".equals(clientId[0])) {
+                return ssiBrokerService.siopAuthorize(model);
+            }
+        }
+
+        throw new OAuth2AuthenticationException("unknown client: " + (clientId == null ? "null" : Arrays.toString(clientId)));
+    }
+
+    private String oidcLogin(Model model, DefaultSavedRequest auth) {
         String[] age = auth.getParameterValues("max_age");
         if (age != null && age.length > 0) {
             model.addAttribute("max_age", age[0]);
         }
-        
+
         String[] hint = auth.getParameterValues("id_token_hint");
         if (hint != null && hint.length > 0) {
             String sub = getSubject(hint[0]);
@@ -47,16 +72,9 @@ public class LoginController {
             }
         }
 
-        String errorMessage = (String) request.getSession().getAttribute("AUTH_ERROR");
-        if (errorMessage != null) {
-            Locale locale = (Locale) request.getSession().getAttribute("session.current.locale");
-            ResourceBundle resourceBundle = ResourceBundle.getBundle("language/messages", locale != null ? locale : Locale.getDefault());
-
-            model.addAttribute("errorMessage", resourceBundle.getString(errorMessage));
-        }
-        return ssiBrokerService.authorize(model);
+        return ssiBrokerService.oidcAuthorize(model);
     }
-    
+
     private String getSubject(String idToken) {
         try {
             JWT jwt = JWTParser.parse(idToken);

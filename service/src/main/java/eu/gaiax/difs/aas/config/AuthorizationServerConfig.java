@@ -28,6 +28,8 @@ import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
 import java.util.UUID;
 
+import eu.gaiax.difs.aas.properties.ClientsProperties;
+import eu.gaiax.difs.aas.properties.ClientsProperties.ClientProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -65,28 +67,22 @@ import eu.gaiax.difs.aas.service.SsiAuthManager;
  * The Spring Security config.
  */
 @Configuration
-public class AuthorizationServerConfig { 
-    
+public class AuthorizationServerConfig {
+
     @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
     private String issuerUri;
-    
-    @Value("${aas.iam.client-id}")
-    private String clientId;
-
-    @Value("${aas.iam.client-secret}")
-    private String clientSecret;
-
-    @Value("${aas.iam.redirect-uri}")
-    private String redirectUri;
 
     @Value("${aas.iam.ttl}")
     private Duration ttl;
-    
+
     private final ScopeProperties scopeProperties;
 
+    private final ClientsProperties clientsProperties;
+
     @Autowired
-    public AuthorizationServerConfig(ScopeProperties scopeProperties) {
+    public AuthorizationServerConfig(ScopeProperties scopeProperties, ClientsProperties clientsProperties) {
         this.scopeProperties = scopeProperties;
+        this.clientsProperties = clientsProperties;
     }
 
     @Bean
@@ -100,7 +96,7 @@ public class AuthorizationServerConfig {
                 .jwt();
         return http.build();
     }
-    
+
     private void applySecurity(HttpSecurity http) throws Exception {
         OAuth2AuthorizationServerConfigurer<HttpSecurity> authorizationServerConfigurer =
                 new OAuth2AuthorizationServerConfigurer<>();
@@ -111,7 +107,7 @@ public class AuthorizationServerConfig {
 
         http.requestMatcher(endpointsMatcher)
                 .authorizeRequests(authorizeRequests -> authorizeRequests.anyRequest().authenticated())
-                .csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher)) 
+                .csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher))
                 .objectPostProcessor(ssiObjectPostProcessor())
                 .apply(authorizationServerConfigurer);
     }
@@ -130,7 +126,7 @@ public class AuthorizationServerConfig {
             }
         };
     }
-    
+
     @Bean
     public AuthenticationManager authenticationManager() {
         return new SsiAuthManager();
@@ -138,24 +134,29 @@ public class AuthorizationServerConfig {
 
     @Bean
     public RegisteredClientRepository registeredClientRepository() {
-        RegisteredClient reClient = RegisteredClient.withId(UUID.randomUUID().toString())
-                .clientId(clientId)
-                .clientSecret(clientSecret) 
+        return new InMemoryRegisteredClientRepository(
+                prepareClient(clientsProperties.getOidc()),
+                prepareClient(clientsProperties.getSiop()));
+    }
+
+    private RegisteredClient prepareClient(ClientProperties client) {
+        return RegisteredClient.withId(UUID.randomUUID().toString())
+                .clientId(client.getId())
+                .clientSecret(client.getSecret())
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-                .redirectUri(redirectUri)
+                .redirectUri(client.getRedirectUri())
                 //.scopes(c -> c.addAll(List.of(OidcScopes.OPENID, OidcScopes.PROFILE, OidcScopes.EMAIL)))
                 .scope(OidcScopes.OPENID)
                 .clientSettings(ClientSettings.builder()
                         .tokenEndpointAuthenticationSigningAlgorithm(SignatureAlgorithm.RS256)
-                        // my be we'll use it later on..
+                        // maybe we'll use it later on..
                         //.tokenEndpointAuthenticationSigningAlgorithm(MacAlgorithm.HS256)
                         .build())
                 .tokenSettings(TokenSettings.builder()
                         .accessTokenTimeToLive(ttl)
                         .build())
                 .build();
-        return new InMemoryRegisteredClientRepository(reClient);
     }
 
     @Bean

@@ -1,21 +1,3 @@
-server:
-  port: 9000
-
-spring:
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: http://auth-server:9000
-          jwk-set-uri: http://auth-server:9000/oauth2/jwks
 aas:
-  tsa:
-    url: http://trustservice/api
   iam:
-    base-uri: http://key-server:8080
-    client-registration-uri: /realms/gaia-x/clients-registrations/openid-connect
-    realm: gaia-x
-    client-id: aas-app
-    client-iat: eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJiMzdmYzk3Ny1jZDc1LTQ5ZDYtYTJkNi1lOTJlZjUxZDdkYjgifQ.eyJleHAiOi0xNzgzNjIyMzk0LCJpYXQiOjE2NDc0MzEzMDIsImp0aSI6ImUwYmZkY2NiLTEzN2QtNGNlZS1hNmYwLWE0ZTMyM2Y1MWJhMiIsImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODA4MC9yZWFsbXMvZ2FpYS14IiwiYXVkIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgwL3JlYWxtcy9nYWlhLXgiLCJ0eXAiOiJJbml0aWFsQWNjZXNzVG9rZW4ifQ.V_ihmA_GYJL2a_bmRaycVME2nWjgspdHR9Tp3gqGwB4
-    client-secret: "{noop}secret"
-    redirect-uri: http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint
+    client-iat: eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICIxZWQxZGM4Mi05MGVkLTQ3M2QtOWMyMi0xOWFlZGEzYTA1YTkifQ.eyJleHAiOi0xNzgwNTE1NTY4LCJpYXQiOjE2NTA1MzgxMjgsImp0aSI6IjMzMjE3YTY2LTgyNGMtNGMzZS04NGU0LTNiNzVmYWNiNDYxYyIsImlzcyI6Imh0dHA6Ly9rZXktc2VydmVyOjgwODAvcmVhbG1zL2dhaWEteCIsImF1ZCI6Imh0dHA6Ly9rZXktc2VydmVyOjgwODAvcmVhbG1zL2dhaWEteCIsInR5cCI6IkluaXRpYWxBY2Nlc3NUb2tlbiJ9.w3NQ9m1R_AeFi9x-yAfx3fQWeZhfR-Cy5mvi_S1z-JI
