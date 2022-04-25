@@ -1,8 +1,9 @@
 server:
   host: localhost
   port: 8090
-  error:
-    path: /ssi/error
+  servlet:
+    session:
+      timeout: 10m
 
 spring:
   profiles:
@@ -45,6 +46,7 @@ aas:
     client-iat: "{noop}iat"
     client-secret: "{noop}secret"
     redirect-uri: http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint
+    ttl: 10m
   scopes:
     openid:
       - sub

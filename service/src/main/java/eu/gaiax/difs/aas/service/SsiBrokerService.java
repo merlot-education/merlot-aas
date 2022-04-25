@@ -50,9 +50,9 @@ public class SsiBrokerService {
         params.put("scope", scopes);
         
         // they can be provided in re-login scenario..
-        o = model.getAttribute("not_older_than");
+        o = model.getAttribute("sub");
         if (o != null) {
-            params.put("not_older_than", o);
+            params.put("sub", o);
         }
         o = model.getAttribute("max_age");
         if (o != null) {

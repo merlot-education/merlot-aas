@@ -28,7 +28,6 @@
     </modules>
 
     <properties>
-        <!--packaging.format>jar</packaging.format-->
         <!-- java -->
         <java.version>11</java.version>
         <maven.compiler.source>11</maven.compiler.source>
@@ -189,21 +188,21 @@
                     <artifactId>license-maven-plugin</artifactId>
                     <version>2.0.0</version>
                 </plugin>
-                <plugin>
+                <!--plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-war-plugin</artifactId>
                     <version>3.3.1</version>
-                </plugin>
+                </plugin-->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-resources-plugin</artifactId>
                     <version>3.2.0</version>
                 </plugin>
-                <plugin>
+                <!--plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-assembly-plugin</artifactId>
                     <version>${plugin.maven-assembly.version}</version>
-                </plugin>
+                </plugin-->
                 <plugin>
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-maven-plugin</artifactId>
@@ -267,22 +266,6 @@
                         <mainClass>eu.gaiax.difs.aas.AuthServiceApplication</mainClass>
                     </container-->
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.owasp</groupId>
-                <artifactId>dependency-check-maven</artifactId>
-                <version>${owasp.version}</version>
-                <configuration>
-                    <suppressionFile>./owasp/suppressions.xml</suppressionFile>
-                    <failBuildOnAnyVulnerability>false</failBuildOnAnyVulnerability>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
