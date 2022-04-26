@@ -11,6 +11,9 @@ The communication flow between Client app, AAS and its IAM is:
 
 ![IAT Issuing](./images/iat_issuing.png "IAT Issuing")
 
+And the Data Flow Diagram for this functionality is:
+
+![IAT Provision DFD](./images/iat_provision_dfd.png "IAT Provision DFD")
 
 An alternative scenario proposed in [Dynamic Client Registration](../dcr) function.
 
