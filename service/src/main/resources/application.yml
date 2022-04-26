@@ -1,22 +1,23 @@
 server:
-  host: localhost
-  port: 8090
-  error:
-    path: /ssi/error
+  host: auth-server
+  port: 9000
+  servlet:
+    session:
+      timeout: 10m
 
 spring:
   profiles:
     active: default
   application:
     name: auth-service
-  security:    
+  security:
     oauth2:
       resourceserver:
         jwt:
           issuer-uri: http://${server.host}:${server.port}
           jwk-set-uri: http://${server.host}:${server.port}/oauth2/jwks
   messages:
-    encoding: UTF-8
+    encoding: ISO-8859-1
 management:
   endpoints:
     web:
@@ -41,10 +42,17 @@ aas:
     base-uri: http://key-server:8080
     client-registration-uri: /auth/realms/gaia-x/clients-registrations/openid-connect
     realm: gaia-x
-    client-id: aas-app
     client-iat: "{noop}iat"
-    client-secret: "{noop}secret"
-    redirect-uri: http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint
+    ttl: 10m
+    clients:
+      oidc:
+        id: aas-app-oidc
+        secret: "{noop}secret"
+        redirect-uri: ${aas.iam.base-uri}/realms/gaia-x/broker/ssi-oidc/endpoint
+      siop:
+        id: aas-app-siop
+        secret: "{noop}secret2"
+        redirect-uri: ${aas.iam.base-uri}/realms/gaia-x/broker/ssi-siop/endpoint
   scopes:
     openid:
       - sub
@@ -68,5 +76,5 @@ logging:
     root: INFO
     org.springframework.web: DEBUG
     org.springframework.security: DEBUG
-    org.springframework.web.client.RestTemplate: DEBUG    
+    org.springframework.web.client.RestTemplate: DEBUG
     eu.gaiax.difs.aas: DEBUG

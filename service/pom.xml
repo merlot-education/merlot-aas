@@ -102,14 +102,6 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.owasp</groupId>
-                <artifactId>dependency-check-maven</artifactId>
-                <configuration>
-                    <suppressionFile>./owasp/suppressions.xml</suppressionFile>
-                    <failBuildOnAnyVulnerability>true</failBuildOnAnyVulnerability>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <configuration>
@@ -193,6 +185,22 @@
                                 <library>spring-boot</library>
                             </configOptions>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <configuration>
+                    <suppressionFile>./owasp/suppressions.xml</suppressionFile>
+                    <!--failBuildOnAnyVulnerability>false</failBuildOnAnyVulnerability-->
+                    <failBuildOnCVSS>50</failBuildOnCVSS>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>

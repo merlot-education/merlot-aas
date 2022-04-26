@@ -20,17 +20,10 @@
 
 package eu.gaiax.difs.aas.config;
 
-import java.io.IOException;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.server.authorization.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenCustomizer;
@@ -54,7 +47,7 @@ public class SecurityConfig {
             "/actuator",
             "/actuator/**",
             "/**/*.{js,html,css}",
-            // "/oauth2/**",
+//            "/oauth2/**",
             "/.well-known/**",
             "/ssi/**",
             "/clients/**"
@@ -85,19 +78,14 @@ public class SecurityConfig {
     }
 
     private AuthenticationFailureHandler ssiAuthenticationFailureHandler() {
-        return new AuthenticationFailureHandler() {
-
-            @Override
-            public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
-                                                AuthenticationException exception) throws IOException, ServletException {
-                String error = exception.getMessage();
-                if (error == null && exception instanceof OAuth2AuthenticationException) {
-                    error = ((OAuth2AuthenticationException) exception).getError().getErrorCode();
-                }
-                request.getSession().setAttribute("AUTH_ERROR", error);
-                String redirectUrl = request.getContextPath() + "/ssi/login";
-                response.sendRedirect(redirectUrl);
+        return (request, response, exception) -> {
+            String error = exception.getMessage();
+            if (error == null && exception instanceof OAuth2AuthenticationException) {
+                error = ((OAuth2AuthenticationException) exception).getError().getErrorCode();
             }
+            request.getSession().setAttribute("AUTH_ERROR", error);
+            String redirectUrl = request.getContextPath() + "/ssi/login";
+            response.sendRedirect(redirectUrl);
         };
     }
 }
