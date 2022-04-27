@@ -1,0 +1,27 @@
+server:
+  host: auth-server
+  port: 9000
+
+spring:
+  security:    
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://${server.host}:${server.port}
+          jwk-set-uri: http://${server.host}:${server.port}/oauth2/jwks
+          
+aas:
+  iam:
+    base-uri: https://localhost.emobix.co.uk:8443
+    client-registration-uri: /auth/realms/gaia-x/clients-registrations/openid-connect # should be changed, probably
+    client-iat: "{noop}iat"
+    ttl: 10m
+    clients:
+      oidc:
+        id: aas-app-oidc
+        secret: "{noop}secret"
+        redirect-uri: ${aas.iam.base-uri}/test/a/aas-test/callback
+      siop:
+        id: aas-app-siop
+        secret: "{noop}secret2"
+        redirect-uri: ${aas.iam.base-uri}/test/a/aas-test/callback #requires another path, probably..    
