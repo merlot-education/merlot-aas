@@ -1,11 +1,10 @@
 package eu.gaiax.difs.aas.controller;
 
-import javax.servlet.http.HttpServletRequest;
-
-import eu.gaiax.difs.aas.service.SsiUserService;
-import io.swagger.v3.oas.annotations.Parameter;
+import com.nimbusds.jwt.JWT;
+import com.nimbusds.jwt.JWTParser;
+import eu.gaiax.difs.aas.service.SsiBrokerService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.json.JacksonJsonParser;
-import org.springframework.boot.json.JsonParser;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -16,13 +15,11 @@ import org.springframework.ui.Model;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
-import com.nimbusds.jwt.JWT;
-import com.nimbusds.jwt.JWTParser;
-
-import eu.gaiax.difs.aas.service.SsiBrokerService;
-import lombok.RequiredArgsConstructor;
-
-import java.util.*;
+import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
+import java.util.Locale;
+import java.util.Map;
+import java.util.ResourceBundle;
 
 @Controller
 @RequiredArgsConstructor
