@@ -44,6 +44,7 @@
         <micrometer.version>1.8.1</micrometer.version>
         <zxing.version>3.4.1</zxing.version>
         <jackson.data-nullable.version>0.2.2</jackson.data-nullable.version>
+        <nimbusds.version>9.34</nimbusds.version>
         <!-- plugins -->
         <plugin.owasp.version>6.5.0</plugin.owasp.version>
         <plugin.maven-assembly.version>3.3.0</plugin.maven-assembly.version>
@@ -166,6 +167,11 @@
                 <groupId>com.google.zxing</groupId>
                 <artifactId>javase</artifactId>
                 <version>${zxing.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.nimbusds</groupId>
+                <artifactId>oauth2-oidc-sdk</artifactId>
+                <version>${nimbusds.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
