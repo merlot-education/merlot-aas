@@ -49,17 +49,18 @@ public class SsiBrokerService {
     @Value("${server.port}")
     private String serverPort;
 
-    @Value("${aas.id-token.ttl:10}")
+    @Value("${aas.id-token.ttl}")
     private Long ttl;
 
-    @Value("${aas.id-token.clock-skew:5}")
+    @Value("${aas.id-token.clock-skew}")
     private Integer clockSkew;
 
-    @Value("${aas.id-token.client-id:https://auth-server:9000/ssi/siop-cb}") //todo why?
+    @Value("${aas.id-token.client-id}") //todo why?
     private String clientId;
 
     private final TrustServiceClient trustServiceClient;
     private final SsiUserService ssiUserService;
+    private final CacheService cacheService;
     private final ScopeProperties scopeProperties;
 
     private final Map<String, LocalDateTime> nonceCache = new ConcurrentHashMap<String, LocalDateTime>();
