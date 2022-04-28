@@ -81,7 +81,7 @@ public class AuthenticationSiopFlowTest {
                 .andExpect(status().isOk());
 
         result = mockMvc.perform(
-                        post("/ssi/siop-cb").contentType(APPLICATION_FORM_URLENCODED_VALUE).content("id_token={ \"iss\": \"https://self-issued.me/v2\", " +
+                        post("/ssi/siop-callback").contentType(APPLICATION_FORM_URLENCODED_VALUE).content("id_token={ \"iss\": \"https://self-issued.me/v2\", " +
                                                                                                         "\"sub\": \"NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs\", " +
                                                                                                         "\"aud\": \"https://auth-server:9000/ssi/siop-cb\", " +
                                                                                                         "\"nonce\": \"n-0S6_WzA2Mj\", \"exp\": 1311281970, \"iat\": 1311280970}"))

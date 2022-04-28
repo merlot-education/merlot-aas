@@ -93,7 +93,7 @@ public class LoginController {
 
     }
 
-    @PostMapping(value = "/siop-cb", consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE})
+    @PostMapping(value = "/siop-callback", consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE})
     public ResponseEntity siopLogin(
             @Parameter(description = "Request ID", required = true)
             @RequestParam("id_token") final String idToken) {
