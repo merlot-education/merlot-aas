@@ -16,12 +16,12 @@ import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.Issuer;
 import com.nimbusds.openid.connect.sdk.Nonce;
 import com.nimbusds.openid.connect.sdk.validators.IDTokenClaimsVerifier;
-import eu.gaiax.difs.aas.exception.AssLoginException;
 import eu.gaiax.difs.aas.properties.ScopeProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
 
@@ -165,7 +165,7 @@ public class SsiBrokerService {
     private void validateIdToken(Map<String, Object> idToken) {
         String nonce = ((String) idToken.get("nonce"));
         if (nonce == null || nonce.isBlank() || !isValidNonce(nonce)) {
-            throw new AssLoginException("loginFailed");
+            throw new OAuth2AuthenticationException("loginFailed");
         }
 
         JWTClaimsSetVerifier claimsVerifier = new IDTokenClaimsVerifier(
@@ -178,12 +178,12 @@ public class SsiBrokerService {
         try {
             claimsVerifier.verify(JWTClaimsSet.parse(idToken), null);
         } catch (ParseException | BadJWTException e) {
-            throw new AssLoginException("loginFailed");
+            throw new OAuth2AuthenticationException("loginFailed");
         }
 
         if (!idToken.keySet().containsAll(scopeProperties.getScopes().get("profile")) ||
             !idToken.keySet().containsAll(scopeProperties.getScopes().get("email"))) {
-            throw new AssLoginException("loginFailed");
+            throw new OAuth2AuthenticationException("loginFailed");
         }
     }
 
@@ -191,7 +191,7 @@ public class SsiBrokerService {
         if (!nonceCache.containsKey(requestId)) {
             nonceCache.put(requestId, LocalDateTime.now());
         } else {
-            throw new AssLoginException("loginFailed");
+            throw new OAuth2AuthenticationException("loginFailed");
         }
     }
 
