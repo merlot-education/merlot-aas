@@ -60,7 +60,6 @@ public class SsiBrokerService {
 
     private final TrustServiceClient trustServiceClient;
     private final SsiUserService ssiUserService;
-    private final CacheService cacheService;
     private final ScopeProperties scopeProperties;
 
     private final Map<String, LocalDateTime> nonceCache = new ConcurrentHashMap<String, LocalDateTime>();

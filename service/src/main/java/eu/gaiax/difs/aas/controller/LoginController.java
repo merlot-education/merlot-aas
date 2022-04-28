@@ -13,6 +13,7 @@ import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.security.web.savedrequest.DefaultSavedRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
 import com.nimbusds.jwt.JWT;
@@ -94,13 +95,10 @@ public class LoginController {
     }
 
     @PostMapping(value = "/siop-callback", consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE})
-    public ResponseEntity siopLogin(
-            @RequestParam("id_token") final String idToken) {
-//        @RequestParam("id_token") final Map<String, String> idToken) {
+    public ResponseEntity siopLogin(@RequestParam MultiValueMap body) {
 
-            JacksonJsonParser parser = new JacksonJsonParser(); //todo why above does not work and when creating custom converter it clashes with already build in converter - of course
-
-        ssiBrokerService.processSiopLoginResponse(parser.parseMap(idToken));
+        JacksonJsonParser parser = new JacksonJsonParser();
+        ssiBrokerService.processSiopLoginResponse(parser.parseMap((String) body.getFirst("id_token")));
 
         return ResponseEntity.ok().build();
 
