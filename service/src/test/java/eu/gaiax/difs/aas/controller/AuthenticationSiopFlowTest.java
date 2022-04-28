@@ -89,4 +89,11 @@ public class AuthenticationSiopFlowTest {
                 .andReturn();
         session = result.getRequest().getSession(false);
     }
+
+    @Test
+    void siopCallback_missingParameter() throws Exception {
+        mockMvc.perform(
+                        post("/ssi/siop-callback").contentType(APPLICATION_FORM_URLENCODED_VALUE))
+                .andExpect(status().isBadRequest());
+    }
 }
