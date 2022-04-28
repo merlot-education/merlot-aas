@@ -60,7 +60,12 @@ public class SsiUserService implements UserDetailsService {
     }
 
     public void cacheUserClaims(String requestId, Map<String, Object> userClaims) {
-        userClaimsCache.put(requestId, userClaims);
+        if (!userClaimsCache.containsKey(requestId)) {
+            userClaimsCache.put(requestId, userClaims);
+        }
+        else {
+            throw new OAuth2AuthenticationException("loginFailed");
+        }
     }
 
     private Map<String, Object> loadUserClaims(String requestId) {

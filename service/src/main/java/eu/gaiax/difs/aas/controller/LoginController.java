@@ -98,9 +98,13 @@ public class LoginController {
     public ResponseEntity siopLogin(@RequestParam MultiValueMap body) {
 
         JacksonJsonParser parser = new JacksonJsonParser();
-        ssiBrokerService.processSiopLoginResponse(parser.parseMap((String) body.getFirst("id_token")));
+        String idToken = (String) body.getFirst("id_token");
+
+        if (idToken == null || idToken.isBlank())
+            return ResponseEntity.badRequest().build();
+
+        ssiBrokerService.processSiopLoginResponse(parser.parseMap(idToken));
 
         return ResponseEntity.ok().build();
-
     }
 }
