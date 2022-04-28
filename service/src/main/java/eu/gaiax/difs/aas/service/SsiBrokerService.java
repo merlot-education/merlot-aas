@@ -2,10 +2,22 @@ package eu.gaiax.difs.aas.service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.text.ParseException;
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.imageio.ImageIO;
 
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.proc.BadJWTException;
+import com.nimbusds.jwt.proc.JWTClaimsSetVerifier;
+import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.oauth2.sdk.id.Issuer;
+import com.nimbusds.openid.connect.sdk.Nonce;
+import com.nimbusds.openid.connect.sdk.validators.IDTokenClaimsVerifier;
+import eu.gaiax.difs.aas.exception.AssLoginException;
+import eu.gaiax.difs.aas.properties.ScopeProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +49,20 @@ public class SsiBrokerService {
     @Value("${server.port}")
     private String serverPort;
 
+    @Value("${aas.id-token.ttl:10}")
+    private Long ttl;
+
+    @Value("${aas.id-token.clock-skew:5}")
+    private Integer clockSkew;
+
+    @Value("${aas.id-token.client-id:https://auth-server:9000/ssi/siop-cb}") //todo why?
+    private String clientId;
+
     private final TrustServiceClient trustServiceClient;
+    private final SsiUserService ssiUserService;
+    private final ScopeProperties scopeProperties;
+
+    private final Map<String, LocalDateTime> nonceCache = new ConcurrentHashMap<String, LocalDateTime>();
 
     public String oidcAuthorize(Model model) {
         log.debug("authorize.enter; got model: {}", model);
@@ -69,6 +94,7 @@ public class SsiBrokerService {
 
         UUID requestId = UUID.randomUUID();
         model.addAttribute("requestId", requestId);
+        storeNonce(requestId.toString());
 
         String qrUrl = "/ssi/qr/" + Base64.getUrlEncoder().encodeToString(buildRequestString(model, requestId).getBytes());
         model.addAttribute("qrUrl", qrUrl);
@@ -130,4 +156,48 @@ public class SsiBrokerService {
         return baos.toByteArray();
     }
 
+    public void processSiopLoginResponse(Map<String, Object> idToken) {
+        validateIdToken(idToken);
+
+        ssiUserService.cacheUserClaims(((String) idToken.get("nonce")), idToken);
+    }
+
+    private void validateIdToken(Map<String, Object> idToken) {
+        String nonce = ((String) idToken.get("nonce"));
+        if (nonce == null || nonce.isBlank() || !isValidNonce(nonce)) {
+            throw new AssLoginException("loginFailed");
+        }
+
+        JWTClaimsSetVerifier claimsVerifier = new IDTokenClaimsVerifier(
+                new Issuer(issuerUri),
+                new ClientID(clientId),
+                new Nonce(nonce),
+                clockSkew
+        );
+
+        try {
+            claimsVerifier.verify(JWTClaimsSet.parse(idToken), null);
+        } catch (ParseException | BadJWTException e) {
+            throw new AssLoginException("loginFailed");
+        }
+
+        if (!idToken.keySet().containsAll(scopeProperties.getScopes().get("profile")) ||
+            !idToken.keySet().containsAll(scopeProperties.getScopes().get("email"))) {
+            throw new AssLoginException("loginFailed");
+        }
+    }
+
+    private void storeNonce(String requestId) {
+        if (!nonceCache.containsKey(requestId)) {
+            nonceCache.put(requestId, LocalDateTime.now());
+        } else {
+            throw new AssLoginException("loginFailed");
+        }
+    }
+
+    private boolean isValidNonce(String nonce) {
+        // TODO: Some cleanup missing
+        return nonceCache.containsKey(nonce) &&
+                nonceCache.remove(nonce).isAfter(LocalDateTime.now().minusMinutes(ttl));
+    }
 }

@@ -2,7 +2,10 @@ package eu.gaiax.difs.aas.controller;
 
 import javax.servlet.http.HttpServletRequest;
 
+import eu.gaiax.difs.aas.service.SsiUserService;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.boot.json.JacksonJsonParser;
+import org.springframework.boot.json.JsonParser;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -10,9 +13,7 @@ import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.security.web.savedrequest.DefaultSavedRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTParser;
@@ -20,10 +21,7 @@ import com.nimbusds.jwt.JWTParser;
 import eu.gaiax.difs.aas.service.SsiBrokerService;
 import lombok.RequiredArgsConstructor;
 
-import java.util.Arrays;
-import java.util.Locale;
-import java.util.Map;
-import java.util.ResourceBundle;
+import java.util.*;
 
 @Controller
 @RequiredArgsConstructor
@@ -95,4 +93,17 @@ public class LoginController {
 
     }
 
+    @PostMapping(value = "/siop-cb", consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE})
+    public ResponseEntity siopLogin(
+            @Parameter(description = "Request ID", required = true)
+            @RequestParam("id_token") final String idToken) {
+//        @RequestParam("id_token") final Map<String, String> idToken) {
+
+            JacksonJsonParser parser = new JacksonJsonParser(); //todo why above does not work and when creating custom converter it clashes with already build in converter - of course
+
+        ssiBrokerService.processSiopLoginResponse(parser.parseMap(idToken));
+
+        return ResponseEntity.ok().build();
+
+    }
 }

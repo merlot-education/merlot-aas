@@ -1,7 +1,6 @@
 package eu.gaiax.difs.aas.service;
 
 import eu.gaiax.difs.aas.client.TrustServiceClient;
-import eu.gaiax.difs.aas.controller.LoginController;
 import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +13,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.stereotype.Service;
 
-import javax.servlet.http.HttpServletRequest;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -59,6 +57,10 @@ public class SsiUserService implements UserDetailsService {
         } else {
             return userClaimsCache.get(requestId);
         }
+    }
+
+    public void cacheUserClaims(String requestId, Map<String, Object> userClaims) {
+        userClaimsCache.put(requestId, userClaims);
     }
 
     private Map<String, Object> loadUserClaims(String requestId) {
