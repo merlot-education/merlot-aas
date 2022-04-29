@@ -12,16 +12,15 @@
 </head>
 <body>
 <header>
-    <p class="error-message" th:if= "${errorMessage != null}" th:text="${errorMessage}"></p>
-<!--    TODO: sJavorsky - fix or delete modal -->
-<!--    <div class="modal show-modal">-->
-<!--        <div class="modal-content">-->
-<!--            <h1 class="modal-title" th:text="#{modalTitle}">Login failed</h1>-->
-<!--            <hr class="modal-divider">-->
-<!--            <p class="modal-message" th:text="#{modalMessage}">You need to install a wallet browser extension to login with your credentials.</p>-->
-<!--            <button class="modal-button" th:text="#{closeModal}">Close</button>-->
-<!--        </div>-->
-<!--    </div>-->
+<!--    <p class="error-message" th:if= "${errorMessage != null}" th:text="${errorMessage}"></p>-->
+    <div id="modal" class="modal show" th:if= "${errorMessage != null}">
+        <div class="modal-content">
+            <h1 class="modal-title" th:text="#{modalTitle}">Error</h1>
+            <hr class="modal-divider">
+            <p class="modal-message" th:text="${errorMessage}">Login failed</p>
+            <button class="modal-button" onclick="closeModal()" th:text="#{closeModal}">Close</button>
+        </div>
+    </div>
     <div class="navigation-bar">
         <svg width="107" height="59" viewBox="0 0 107 59" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M50.9988 48.3137H47.5141C47.1721 48.3137 46.8882 48.5977 46.8882 48.9397C46.8882 49.301 47.1657 49.5914 47.5141 49.5914H50.9988C51.3537 49.5914 51.6247 49.3139 51.6247 48.9397C51.6312 48.5912 51.3537 48.3137 50.9988 48.3137Z" fill="#000094"/>
@@ -81,9 +80,11 @@
                     <li id="Français" class="locale">Français</li>
                 </ul>
             </div>
-
         </div>
-
+        <div class="mobile-header">
+            <h1 th:text="#{title}">Welcome to Gaia-X</h1>
+            <p th:text="#{subtitle}">Sign in to continue</p>
+        </div>
     </div>
 </header>
 <main>
@@ -126,7 +127,6 @@
 <script type="application/javascript" th:src="@{/js/translate.js}"></script>
 <script type="application/javascript" th:src="@{/js/modal.js}"></script>
 
-</body>
 <footer>
     <div class="footer-top">
         <svg width="108" height="61" viewBox="0 0 108 61" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -193,5 +193,5 @@
         <p th:text="#{footnote}"></p>
     </div>
 </footer>
-
+</body>
 </html>
