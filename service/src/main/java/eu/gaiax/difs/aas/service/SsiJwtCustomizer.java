@@ -23,7 +23,7 @@ public class SsiJwtCustomizer implements OAuth2TokenCustomizer<JwtEncodingContex
         String requestId = getRequestId(context);
 
         if ("id_token".equals(context.getTokenType().getValue())) {
-            Map<String, Object> userDetails = ssiUserService.getUserClaims(requestId);
+            Map<String, Object> userDetails = ssiUserService.getUserClaims(requestId, false);
             context.getClaims().claims(claims -> claims.putAll(userDetails));
         }
 

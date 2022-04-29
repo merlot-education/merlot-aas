@@ -1,7 +1,9 @@
 package eu.gaiax.difs.aas.controller;
 
 import com.nimbusds.jwt.JWT;
+import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.JWTParser;
+
 import eu.gaiax.difs.aas.service.SsiBrokerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.json.JacksonJsonParser;
@@ -16,7 +18,10 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+
+import java.text.ParseException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -92,16 +97,38 @@ public class LoginController {
     }
 
     @PostMapping(value = "/siop-callback", consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE})
-    public ResponseEntity siopLogin(@RequestParam MultiValueMap body) {
+    public ResponseEntity<Void> siopCallback(@RequestParam MultiValueMap<String, Object> body) {
 
-        JacksonJsonParser parser = new JacksonJsonParser();
+        String error;
+        Map<String, Object> claims;
         String idToken = (String) body.getFirst("id_token");
+        if (idToken == null) {
+            error = (String) body.getFirst("error");
+            String desc = (String) body.getFirst("error_description");
+            if (error != null || desc != null) {
+                claims = new HashMap<>();
+                claims.put("error", String.join(": ", error, desc));
+                claims.put("state", (String) body.getFirst("state"));
+            } else {
+                return ResponseEntity.badRequest().build();
+            }
+        } else {
 
-        if (idToken == null || idToken.isBlank())
-            return ResponseEntity.badRequest().build();
-
-        ssiBrokerService.processSiopLoginResponse(parser.parseMap(idToken));
-
-        return ResponseEntity.ok().build();
+            try {
+                JWT jwt = JWTParser.parse(idToken);
+                claims = jwt.getJWTClaimsSet().getClaims();
+            } catch (ParseException ex) {
+                // log it?
+                JacksonJsonParser parser = new JacksonJsonParser();
+                claims = parser.parseMap(idToken);
+            }
+        }
+        
+        error = ssiBrokerService.processSiopLoginResponse(claims);
+        if (error == null) {
+            return ResponseEntity.ok().build();
+        }
+        // TODO: return error..
+        return ResponseEntity.badRequest().build();
     }
 }

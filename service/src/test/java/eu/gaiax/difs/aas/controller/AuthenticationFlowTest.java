@@ -47,6 +47,7 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 
 @SpringBootTest
@@ -106,7 +107,8 @@ public class AuthenticationFlowTest {
                                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                                 .cookie(new Cookie("JSESSIONID", session.getId()))
                                 .session((MockHttpSession) session)
-                                .param("username", userId))
+                                .param("username", userId)
+                                .param("password", "OIDC"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(header().string("Location", containsString("/oauth2/authorize")))
                 .andReturn();
@@ -189,8 +191,6 @@ public class AuthenticationFlowTest {
     @Test
     void testSiopLoginFlow() throws Exception {
 
-        setupTrustService(ACCEPTED);
-
         MvcResult result = mockMvc.perform(
                         get("/oauth2/authorize?scope={scope}&state={state}&response_type={type}&client_id={id}&redirect_uri={uri}&nonce={nonce}",
                                 "openid", "QfjgI5XxMjNkvUU2f9sWQymGfKoaBr7Ro2jHprmBZrg.VTxL7FGKhi0.demo-app", "code", "aas-app-siop",
@@ -211,7 +211,7 @@ public class AuthenticationFlowTest {
                 .andReturn();
 
         session = result.getRequest().getSession(false);
-        String userId = result.getModelAndView().getModel().get("requestId").toString();
+        String requestId = result.getModelAndView().getModel().get("requestId").toString();
         String qrUrl = result.getModelAndView().getModel().get("qrUrl").toString();
 
         result = mockMvc.perform(
@@ -225,9 +225,9 @@ public class AuthenticationFlowTest {
                 "?scope=openid" +
                 "&response_type=id_token" +
                 "&client_id=http://auth-server:9000" +
-                "&redirect_uri=http://auth-server:9000/ssi/siop-cb" +
+                "&redirect_uri=http://auth-server:9000/ssi/siop-callback" +
                 "&response_mode=post" +
-                "&nonce=" + userId;
+                "&state=" + requestId;
         String resultQrUrl = decodeQR(result.getResponse().getContentAsByteArray());
 
         assertEquals(expectedUrl, resultQrUrl);
@@ -238,7 +238,33 @@ public class AuthenticationFlowTest {
                                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                                 .cookie(new Cookie("JSESSIONID", session.getId()))
                                 .session((MockHttpSession) session)
-                                .param("username", userId))
+                                .param("username", requestId)
+                                .param("password", "SIOP"))
+                // as callback was not invoked yet, then it must return error response and redirected back to login page 
+                .andExpect(status().is3xxRedirection())
+                .andExpect(header().string("Location", containsString("/ssi/login")))
+                .andReturn();
+
+        result = mockMvc.perform(
+                        post("/ssi/siop-callback")
+                                .contentType(APPLICATION_FORM_URLENCODED_VALUE)
+                                .content("id_token={ \"iss\": \"https://self-issued.me/v2\", " +
+                                        "\"sub\": \"NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs\", " +
+                                        "\"aud\": \"https://auth-server:9000/ssi/siop-callback\", " +
+                                        "\"state\": \"" + requestId + "\", " +
+                                        "\"exp\": " + new Date().getTime() + ", " +
+                                        "\"iat\": 1311280970}"))
+                .andExpect(status().isOk())
+                .andReturn();
+        
+        result = mockMvc.perform(
+                        post("/login")
+                                .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
+                                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                                .cookie(new Cookie("JSESSIONID", session.getId()))
+                                .session((MockHttpSession) session)
+                                .param("username", requestId)
+                                .param("password", "SIOP"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(header().string("Location", containsString("/oauth2/authorize")))
                 .andReturn();
@@ -288,58 +314,83 @@ public class AuthenticationFlowTest {
     }
 
     @Test
-    void siopCallback() throws Exception {
-        MvcResult result = mockMvc.perform(
-                        get("/oauth2/authorize?scope={scope}&state={state}&response_type={type}&client_id={id}&redirect_uri={uri}&nonce={nonce}",
-                                "openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-siop",
-                                "http://key-server:8080/realms/gaia-x/broker/ssi-siop/endpoint", "fXCqL9w6_Daqmibe5nD7Rg")
-                                .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(header().string("Location", containsString("/ssi/login")))
-                .andReturn();
-        HttpSession session = result.getRequest().getSession(false);
-
-        result = mockMvc.perform(
-                        get("/ssi/login")
-                                .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
-                                .cookie(new Cookie("JSESSIONID", session.getId()))
-                                .session((MockHttpSession) session))
-                .andExpect(status().isOk())
-                .andReturn();
-        session = result.getRequest().getSession(false);
-        String requestId = result.getModelAndView().getModel().get("requestId").toString();
-
-
-        String qrUrl = (String) result.getModelAndView().getModel().get("qrUrl");
-        mockMvc.perform(
-                        get(qrUrl)
-                                .accept(MediaType.IMAGE_PNG, MediaType.IMAGE_GIF)
-                                .cookie(new Cookie("JSESSIONID", session.getId()))
-                                .session((MockHttpSession) session))
-                .andExpect(status().isOk());
-
-        result = mockMvc.perform(
-                        post("/ssi/siop-callback")
-                                .contentType(APPLICATION_FORM_URLENCODED_VALUE)
-                                .content("id_token={ \"iss\": \"https://self-issued.me/v2\", " +
-                                        "\"sub\": \"NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs\", " +
-                                        "\"aud\": \"https://auth-server:9000/ssi/siop-callback\", " +
-                                        "\"nonce\": \"" + requestId + "\", " +
-                                        "\"exp\": " + new Date().getTime() + ", " +
-                                        "\"iat\": 1311280970}"
-                                ))
-                .andExpect(status().isOk())
-                .andReturn();
-        session = result.getRequest().getSession(false);
-    }
-
-    @Test
     void siopCallback_missingParameter() throws Exception {
         mockMvc.perform(
                         post("/ssi/siop-callback").contentType(APPLICATION_FORM_URLENCODED_VALUE))
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    void siopCallback_errorResponse() throws Exception {
+            MvcResult result = mockMvc.perform(
+                    get("/oauth2/authorize?scope={scope}&state={state}&response_type={type}&client_id={id}&redirect_uri={uri}&nonce={nonce}",
+                            "openid", "QfjgI5XxMjNkvUU2f9sWQymGfKoaBr7Ro2jHprmBZrg.VTxL7FGKhi0.demo-app", "code", "aas-app-siop",
+                            "http://key-server:8080/realms/gaia-x/broker/ssi-siop/endpoint", "Q5h3noccV6Hwb4pVHps41A")
+                            .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML))
+            .andExpect(status().is3xxRedirection())
+            .andExpect(header().string("Location", containsString("/ssi/login")))
+            .andReturn();
+        
+        HttpSession session = result.getRequest().getSession(false);
+        
+        result = mockMvc.perform(
+                    get("/ssi/login")
+                            .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
+                            .cookie(new Cookie("JSESSIONID", session.getId()))
+                            .session((MockHttpSession) session))
+            .andExpect(status().isOk())
+            .andReturn();
+        
+        session = result.getRequest().getSession(false);
+        String requestId = result.getModelAndView().getModel().get("requestId").toString();
+        
+        result = mockMvc.perform(
+                    post("/login")
+                            .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
+                            .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                            .cookie(new Cookie("JSESSIONID", session.getId()))
+                            .session((MockHttpSession) session)
+                            .param("username", requestId)
+                            .param("password", "SIOP"))
+            // as callback was not invoked yet, then it must return error response and redirected back to login page 
+            .andExpect(status().is3xxRedirection())
+            .andExpect(header().string("Location", containsString("/ssi/login")))
+            .andReturn();
+        
+        result = mockMvc.perform(
+                        post("/ssi/siop-callback")
+                                .contentType(APPLICATION_FORM_URLENCODED_VALUE)
+                                .content("error=invalid_request&error_description=Unsupported%20response_type%20value&state=" + requestId))
+                // we had error response above, so we're redirected back to login page to see errors 
+                .andExpect(status().isOk())
+                .andReturn();
+        
+        result = mockMvc.perform(
+                    post("/ssi/siop-callback")
+                            .contentType(APPLICATION_FORM_URLENCODED_VALUE)
+                            .content("id_token={ \"iss\": \"https://self-issued.me/v2\", " +
+                                    "\"sub\": \"NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs\", " +
+                                    "\"aud\": \"https://auth-server:9000/ssi/siop-callback\", " +
+                                    "\"state\": \"" + requestId + "\", " +
+                                    "\"exp\": " + new Date().getTime() + ", " +
+                                    "\"iat\": 1311280970}"))
+            .andExpect(status().isBadRequest()) // no requestId any more
+            .andReturn();
+        
+        result = mockMvc.perform(
+                    post("/login")
+                            .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
+                            .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                            .cookie(new Cookie("JSESSIONID", session.getId()))
+                            .session((MockHttpSession) session)
+                            .param("username", requestId)
+                            .param("password", "SIOP"))
+            .andExpect(status().is3xxRedirection())
+            .andExpect(header().string("Location", containsString("/ssi/login")))
+            .andReturn();
+    }
+
+    
     @Test
     void testLoginFlowTimeout() throws Exception {
 
@@ -379,7 +430,8 @@ public class AuthenticationFlowTest {
                                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                                 .cookie(new Cookie("JSESSIONID", session.getId()))
                                 .session((MockHttpSession) session)
-                                .param("username", userId))
+                                .param("username", userId)
+                                .param("password", "OIDC"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(header().string("Location", containsString("/ssi/login")))
                 .andReturn();
@@ -427,7 +479,8 @@ public class AuthenticationFlowTest {
                                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                                 .cookie(new Cookie("JSESSIONID", session.getId()))
                                 .session((MockHttpSession) session)
-                                .param("username", userId))
+                                .param("username", userId)
+                                .param("password", "OIDC"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(header().string("Location", containsString("/ssi/login")))
                 .andReturn();
