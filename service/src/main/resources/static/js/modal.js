@@ -1,8 +1,7 @@
-const closeButton = document.getElementsByClassName("modal-button")
-const modal = document.getElementsByClassName("modal")
-
 function closeModal() {
-    modal.classList.remove("show-modal");
+    const modal = document.getElementById("modal")
+    if (modal.classList.contains("show")) {
+        modal.classList.remove("show");
+        modal.classList.add("hide")
+    }
 }
-
-closeButton.addEventListener("click", () => closeModal());

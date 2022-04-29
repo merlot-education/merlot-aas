@@ -15,9 +15,13 @@ html {
     opacity: 0;
 }
 
-.show-modal {
+.show {
     opacity: 1;
     visibility: visible;
+}
+
+.hide {
+    display: none;
 }
 
 .modal-content {
@@ -78,7 +82,6 @@ html {
     margin: 0;
 }
 
-
 .logo-header {
     fill: red;
 }
@@ -115,6 +118,10 @@ header {
 .navigation-link {
     padding: 0 16px;
     white-space: nowrap;
+}
+
+.mobile-header {
+    display: none;
 }
 
 body {
@@ -412,14 +419,19 @@ footer {
     }
 
     .card {
+        margin: 0;
         width: auto;
+        border-top: none;
+        box-shadow: none;
+    }
+
+    .card-top {
+        display: none
     }
 
     .card-bottom {
         margin: 0;
         width: 100%;
-        padding-top: 20px;
-        padding-bottom: 30px;
         border-top: none;
         box-shadow: none;
     }
@@ -430,13 +442,29 @@ footer {
         padding-top: 5px;
     }
 
-    .navigation-bar,
-    .footer-top,
-    .footer-bottom {
-        flex-direction: column;
+    .card-divider {
+        display: none;
     }
 
-    .bottom-nav-bar a {
-        display: flex;
+    .navigation-links {
+        display: none;
+    }
+
+    .mobile-header {
+        display: block;
+        white-space: nowrap;
+    }
+
+    footer {
+        display: none;
+    }
+
+    .modal-content {
+        width: 100%;
+        border-radius: 0;
+    }
+
+    .modal-button {
+        float: right;
     }
 }
