@@ -1,7 +1,9 @@
 package eu.gaiax.difs.aas.controller;
 
-import javax.servlet.http.HttpServletRequest;
-
+import com.nimbusds.jwt.JWT;
+import com.nimbusds.jwt.JWTParser;
+import eu.gaiax.difs.aas.service.SsiBrokerService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.json.JacksonJsonParser;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -10,16 +12,10 @@ import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.security.web.savedrequest.DefaultSavedRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.*;
 
-import com.nimbusds.jwt.JWT;
-import com.nimbusds.jwt.JWTParser;
-
-import eu.gaiax.difs.aas.service.SsiBrokerService;
-import lombok.RequiredArgsConstructor;
-
+import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
@@ -95,4 +91,17 @@ public class LoginController {
 
     }
 
+    @PostMapping(value = "/siop-callback", consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE})
+    public ResponseEntity siopLogin(@RequestParam MultiValueMap body) {
+
+        JacksonJsonParser parser = new JacksonJsonParser();
+        String idToken = (String) body.getFirst("id_token");
+
+        if (idToken == null || idToken.isBlank())
+            return ResponseEntity.badRequest().build();
+
+        ssiBrokerService.processSiopLoginResponse(parser.parseMap(idToken));
+
+        return ResponseEntity.ok().build();
+    }
 }

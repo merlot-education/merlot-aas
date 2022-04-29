@@ -39,9 +39,14 @@ aas:
         secret: "{noop}secret2"
         redirect-uri: ${aas.iam.base-uri}/realms/gaia-x/broker/ssi-siop/endpoint
   scopes:
-    first:
-      - one
-      - two
-    second:
-      - two
-      - three
+    openid:
+      - sub
+      - iss
+    profile:
+      - sub
+      - gender
+  id-token:
+    ttl: 10 # in minutes
+    clock-skew: 5 # in seconds
+    issuer: https://self-issued.me/v2
+    client-id: https://auth-server:9000/ssi/siop-callback

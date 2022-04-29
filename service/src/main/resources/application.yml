@@ -70,7 +70,11 @@ aas:
     email:
       - email
       - email_verified
-
+  id-token:
+    ttl: 10 # in minutes
+    clock-skew: 5 # in seconds
+    issuer: https://self-issued.me/v2
+    client-id: https://auth-server:9000/ssi/siop-callback
 logging:
   level:
     root: INFO

@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
+import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED_VALUE;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -43,6 +44,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -283,6 +285,59 @@ public class AuthenticationFlowTest {
         BufferedImage image = ImageIO.read(new ByteArrayInputStream(content));
         BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(new BufferedImageLuminanceSource(image)));
         return new QRCodeReader().decode(bitmap).getText();
+    }
+
+    @Test
+    void siopCallback() throws Exception {
+        MvcResult result = mockMvc.perform(
+                        get("/oauth2/authorize?scope={scope}&state={state}&response_type={type}&client_id={id}&redirect_uri={uri}&nonce={nonce}",
+                                "openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-siop",
+                                "http://key-server:8080/realms/gaia-x/broker/ssi-siop/endpoint", "fXCqL9w6_Daqmibe5nD7Rg")
+                                .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(header().string("Location", containsString("/ssi/login")))
+                .andReturn();
+        HttpSession session = result.getRequest().getSession(false);
+
+        result = mockMvc.perform(
+                        get("/ssi/login")
+                                .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
+                                .cookie(new Cookie("JSESSIONID", session.getId()))
+                                .session((MockHttpSession) session))
+                .andExpect(status().isOk())
+                .andReturn();
+        session = result.getRequest().getSession(false);
+        String requestId = result.getModelAndView().getModel().get("requestId").toString();
+
+
+        String qrUrl = (String) result.getModelAndView().getModel().get("qrUrl");
+        mockMvc.perform(
+                        get(qrUrl)
+                                .accept(MediaType.IMAGE_PNG, MediaType.IMAGE_GIF)
+                                .cookie(new Cookie("JSESSIONID", session.getId()))
+                                .session((MockHttpSession) session))
+                .andExpect(status().isOk());
+
+        result = mockMvc.perform(
+                        post("/ssi/siop-callback")
+                                .contentType(APPLICATION_FORM_URLENCODED_VALUE)
+                                .content("id_token={ \"iss\": \"https://self-issued.me/v2\", " +
+                                        "\"sub\": \"NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs\", " +
+                                        "\"aud\": \"https://auth-server:9000/ssi/siop-callback\", " +
+                                        "\"nonce\": \"" + requestId + "\", " +
+                                        "\"exp\": " + new Date().getTime() + ", " +
+                                        "\"iat\": 1311280970}"
+                                ))
+                .andExpect(status().isOk())
+                .andReturn();
+        session = result.getRequest().getSession(false);
+    }
+
+    @Test
+    void siopCallback_missingParameter() throws Exception {
+        mockMvc.perform(
+                        post("/ssi/siop-callback").contentType(APPLICATION_FORM_URLENCODED_VALUE))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

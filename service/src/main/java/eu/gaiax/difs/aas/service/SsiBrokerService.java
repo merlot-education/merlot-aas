@@ -2,14 +2,26 @@ package eu.gaiax.difs.aas.service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.text.ParseException;
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.imageio.ImageIO;
 
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.proc.BadJWTException;
+import com.nimbusds.jwt.proc.JWTClaimsSetVerifier;
+import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.oauth2.sdk.id.Issuer;
+import com.nimbusds.openid.connect.sdk.Nonce;
+import com.nimbusds.openid.connect.sdk.validators.IDTokenClaimsVerifier;
+import eu.gaiax.difs.aas.properties.ScopeProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
 
@@ -37,7 +49,23 @@ public class SsiBrokerService {
     @Value("${server.port}")
     private String serverPort;
 
+    @Value("${aas.id-token.ttl}")
+    private Long ttl;
+
+    @Value("${aas.id-token.clock-skew}")
+    private Integer clockSkew;
+
+    @Value("${aas.id-token.client-id}")
+    private String clientId;
+
+    @Value("${aas.id-token.issuer}")
+    private String idTokenIssuer;
+
     private final TrustServiceClient trustServiceClient;
+    private final SsiUserService ssiUserService;
+    private final ScopeProperties scopeProperties;
+
+    private final Map<String, Map<String, Object>> siopRequestCache = new ConcurrentHashMap<>();
 
     public String oidcAuthorize(Model model) {
         log.debug("authorize.enter; got model: {}", model);
@@ -69,6 +97,12 @@ public class SsiBrokerService {
 
         UUID requestId = UUID.randomUUID();
         model.addAttribute("requestId", requestId);
+        Object o = model.getAttribute("scope");
+        if (o == null) {
+            throw new OAuth2AuthenticationException("loginFailed");
+        }
+        String scope = String.join(" ", ((String[]) o));
+        cacheSiopData(requestId.toString(), scope);
 
         String qrUrl = "/ssi/qr/" + Base64.getUrlEncoder().encodeToString(buildRequestString(model, requestId).getBytes());
         model.addAttribute("qrUrl", qrUrl);
@@ -130,4 +164,52 @@ public class SsiBrokerService {
         return baos.toByteArray();
     }
 
+    public void processSiopLoginResponse(Map<String, Object> idToken) {
+        validateIdToken(idToken);
+
+        ssiUserService.cacheUserClaims(((String) idToken.get("nonce")), idToken);
+    }
+
+    private void validateIdToken(Map<String, Object> idToken) {
+        String nonce = ((String) idToken.get("nonce"));
+        if (nonce == null || nonce.isBlank() || !isValidNonce(nonce)) {
+            throw new OAuth2AuthenticationException("loginFailed");
+        }
+
+        JWTClaimsSetVerifier claimsVerifier = new IDTokenClaimsVerifier(
+                new Issuer(idTokenIssuer),
+                new ClientID(clientId),
+                new Nonce(nonce),
+                clockSkew
+        );
+
+        try {
+            claimsVerifier.verify(JWTClaimsSet.parse(idToken), null);
+        } catch (ParseException | BadJWTException e) {
+            throw new OAuth2AuthenticationException("loginFailed");
+        }
+
+        String requiredScope = ((String) siopRequestCache.get(nonce).get("scope"));
+        if (!idToken.keySet().containsAll(scopeProperties.getScopes().get(requiredScope))) {
+            throw new OAuth2AuthenticationException("loginFailed");
+        }
+
+        siopRequestCache.remove(nonce);
+    }
+
+    private void cacheSiopData(String requestId, String scope) {
+        if (!siopRequestCache.containsKey(requestId)) {
+            Map<String, Object> data = new HashMap<>();
+            data.put("request_time", LocalDateTime.now());
+            data.put("scope", scope);
+            siopRequestCache.put(requestId, data);
+        } else {
+            throw new OAuth2AuthenticationException("loginFailed");
+        }
+    }
+
+    private boolean isValidNonce(String nonce) {
+        return siopRequestCache.containsKey(nonce) &&
+                ((LocalDateTime) siopRequestCache.get(nonce).get("request_time")).isAfter(LocalDateTime.now().minusMinutes(ttl));
+    }
 }
