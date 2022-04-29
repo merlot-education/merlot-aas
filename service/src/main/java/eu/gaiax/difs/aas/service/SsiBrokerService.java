@@ -98,10 +98,10 @@ public class SsiBrokerService {
         UUID requestId = UUID.randomUUID();
         model.addAttribute("requestId", requestId);
         Object o = model.getAttribute("scope");
-        String scope = null;
-        if (o != null) {
-            scope = String.join(" ", ((String[]) o));
+        if (o == null) {
+            throw new OAuth2AuthenticationException("loginFailed");
         }
+        String scope = String.join(" ", ((String[]) o));
         cacheSiopData(requestId.toString(), scope);
 
         String qrUrl = "/ssi/qr/" + Base64.getUrlEncoder().encodeToString(buildRequestString(model, requestId).getBytes());
