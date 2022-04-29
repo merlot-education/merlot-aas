@@ -51,12 +51,13 @@ public class SsiUserService implements UserDetailsService {
         return ud;
     }
 
-    public Map<String, Object> getUserClaims(String requestId) {
-        if (!userClaimsCache.containsKey(requestId)) {
-            return userClaimsCache.put(requestId, loadUserClaims(requestId));
-        } else {
-            return userClaimsCache.get(requestId);
+    public Map<String, Object> getUserClaims(String requestId, boolean required) {
+        Map<String, Object> claims = userClaimsCache.get(requestId);
+        if (claims == null && required) {
+            claims = loadUserClaims(requestId);
+            userClaimsCache.put(requestId, claims);
         }
+        return claims;
     }
 
     public void cacheUserClaims(String requestId, Map<String, Object> userClaims) {

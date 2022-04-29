@@ -11,11 +11,12 @@ import javax.imageio.ImageIO;
 
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.proc.BadJWTException;
-import com.nimbusds.jwt.proc.JWTClaimsSetVerifier;
-import com.nimbusds.oauth2.sdk.id.ClientID;
-import com.nimbusds.oauth2.sdk.id.Issuer;
-import com.nimbusds.openid.connect.sdk.Nonce;
-import com.nimbusds.openid.connect.sdk.validators.IDTokenClaimsVerifier;
+import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
+//import com.nimbusds.jwt.proc.JWTClaimsSetVerifier;
+//import com.nimbusds.oauth2.sdk.id.ClientID;
+//import com.nimbusds.oauth2.sdk.id.Issuer;
+//import com.nimbusds.openid.connect.sdk.Nonce;
+//import com.nimbusds.openid.connect.sdk.validators.IDTokenClaimsVerifier;
 import eu.gaiax.difs.aas.properties.ScopeProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,6 +88,7 @@ public class SsiBrokerService {
         String qrUrl = "/ssi/qr/" + Base64.getUrlEncoder().encodeToString(link.getBytes());
         model.addAttribute("qrUrl", qrUrl);
         model.addAttribute("requestId", requestId);
+        model.addAttribute("loginType", "OIDC");
 
         log.debug("authorize.exit; returning model: {}", model);
         return "login-template.html";
@@ -95,17 +97,20 @@ public class SsiBrokerService {
     public String siopAuthorize(Model model) {
         log.debug("siopAuthorize.enter; got model: {}", model);
 
-        UUID requestId = UUID.randomUUID();
-        model.addAttribute("requestId", requestId);
         Object o = model.getAttribute("scope");
         if (o == null) {
             throw new OAuth2AuthenticationException("loginFailed");
         }
+
+        UUID requestId = UUID.randomUUID();
+        String link = buildRequestString(model, requestId);
         String scope = String.join(" ", ((String[]) o));
         cacheSiopData(requestId.toString(), scope);
-
-        String qrUrl = "/ssi/qr/" + Base64.getUrlEncoder().encodeToString(buildRequestString(model, requestId).getBytes());
+        
+        String qrUrl = "/ssi/qr/" + Base64.getUrlEncoder().encodeToString(link.getBytes());
         model.addAttribute("qrUrl", qrUrl);
+        model.addAttribute("requestId", requestId);
+        model.addAttribute("loginType", "SIOP");
 
         log.debug("siopAuthorize.exit; returning model: {}", model);
         return "login-template.html";
@@ -136,9 +141,9 @@ public class SsiBrokerService {
         processScopes(model, new HashMap<>()).forEach(scope -> params.add("scope=" + scope));
         params.add("response_type=id_token");
         params.add("client_id=" + issuerUri);
-        params.add("redirect_uri=http://" + serverHost + ":" + serverPort + "/ssi/siop-cb");
+        params.add("redirect_uri=http://" + serverHost + ":" + serverPort + "/ssi/siop-callback");
         params.add("response_mode=post");
-        params.add("nonce=" + requestId);
+        params.add("state=" + requestId);
 
         return "openid://?" + String.join("&", params);
     }
@@ -164,37 +169,30 @@ public class SsiBrokerService {
         return baos.toByteArray();
     }
 
-    public void processSiopLoginResponse(Map<String, Object> idToken) {
-        validateIdToken(idToken);
-
-        ssiUserService.cacheUserClaims(((String) idToken.get("nonce")), idToken);
-    }
-
-    private void validateIdToken(Map<String, Object> idToken) {
-        String nonce = ((String) idToken.get("nonce"));
-        if (nonce == null || nonce.isBlank() || !isValidNonce(nonce)) {
-            throw new OAuth2AuthenticationException("loginFailed");
+    public String processSiopLoginResponse(Map<String, Object> response) {
+        String requestId = (String) response.get("state");
+        if (requestId == null || !isValidRequest(requestId)) {
+            return "invalid state";
         }
 
-        JWTClaimsSetVerifier claimsVerifier = new IDTokenClaimsVerifier(
-                new Issuer(idTokenIssuer),
-                new ClientID(clientId),
-                new Nonce(nonce),
-                clockSkew
-        );
-
-        try {
-            claimsVerifier.verify(JWTClaimsSet.parse(idToken), null);
-        } catch (ParseException | BadJWTException e) {
-            throw new OAuth2AuthenticationException("loginFailed");
+        String error = (String) response.get("error");
+        if (error == null) {
+            String requiredScope = (String) siopRequestCache.get(requestId).get("scope");
+            List<String> claims = scopeProperties.getScopes().get(requiredScope);
+        
+            DefaultJWTClaimsVerifier<?> verifier = new DefaultJWTClaimsVerifier<>(new JWTClaimsSet.Builder()
+                .issuer(idTokenIssuer)
+                .audience(clientId)
+                .build(), new HashSet<String>(claims));
+            try {
+                verifier.verify(JWTClaimsSet.parse(response), null);
+            } catch(ParseException | BadJWTException ex) {
+                return ex.getMessage();
+            }
         }
-
-        String requiredScope = ((String) siopRequestCache.get(nonce).get("scope"));
-        if (!idToken.keySet().containsAll(scopeProperties.getScopes().get(requiredScope))) {
-            throw new OAuth2AuthenticationException("loginFailed");
-        }
-
-        siopRequestCache.remove(nonce);
+        siopRequestCache.remove(requestId);
+        ssiUserService.cacheUserClaims(requestId, response);
+        return null;
     }
 
     private void cacheSiopData(String requestId, String scope) {
@@ -208,8 +206,8 @@ public class SsiBrokerService {
         }
     }
 
-    private boolean isValidNonce(String nonce) {
-        return siopRequestCache.containsKey(nonce) &&
-                ((LocalDateTime) siopRequestCache.get(nonce).get("request_time")).isAfter(LocalDateTime.now().minusMinutes(ttl));
+    private boolean isValidRequest(String requestId) {
+        return siopRequestCache.containsKey(requestId) &&
+                ((LocalDateTime) siopRequestCache.get(requestId).get("request_time")).isAfter(LocalDateTime.now().minusMinutes(ttl));
     }
 }
