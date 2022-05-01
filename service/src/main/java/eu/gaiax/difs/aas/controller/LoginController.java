@@ -108,7 +108,11 @@ public class LoginController {
             if (error != null || desc != null) {
                 claims = new HashMap<>();
                 claims.put("error", String.join(": ", error, desc));
-                claims.put("state", (String) body.getFirst("state"));
+                String nonce = (String) body.getFirst("nonce");
+                if (nonce == null) {
+                    nonce = (String) body.getFirst("state");
+                }
+                claims.put("nonce", nonce);
             } else {
                 return ResponseEntity.badRequest().build();
             }
@@ -131,4 +135,5 @@ public class LoginController {
         // TODO: return error..
         return ResponseEntity.badRequest().build();
     }
+    
 }

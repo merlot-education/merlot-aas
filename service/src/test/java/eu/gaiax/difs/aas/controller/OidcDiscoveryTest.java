@@ -17,8 +17,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -43,7 +41,7 @@ public class OidcDiscoveryTest {
                 .elements()
                 .forEachRemaining(jsonNode -> supportedScopes.add(jsonNode.asText()));
 
-        assertTrue(List.of("openid", "profile").containsAll(supportedScopes));
+        assertTrue(List.of("openid", "profile", "email").containsAll(supportedScopes));
     }
 
     @Test
@@ -59,7 +57,8 @@ public class OidcDiscoveryTest {
                 .elements()
                 .forEachRemaining(jsonNode -> supportedClaims.add(jsonNode.asText()));
 
-        assertTrue(List.of("sub", "iss", "gender").containsAll(supportedClaims));
+        assertTrue(List.of("sub", "iss", "auth_time", "name", "given_name", "family_name", "middle_name", "preferred_username", "gender",
+                "birtdate", "updated_at", "email", "email_verified").containsAll(supportedClaims));
     }
 
 }

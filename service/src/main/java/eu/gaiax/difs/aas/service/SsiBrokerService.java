@@ -18,6 +18,8 @@ import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 //import com.nimbusds.openid.connect.sdk.Nonce;
 //import com.nimbusds.openid.connect.sdk.validators.IDTokenClaimsVerifier;
 import eu.gaiax.difs.aas.properties.ScopeProperties;
+import eu.gaiax.difs.aas.properties.ServerProperties;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,23 +43,8 @@ public class SsiBrokerService {
 
     private final static Logger log = LoggerFactory.getLogger(SsiBrokerService.class);
 
-    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
-    private String issuerUri;
-
-    @Value("${server.host}")
-    private String serverHost;
-
-    @Value("${server.port}")
-    private String serverPort;
-
-    @Value("${aas.id-token.ttl}")
-    private Long ttl;
-
     @Value("${aas.id-token.clock-skew}")
     private Integer clockSkew;
-
-    @Value("${aas.id-token.client-id}")
-    private String clientId;
 
     @Value("${aas.id-token.issuer}")
     private String idTokenIssuer;
@@ -65,6 +52,7 @@ public class SsiBrokerService {
     private final TrustServiceClient trustServiceClient;
     private final SsiUserService ssiUserService;
     private final ScopeProperties scopeProperties;
+    private final ServerProperties serverProperties;
 
     private final Map<String, Map<String, Object>> siopRequestCache = new ConcurrentHashMap<>();
 
@@ -140,10 +128,10 @@ public class SsiBrokerService {
 
         processScopes(model, new HashMap<>()).forEach(scope -> params.add("scope=" + scope));
         params.add("response_type=id_token");
-        params.add("client_id=" + issuerUri);
-        params.add("redirect_uri=http://" + serverHost + ":" + serverPort + "/ssi/siop-callback");
+        params.add("client_id=" + serverProperties.getBaseUrl());
+        params.add("redirect_uri=" + serverProperties.getBaseUrl() + "/ssi/siop-callback");
         params.add("response_mode=post");
-        params.add("state=" + requestId);
+        params.add("nonce=" + requestId);
 
         return "openid://?" + String.join("&", params);
     }
@@ -170,9 +158,9 @@ public class SsiBrokerService {
     }
 
     public String processSiopLoginResponse(Map<String, Object> response) {
-        String requestId = (String) response.get("state");
+        String requestId = (String) response.get("nonce");
         if (requestId == null || !isValidRequest(requestId)) {
-            return "invalid state";
+            return "invalid nonce";
         }
 
         String error = (String) response.get("error");
@@ -182,7 +170,7 @@ public class SsiBrokerService {
         
             DefaultJWTClaimsVerifier<?> verifier = new DefaultJWTClaimsVerifier<>(new JWTClaimsSet.Builder()
                 .issuer(idTokenIssuer)
-                .audience(clientId)
+                .audience(serverProperties.getBaseUrl())
                 .build(), new HashSet<String>(claims));
             try {
                 verifier.verify(JWTClaimsSet.parse(response), null);
@@ -194,7 +182,7 @@ public class SsiBrokerService {
         ssiUserService.cacheUserClaims(requestId, response);
         return null;
     }
-
+    
     private void cacheSiopData(String requestId, String scope) {
         if (!siopRequestCache.containsKey(requestId)) {
             Map<String, Object> data = new HashMap<>();
@@ -207,7 +195,8 @@ public class SsiBrokerService {
     }
 
     private boolean isValidRequest(String requestId) {
-        return siopRequestCache.containsKey(requestId) &&
-                ((LocalDateTime) siopRequestCache.get(requestId).get("request_time")).isAfter(LocalDateTime.now().minusMinutes(ttl));
+        Map<String, Object> request = siopRequestCache.get(requestId);
+        return request != null && ((LocalDateTime) request.get("request_time")).isAfter(LocalDateTime.now().minusSeconds(clockSkew));
     }
+    
 }

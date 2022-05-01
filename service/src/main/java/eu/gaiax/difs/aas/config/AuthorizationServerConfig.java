@@ -61,6 +61,7 @@ import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 
 import eu.gaiax.difs.aas.properties.ScopeProperties;
+import eu.gaiax.difs.aas.properties.ServerProperties;
 import eu.gaiax.difs.aas.service.SsiAuthManager;
 
 /**
@@ -69,9 +70,6 @@ import eu.gaiax.difs.aas.service.SsiAuthManager;
 @Configuration
 public class AuthorizationServerConfig {
 
-    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
-    private String issuerUri;
-
     @Value("${aas.iam.ttl}")
     private Duration ttl;
 
@@ -79,10 +77,13 @@ public class AuthorizationServerConfig {
 
     private final ClientsProperties clientsProperties;
 
+    private final ServerProperties serverProperties;
+    
     @Autowired
-    public AuthorizationServerConfig(ScopeProperties scopeProperties, ClientsProperties clientsProperties) {
+    public AuthorizationServerConfig(ScopeProperties scopeProperties, ClientsProperties clientsProperties, ServerProperties serverProperties) {
         this.scopeProperties = scopeProperties;
         this.clientsProperties = clientsProperties;
+        this.serverProperties = serverProperties;
     }
 
     @Bean
@@ -162,7 +163,7 @@ public class AuthorizationServerConfig {
     @Bean
     public ProviderSettings providerSettings() {
         return ProviderSettings.builder()
-                .issuer(issuerUri)
+                .issuer(serverProperties.getBaseUrl())
                 // could be added later. but ClientRegistrationEndpoint is not present in OidcProviderConfiguration (yet?)
                 // so it is not clear, how should we expose it
                 //.oidcClientRegistrationEndpoint("/clients/registration")

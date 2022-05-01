@@ -23,10 +23,10 @@ import static java.time.temporal.ChronoUnit.MILLIS;
 @Service
 public class SsiUserService implements UserDetailsService {
 
+    private static final Logger log = LoggerFactory.getLogger(SsiUserService.class);
+
     @Autowired
     private TrustServiceClient trustServiceClient;
-
-    private static final Logger log = LoggerFactory.getLogger(SsiUserService.class);
 
     @Value("${aas.tsa.delay}")
     private long millisecondsToDelay;
