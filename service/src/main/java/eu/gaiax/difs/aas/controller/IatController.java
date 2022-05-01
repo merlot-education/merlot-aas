@@ -17,14 +17,14 @@ public class IatController implements IatControllerApiDelegate {
     @Override
     public ResponseEntity<AccessResponseDto> postAccessRequest(AccessRequestDto accessRequestDto) {
 
-        return ResponseEntity.ok(iatService.evaluateGetIatProofInvitation(accessRequestDto));
+        return ResponseEntity.ok(iatService.evaluateIatProofInvitation(accessRequestDto));
 
     }
 
     @Override
     public ResponseEntity<AccessResponseDto> getAccessRequest(String requestId) {
 
-        return ResponseEntity.ok(iatService.evaluateGetIatProofResult(requestId));
+        return ResponseEntity.ok(iatService.evaluateIatProofResult(requestId));
 
     }
 

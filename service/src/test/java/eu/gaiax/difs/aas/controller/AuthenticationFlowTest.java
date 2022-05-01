@@ -1,11 +1,14 @@
 package eu.gaiax.difs.aas.controller;
 
-import static eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto.*;
+import static eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto.ACCEPTED;
+import static eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto.REJECTED;
+import static eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto.TIMED_OUT;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED_VALUE;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -13,20 +16,21 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.imageio.ImageIO;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpSession;
 
-import com.google.zxing.*;
-import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
-import com.google.zxing.common.HybridBinarizer;
-import com.google.zxing.qrcode.QRCodeReader;
-import eu.gaiax.difs.aas.client.LocalTrustServiceClientImpl;
-import eu.gaiax.difs.aas.client.TrustServiceClient;
-import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.json.JacksonJsonParser;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -41,26 +45,36 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import com.google.zxing.BinaryBitmap;
+import com.google.zxing.ChecksumException;
+import com.google.zxing.FormatException;
+import com.google.zxing.NotFoundException;
+import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
+import com.google.zxing.common.HybridBinarizer;
+import com.google.zxing.qrcode.QRCodeReader;
 
+import eu.gaiax.difs.aas.client.LocalTrustServiceClientImpl;
+import eu.gaiax.difs.aas.client.TrustServiceClient;
+import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
+import eu.gaiax.difs.aas.properties.ServerProperties;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @AutoConfigureMockMvc
 public class AuthenticationFlowTest {
 
+    @Value("${aas.iam.base-uri}")
+    private String keycloakUri;
+    
+    @Autowired
+    private ServerProperties serverProps;
+    
     @MockBean
     private TrustServiceClient mockLocalTrustServiceClient;
 
     @Autowired
     private MockMvc mockMvc;
-
+    
     @Test
     void testOidcLoginFlow() throws Exception {
 
@@ -69,7 +83,7 @@ public class AuthenticationFlowTest {
         MvcResult result = mockMvc.perform(
                         get("/oauth2/authorize?scope={scope}&state={state}&response_type={type}&client_id={id}&redirect_uri={uri}&nonce={nonce}",
                                 "openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc",
-                                "http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg")
+                                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg")
                                 .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(header().string("Location", containsString("/ssi/login")))
@@ -118,7 +132,7 @@ public class AuthenticationFlowTest {
         result = mockMvc.perform(
                         get("/oauth2/authorize?scope={scope}&state={state}&response_type={type}&client_id={id}&redirect_uri={uri}&nonce={nonce}",
                                 "openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc",
-                                "http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg")
+                                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg")
                                 .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
                                 .cookie(new Cookie("JSESSIONID", session.getId()))
                                 .session((MockHttpSession) session))
@@ -136,7 +150,7 @@ public class AuthenticationFlowTest {
                                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                                 .param(OAuth2ParameterNames.CODE, code)
                                 .param(OAuth2ParameterNames.GRANT_TYPE, "authorization_code")
-                                .param(OAuth2ParameterNames.REDIRECT_URI, "http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint"))
+                                .param(OAuth2ParameterNames.REDIRECT_URI, keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint"))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -159,7 +173,7 @@ public class AuthenticationFlowTest {
                         get("/oauth2/authorize?scope={scope}&state={state}&response_type={type}&client_id={id}&redirect_uri={uri}&nonce={nonce}" +
                                         "&max_age={age}&id_token_hint={hint}",
                                 "openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc",
-                                "http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "10", idToken)
+                                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "10", idToken)
                                 .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
                         //.session((MockHttpSession) session)
                 )
@@ -194,7 +208,7 @@ public class AuthenticationFlowTest {
         MvcResult result = mockMvc.perform(
                         get("/oauth2/authorize?scope={scope}&state={state}&response_type={type}&client_id={id}&redirect_uri={uri}&nonce={nonce}",
                                 "openid", "QfjgI5XxMjNkvUU2f9sWQymGfKoaBr7Ro2jHprmBZrg.VTxL7FGKhi0.demo-app", "code", "aas-app-siop",
-                                "http://key-server:8080/realms/gaia-x/broker/ssi-siop/endpoint", "Q5h3noccV6Hwb4pVHps41A")
+                                keycloakUri + "/realms/gaia-x/broker/ssi-siop/endpoint", "Q5h3noccV6Hwb4pVHps41A")
                                 .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(header().string("Location", containsString("/ssi/login")))
@@ -224,10 +238,10 @@ public class AuthenticationFlowTest {
         String expectedUrl = "openid://" +
                 "?scope=openid" +
                 "&response_type=id_token" +
-                "&client_id=http://auth-server:9000" +
-                "&redirect_uri=http://auth-server:9000/ssi/siop-callback" +
+                "&client_id=" + serverProps.getBaseUrl() + 
+                "&redirect_uri=" + serverProps.getBaseUrl() + "/ssi/siop-callback" +
                 "&response_mode=post" +
-                "&state=" + requestId;
+                "&nonce=" + requestId;
         String resultQrUrl = decodeQR(result.getResponse().getContentAsByteArray());
 
         assertEquals(expectedUrl, resultQrUrl);
@@ -250,8 +264,9 @@ public class AuthenticationFlowTest {
                                 .contentType(APPLICATION_FORM_URLENCODED_VALUE)
                                 .content("id_token={ \"iss\": \"https://self-issued.me/v2\", " +
                                         "\"sub\": \"NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs\", " +
-                                        "\"aud\": \"https://auth-server:9000/ssi/siop-callback\", " +
-                                        "\"state\": \"" + requestId + "\", " +
+                                        "\"aud\": \"" + serverProps.getBaseUrl() + "\", " +
+                                        "\"nonce\": \"" + requestId + "\", " +
+                                        "\"auth_time\": " + new Date().getTime() + ", " +
                                         "\"exp\": " + new Date().getTime() + ", " +
                                         "\"iat\": 1311280970}"))
                 .andExpect(status().isOk())
@@ -274,7 +289,7 @@ public class AuthenticationFlowTest {
         result = mockMvc.perform(
                         get("/oauth2/authorize?scope={scope}&state={state}&response_type={type}&client_id={id}&redirect_uri={uri}&nonce={nonce}",
                                 "openid", "QfjgI5XxMjNkvUU2f9sWQymGfKoaBr7Ro2jHprmBZrg.VTxL7FGKhi0.demo-app", "code", "aas-app-siop",
-                                "http://key-server:8080/realms/gaia-x/broker/ssi-siop/endpoint", "Q5h3noccV6Hwb4pVHps41A")
+                                keycloakUri + "/realms/gaia-x/broker/ssi-siop/endpoint", "Q5h3noccV6Hwb4pVHps41A")
                                 .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
                                 .cookie(new Cookie("JSESSIONID", session.getId()))
                                 .session((MockHttpSession) session))
@@ -292,7 +307,7 @@ public class AuthenticationFlowTest {
                                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                                 .param(OAuth2ParameterNames.CODE, code)
                                 .param(OAuth2ParameterNames.GRANT_TYPE, "authorization_code")
-                                .param(OAuth2ParameterNames.REDIRECT_URI, "http://key-server:8080/realms/gaia-x/broker/ssi-siop/endpoint"))
+                                .param(OAuth2ParameterNames.REDIRECT_URI, keycloakUri + "/realms/gaia-x/broker/ssi-siop/endpoint"))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -325,7 +340,7 @@ public class AuthenticationFlowTest {
             MvcResult result = mockMvc.perform(
                     get("/oauth2/authorize?scope={scope}&state={state}&response_type={type}&client_id={id}&redirect_uri={uri}&nonce={nonce}",
                             "openid", "QfjgI5XxMjNkvUU2f9sWQymGfKoaBr7Ro2jHprmBZrg.VTxL7FGKhi0.demo-app", "code", "aas-app-siop",
-                            "http://key-server:8080/realms/gaia-x/broker/ssi-siop/endpoint", "Q5h3noccV6Hwb4pVHps41A")
+                            keycloakUri + "/realms/gaia-x/broker/ssi-siop/endpoint", "Q5h3noccV6Hwb4pVHps41A")
                             .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML))
             .andExpect(status().is3xxRedirection())
             .andExpect(header().string("Location", containsString("/ssi/login")))
@@ -370,8 +385,8 @@ public class AuthenticationFlowTest {
                             .contentType(APPLICATION_FORM_URLENCODED_VALUE)
                             .content("id_token={ \"iss\": \"https://self-issued.me/v2\", " +
                                     "\"sub\": \"NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs\", " +
-                                    "\"aud\": \"https://auth-server:9000/ssi/siop-callback\", " +
-                                    "\"state\": \"" + requestId + "\", " +
+                                    "\"aud\": \"" + serverProps.getBaseUrl() + "/ssi/siop-callback\", " +
+                                    "\"nonce\": \"" + requestId + "\", " +
                                     "\"exp\": " + new Date().getTime() + ", " +
                                     "\"iat\": 1311280970}"))
             .andExpect(status().isBadRequest()) // no requestId any more
@@ -399,7 +414,7 @@ public class AuthenticationFlowTest {
         MvcResult result = mockMvc.perform(
                         get("/oauth2/authorize?scope={scope}&state={state}&response_type={type}&client_id={id}&redirect_uri={uri}&nonce={nonce}",
                                 "openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc",
-                                "http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg")
+                                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg")
                                 .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(header().string("Location", containsString("/ssi/login")))
@@ -448,7 +463,7 @@ public class AuthenticationFlowTest {
         MvcResult result = mockMvc.perform(
                         get("/oauth2/authorize?scope={scope}&state={state}&response_type={type}&client_id={id}&redirect_uri={uri}&nonce={nonce}",
                                 "openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc",
-                                "http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg")
+                                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg")
                                 .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(header().string("Location", containsString("/ssi/login")))
