@@ -3,6 +3,7 @@ package eu.gaiax.difs.aas.service;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.text.ParseException;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,11 +13,6 @@ import javax.imageio.ImageIO;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.proc.BadJWTException;
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
-//import com.nimbusds.jwt.proc.JWTClaimsSetVerifier;
-//import com.nimbusds.oauth2.sdk.id.ClientID;
-//import com.nimbusds.oauth2.sdk.id.Issuer;
-//import com.nimbusds.openid.connect.sdk.Nonce;
-//import com.nimbusds.openid.connect.sdk.validators.IDTokenClaimsVerifier;
 import eu.gaiax.difs.aas.properties.ScopeProperties;
 import eu.gaiax.difs.aas.properties.ServerProperties;
 
@@ -24,9 +20,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
@@ -44,7 +42,7 @@ public class SsiBrokerService {
     private final static Logger log = LoggerFactory.getLogger(SsiBrokerService.class);
 
     @Value("${aas.id-token.clock-skew}")
-    private Integer clockSkew;
+    private Duration clockSkew;
 
     @Value("${aas.id-token.issuer}")
     private String idTokenIssuer;
@@ -157,17 +155,18 @@ public class SsiBrokerService {
         return baos.toByteArray();
     }
 
-    public String processSiopLoginResponse(Map<String, Object> response) {
+    public void processSiopLoginResponse(Map<String, Object> response) {
+        log.debug("processSiopLoginResponse.enter; got response: {}", response);
         String requestId = (String) response.get("nonce");
         if (requestId == null || !isValidRequest(requestId)) {
-            return "invalid nonce";
-        }
-
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_response: invalid nonce"); 
+        } 
+        
         String error = (String) response.get("error");
         if (error == null) {
             String requiredScope = (String) siopRequestCache.get(requestId).get("scope");
             List<String> claims = scopeProperties.getScopes().get(requiredScope);
-        
+            
             DefaultJWTClaimsVerifier<?> verifier = new DefaultJWTClaimsVerifier<>(new JWTClaimsSet.Builder()
                 .issuer(idTokenIssuer)
                 .audience(serverProperties.getBaseUrl())
@@ -175,12 +174,27 @@ public class SsiBrokerService {
             try {
                 verifier.verify(JWTClaimsSet.parse(response), null);
             } catch(ParseException | BadJWTException ex) {
-                return ex.getMessage();
+                siopRequestCache.remove(requestId);
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_response: " + ex.getMessage()); 
+            }
+                
+            String issuer = (String) response.get("iss");
+            String subject = (String) response.get("sub");
+            // should be the same..
+            if (!issuer.equals(subject)) {
+                log.warn("processSiopLoginResponse; issuer and subject have different values");
+            }
+                
+            try {
+                subject = new String(Base64.getUrlDecoder().decode(subject));
+                log.debug("processSiopLoginResponse; subject: {}", subject);
+            } catch (Exception ex) {
+                log.debug("processSiopLoginResponse; subject is not base64-encoded: {}", subject);
             }
         }
         siopRequestCache.remove(requestId);
         ssiUserService.cacheUserClaims(requestId, response);
-        return null;
+        //log.debug("processSiopLoginResponse.exit; returning: {}", result);
     }
     
     private void cacheSiopData(String requestId, String scope) {
@@ -196,7 +210,7 @@ public class SsiBrokerService {
 
     private boolean isValidRequest(String requestId) {
         Map<String, Object> request = siopRequestCache.get(requestId);
-        return request != null && ((LocalDateTime) request.get("request_time")).isAfter(LocalDateTime.now().minusSeconds(clockSkew));
+        return request != null && ((LocalDateTime) request.get("request_time")).isAfter(LocalDateTime.now().minus(clockSkew));
     }
     
 }

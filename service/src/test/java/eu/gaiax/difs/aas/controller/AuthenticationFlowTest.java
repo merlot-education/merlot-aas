@@ -332,7 +332,8 @@ public class AuthenticationFlowTest {
     void siopCallback_missingParameter() throws Exception {
         mockMvc.perform(
                         post("/ssi/siop-callback").contentType(APPLICATION_FORM_URLENCODED_VALUE))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(status().reason(containsString("no id_token nor error provided")));
     }
 
     @Test
@@ -390,6 +391,7 @@ public class AuthenticationFlowTest {
                                     "\"exp\": " + new Date().getTime() + ", " +
                                     "\"iat\": 1311280970}"))
             .andExpect(status().isBadRequest()) // no requestId any more
+            .andExpect(status().reason(containsString("invalid nonce")))
             .andReturn();
         
         result = mockMvc.perform(
