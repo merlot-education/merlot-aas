@@ -1,12 +1,12 @@
 package eu.gaiax.difs.aas.controller;
 
 import com.nimbusds.jwt.JWT;
-import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.JWTParser;
 
 import eu.gaiax.difs.aas.service.SsiBrokerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.json.JacksonJsonParser;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -16,6 +16,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -29,7 +30,7 @@ import java.util.ResourceBundle;
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/ssi")
-public class LoginController {
+public class SsiController {
 
     private final SsiBrokerService ssiBrokerService;
 
@@ -93,11 +94,11 @@ public class LoginController {
     public ResponseEntity<byte[]> getQR(@PathVariable String qrid) {
 
         return ResponseEntity.ok(ssiBrokerService.getQR(qrid));
-
     }
 
+    @ResponseBody
     @PostMapping(value = "/siop-callback", consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE})
-    public ResponseEntity<Void> siopCallback(@RequestParam MultiValueMap<String, Object> body) {
+    public void siopCallback(@RequestParam MultiValueMap<String, Object> body) {
 
         String error;
         Map<String, Object> claims;
@@ -114,7 +115,7 @@ public class LoginController {
                 }
                 claims.put("nonce", nonce);
             } else {
-                return ResponseEntity.badRequest().build();
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_response: no id_token nor error provided"); 
             }
         } else {
 
@@ -128,12 +129,7 @@ public class LoginController {
             }
         }
         
-        error = ssiBrokerService.processSiopLoginResponse(claims);
-        if (error == null) {
-            return ResponseEntity.ok().build();
-        }
-        // TODO: return error..
-        return ResponseEntity.badRequest().build();
+        ssiBrokerService.processSiopLoginResponse(claims);
     }
     
 }

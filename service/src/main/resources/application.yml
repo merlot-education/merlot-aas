@@ -33,18 +33,9 @@ springdoc:
     enabled: true
 
 aas:
-  tsa:
-    url: http://trustservice/api
-    repo: aisbl
-    group: aisbl
-    version: 1.0
-    action: evaluate
-    delay: 500 # in milliseconds
-    duration: 5000 # in milliseconds
   iam:
     base-uri: http://key-server:8080
     client-registration-uri: /realms/gaia-x/clients-registrations/openid-connect
-    realm: gaia-x
     client-iat: "{noop}iat"
     ttl: 10m
     clients:
@@ -56,6 +47,9 @@ aas:
         id: aas-app-siop
         secret: "{noop}secret2"
         redirect-uri: ${aas.iam.base-uri}/realms/gaia-x/broker/ssi-siop/endpoint
+  id-token:
+    clock-skew: 5s 
+    issuer: https://self-issued.me/v2
   scopes:
     openid:
       - sub
@@ -73,9 +67,14 @@ aas:
     email:
       - email
       - email_verified
-  id-token:
-    clock-skew: 5 # in seconds
-    issuer: https://self-issued.me/v2
+  tsa:
+    url: http://trustservice/api
+    repo: aisbl
+    group: aisbl
+    version: 1.0
+    action: evaluate
+    delay: 500 # in milliseconds
+    duration: 5000 # in milliseconds
     
 logging:
   level:
