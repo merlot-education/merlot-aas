@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.server.authorization.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenCustomizer;
 
+import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -19,23 +20,19 @@ public class SsiJwtCustomizer implements OAuth2TokenCustomizer<JwtEncodingContex
     @Override
     public void customize(JwtEncodingContext context) {
         log.debug("customize.enter; got context: {}", context);
-
         String requestId = getRequestId(context);
         
-        //OAuth2TokenType.
-
         if ("id_token".equals(context.getTokenType().getValue())) {
             Map<String, Object> userDetails = ssiUserService.getUserClaims(requestId, false);
             //userDetails.co
             //context.getClaims().
             context.getClaims().claims(claims -> {
                 Object iat = claims.get("iat"); //issued_at?
-                Object authTime = iat == null ? System.currentTimeMillis() : iat;
+                Object authTime = iat == null ? Instant.now() : iat;
                 claims.putAll(userDetails);
                 claims.putIfAbsent("auth_time", authTime);
             });
         }
-
         log.debug("customize.exit; got subject: {}", requestId);
     }
 

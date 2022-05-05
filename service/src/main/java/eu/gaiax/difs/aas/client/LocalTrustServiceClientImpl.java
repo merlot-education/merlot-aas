@@ -1,5 +1,7 @@
 package eu.gaiax.difs.aas.client;
 
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -20,20 +22,7 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
 
     private static final int PENDING_REQUESTS_COUNT = 2;
     private final Map<String, Integer> countdowns = new ConcurrentHashMap<>();
-/*
-    profile:
-        - name
-        - given_name
-        - family_name
-        - middle_name
-        - preferred_username
-        - gender
-        - birthdate
-        - updated_at
-      email:
-        - email
-        - email_verified
-*/        
+        
     @Override
     public Map<String, Object> evaluate(String policyName, Map<String, Object> bodyParams) {
         Map<String, Object> map = new HashMap<>();
@@ -58,19 +47,25 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
             } else {
                 map.put("status", ACCEPTED);
                 if ("GetLoginProofResult".equals(policyName)) {
-                    map.put("email", requestId + "@oidc.ssi");
+                    long stamp = System.currentTimeMillis();
                     map.put("name", requestId);
+                    map.put("given_name", requestId + ": " + stamp);
+                    map.put("family_name", String.valueOf(stamp));
+                    map.put("middle_name", null);
+                    map.put("preferred_username", requestId = " " + stamp);
+                    map.put("gender", stamp % 2 == 0 ? "F" : "M");
+                    map.put("birthdate", LocalDate.now().minusYears(21));
+                    map.put("updated_at", LocalDate.now().minusDays(1));
+                    map.put("email", requestId + "@oidc.ssi");
+                    map.put("email_verified", Boolean.TRUE);
                 }
             }
             map.put("sub", requestId);
             map.put("iss", issuerUri);
+            map.put("auth_time", Instant.now());
         }
 
-        log.debug("\nCalled local trust service client: \n" +
-                "policy: {} \n" +
-                "params: {} \n" +
-                "result: {} ", policyName, bodyParams, map);
-
+        log.debug("Called local trust service client; policy: {}, params: {}, result: {} ", policyName, bodyParams, map);
         return map;
     }
 

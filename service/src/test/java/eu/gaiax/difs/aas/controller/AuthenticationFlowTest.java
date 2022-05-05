@@ -36,6 +36,7 @@ import org.springframework.boot.json.JacksonJsonParser;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
@@ -64,6 +65,7 @@ import eu.gaiax.difs.aas.properties.ServerProperties;
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @AutoConfigureMockMvc
+//@Import(JwkConfig.class)
 public class AuthenticationFlowTest {
 
     @Value("${aas.iam.base-uri}")
@@ -205,10 +207,10 @@ public class AuthenticationFlowTest {
         // so, will investigate it later..
         //result = mockMvc.perform(
         //        get("/userinfo")
-        //        .header("Authorization", "Bearer " + token)
+        //        .header("Authorization", "Bearer " + accessToken)
         //        .accept(MediaType.APPLICATION_JSON))
         //    .andExpect(status().isOk())
-        //    .andDo(print())
+        ////    .andDo(print())
         //    .andReturn();
     }
 

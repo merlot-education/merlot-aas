@@ -75,9 +75,7 @@ public class AuthorizationServerConfig {
     private Duration ttl;
 
     private final ScopeProperties scopeProperties;
-
     private final ClientsProperties clientsProperties;
-
     private final ServerProperties serverProperties;
     
     @Autowired
@@ -170,7 +168,7 @@ public class AuthorizationServerConfig {
                 //.oidcClientRegistrationEndpoint("/clients/registration")
                 .build();
     }
-
+    
     @Bean
     public JWKSource<SecurityContext> jwkSource() {
         RSAKey rsaKey = generateRsa();
@@ -191,7 +189,7 @@ public class AuthorizationServerConfig {
     private static KeyPair generateRsaKey() {
         try {
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-            keyPairGenerator.initialize(2048);
+            keyPairGenerator.initialize(3072);
             return keyPairGenerator.generateKeyPair();
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);

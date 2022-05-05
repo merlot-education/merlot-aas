@@ -39,14 +39,15 @@ public class SsiUserService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         log.debug("loadUserByUserName.enter; got username: {}", username);
-
-        // TODO: get UserDetails from in-memory store; username = requetsId
-        UserDetails ud = User
+        UserDetails ud = null;
+        Map<String, Object> claims = userClaimsCache.get(username);
+        if (claims != null) {
+            ud = User
                 .withUsername(username)
                 .password("{noop}") //password
                 .authorities("ANY")
                 .build();
-
+        }
         log.debug("loadUserByUserName.exit; returning: {}", ud);
         return ud;
     }
