@@ -213,4 +213,25 @@ public class SsiBrokerService {
         return request != null && ((LocalDateTime) request.get("request_time")).isAfter(LocalDateTime.now().minus(clockSkew));
     }
     
+    public Map<String, Object> getSubjectClaims(String subjectId, boolean required, Map<String, Object> params) {
+        log.debug("getSubjectClaims.enter; got subject: {}, required: {}", subjectId, required);
+        Map<String, Object> claims = ssiUserService.getUserClaims(subjectId, required);
+        if (required) {
+            // claims override params
+            if (claims != null) {
+                params.putAll(claims);
+            }
+            claims = params;
+        } else {
+            // params override claims
+            if (claims == null) {
+                claims = params;
+            } else {
+                claims.putAll(params);
+            }
+        }
+        log.debug("getSubjectClaims.exit; returning: {}", claims);
+        return claims;
+    }
+    
 }

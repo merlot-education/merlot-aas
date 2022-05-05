@@ -8,8 +8,6 @@ server:
     enabled: false
 
 spring:
-  profiles:
-    active: default
   application:
     name: auth-service
   security:

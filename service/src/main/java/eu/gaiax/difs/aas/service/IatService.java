@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -31,42 +32,42 @@ public class IatService {
 
     public AccessResponseDto evaluateIatProofInvitation(AccessRequestDto accessRequestDto) {
         log.debug("evaluateIatProofInvitation.enter; got request: {}", accessRequestDto);
-        Map<String, Object> evalResponse = trustServiceClient.evaluate("GetIatProofInvitation", iatRequestToMap(accessRequestDto));
-        AccessResponseDto accessResponseDto = mapToIatAccessResponse(evalResponse);; 
+        Map<String, Object> evalRequest = iatRequestToMap(accessRequestDto);
+        Map<String, Object> evalResponse = trustServiceClient.evaluate("GetIatProofInvitation", evalRequest);
+        AccessResponseDto accessResponseDto = mapToIatAccessResponse(evalResponse);
         log.debug("evaluateIatProofInvitation.exit; returning: {}", accessResponseDto);
         return accessResponseDto;
     }
 
-    public AccessResponseDto evaluateIatProofResult(String requestId) {
-        log.debug("evaluateIatProofResult.enter; got request: {}", requestId);
-        Map<String, Object> evalResponse = trustServiceClient.evaluate("GetIatProofResult", iatRequestToMap(requestId));
-        AccessResponseDto accessResponseDto = mapToIatAccessResponse(evalResponse);
-
-        if (accessResponseDto.getStatus() == AccessRequestStatusDto.ACCEPTED) {
-            Map<String, Object> regResponse = iamClient.registerIam(accessResponseDto.getSubject(), List.of(clientsProperties.getOidc().getRedirectUri()));
-            String iat = (String) regResponse.get("registration_access_token"); // not sure it is correct token!
-            accessResponseDto.initialAccessToken(iat);
-        }
-        log.debug("evaluateIatProofResult.exit; returning: {}", accessResponseDto);
-        return accessResponseDto;
-    }
-    
     private Map<String, Object> iatRequestToMap(AccessRequestDto request) {
         Map<String, Object> map = new HashMap<>();
-        if (request.getEntity().getScope() != null) map.put("scope", List.of("openid", request.getEntity().getScope()));
+        if (request.getEntity().getScope() != null) {
+            map.put("scope", Set.of("openid", request.getEntity().getScope()));
+        }
         map.put("sub", request.getEntity().getDid());
         map.put("iss", request.getSubject());
         map.put("namespace", "Access");
         return map;
     }
 
-    private Map<String, Object> iatRequestToMap(String requestId) {
-        return Collections.singletonMap("requestId", requestId);
-    }
+    public AccessResponseDto evaluateIatProofResult(String requestId) {
+        log.debug("evaluateIatProofResult.enter; got request: {}", requestId);
+        Map<String, Object> evalRequest =  Collections.singletonMap("requestId", requestId);
+        Map<String, Object> evalResponse = trustServiceClient.evaluate("GetIatProofResult", evalRequest);
+        AccessResponseDto accessResponseDto = mapToIatAccessResponse(evalResponse);
 
+        if (accessResponseDto.getStatus() == AccessRequestStatusDto.ACCEPTED) {
+            Map<String, Object> regResponse = iamClient.registerIam(accessResponseDto.getSubject(), List.of(clientsProperties.getOidc().getRedirectUri()));
+            String iat = (String) regResponse.get("registration_access_token"); // not sure it is correct token!
+            accessResponseDto.setInitialAccessToken(iat);
+        }
+        log.debug("evaluateIatProofResult.exit; returning: {}", accessResponseDto);
+        return accessResponseDto;
+    }
+    
     private AccessResponseDto mapToIatAccessResponse(Map<String, Object> map) {
         return new AccessResponseDto().subject((String) map.getOrDefault("iss", null))
-                .entity(mapAccessScope(map.getOrDefault("sub", null)))
+                .entity(mapAccessScope(map.getOrDefault("sub", null))) //???
                 .status(mapStatus(map.getOrDefault("status", null)))
                 .initialAccessToken((String) map.getOrDefault("iat", null))
                 // TODO: claims to be specified
