@@ -20,7 +20,20 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
 
     private static final int PENDING_REQUESTS_COUNT = 2;
     private final Map<String, Integer> countdowns = new ConcurrentHashMap<>();
-
+/*
+    profile:
+        - name
+        - given_name
+        - family_name
+        - middle_name
+        - preferred_username
+        - gender
+        - birthdate
+        - updated_at
+      email:
+        - email
+        - email_verified
+*/        
     @Override
     public Map<String, Object> evaluate(String policyName, Map<String, Object> bodyParams) {
         Map<String, Object> map = new HashMap<>();
@@ -51,7 +64,6 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
             }
             map.put("sub", requestId);
             map.put("iss", issuerUri);
-            map.put("claim1", "test-claim1");
         }
 
         log.debug("\nCalled local trust service client: \n" +

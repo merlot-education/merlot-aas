@@ -93,12 +93,12 @@ public class SsiUserService implements UserDetailsService {
                     throw new OAuth2AuthenticationException("loginRejected");
                 case TIMED_OUT:
                     log.error("Exception during call Evaluate of TrustServiceClient, response status: {}", evaluation.get("status"));
-                    throw new OAuth2AuthenticationException("loginExpired");
+                    throw new OAuth2AuthenticationException("loginTimeout");
             }
         }
 
         log.error("Time for calling TrustServiceClient expired, time spent: {} ms", requestingStart.until(LocalTime.now(), MILLIS));
-        throw new OAuth2AuthenticationException("loginExpired");
+        throw new OAuth2AuthenticationException("loginTimeout");
     }
 
     private void delayNextRequest() {
