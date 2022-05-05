@@ -58,7 +58,7 @@ public class OidcDiscoveryTest {
                 .forEachRemaining(jsonNode -> supportedClaims.add(jsonNode.asText()));
 
         assertTrue(List.of("sub", "iss", "auth_time", "name", "given_name", "family_name", "middle_name", "preferred_username", "gender",
-                "birtdate", "updated_at", "email", "email_verified").containsAll(supportedClaims));
+                "birthdate", "updated_at", "email", "email_verified").containsAll(supportedClaims));
     }
 
 }

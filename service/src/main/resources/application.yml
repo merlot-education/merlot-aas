@@ -60,7 +60,7 @@ aas:
       - middle_name
       - preferred_username
       - gender
-      - birtdate
+      - birthdate
       - updated_at
     email:
       - email

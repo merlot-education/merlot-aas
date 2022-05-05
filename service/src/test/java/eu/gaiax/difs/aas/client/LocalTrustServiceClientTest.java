@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
+
 import java.util.Collections;
 import java.util.Map;
 
@@ -34,8 +36,9 @@ public class LocalTrustServiceClientTest {
         Map<String, Object> response = localTrustServiceClient.evaluate("GetLoginProofResult", Map.of("requestId", "testRequestId"));
 
         assertEquals(issuerUri, response.get("iss"));
+        assertEquals("testRequestId", response.get("requestId"));
         assertEquals("testRequestId", response.get("sub"));
-        assertEquals("test-claim1", response.get("claim1"));
+        assertEquals(AccessRequestStatusDto.PENDING, response.get("status"));
     }
 
     @Test
@@ -50,8 +53,9 @@ public class LocalTrustServiceClientTest {
         Map<String, Object> response = localTrustServiceClient.evaluate("GetIatProofResult", Map.of("requestId", "testRequestId"));
 
         assertEquals(issuerUri, response.get("iss"));
+        assertEquals("testRequestId", response.get("requestId"));
         assertEquals("testRequestId", response.get("sub"));
-        assertEquals("test-claim1", response.get("claim1"));
+        assertEquals(AccessRequestStatusDto.PENDING, response.get("status"));
     }
 
     @Test

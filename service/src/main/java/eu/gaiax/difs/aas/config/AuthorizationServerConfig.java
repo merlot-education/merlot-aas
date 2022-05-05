@@ -26,6 +26,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
+import java.util.List;
 import java.util.UUID;
 
 import eu.gaiax.difs.aas.properties.ClientsProperties;
@@ -148,8 +149,7 @@ public class AuthorizationServerConfig {
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
                 .redirectUri(client.getRedirectUri())
-                //.scopes(c -> c.addAll(List.of(OidcScopes.OPENID, OidcScopes.PROFILE, OidcScopes.EMAIL)))
-                .scope(OidcScopes.OPENID)
+                .scopes(c -> c.addAll(List.of(OidcScopes.OPENID, OidcScopes.PROFILE, OidcScopes.EMAIL)))
                 .clientSettings(ClientSettings.builder()
                         .tokenEndpointAuthenticationSigningAlgorithm(SignatureAlgorithm.RS256)
                         // maybe we'll use it later on..

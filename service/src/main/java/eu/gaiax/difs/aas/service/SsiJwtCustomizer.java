@@ -21,10 +21,19 @@ public class SsiJwtCustomizer implements OAuth2TokenCustomizer<JwtEncodingContex
         log.debug("customize.enter; got context: {}", context);
 
         String requestId = getRequestId(context);
+        
+        //OAuth2TokenType.
 
         if ("id_token".equals(context.getTokenType().getValue())) {
             Map<String, Object> userDetails = ssiUserService.getUserClaims(requestId, false);
-            context.getClaims().claims(claims -> claims.putAll(userDetails));
+            //userDetails.co
+            //context.getClaims().
+            context.getClaims().claims(claims -> {
+                Object iat = claims.get("iat"); //issued_at?
+                Object authTime = iat == null ? System.currentTimeMillis() : iat;
+                claims.putAll(userDetails);
+                claims.putIfAbsent("auth_time", authTime);
+            });
         }
 
         log.debug("customize.exit; got subject: {}", requestId);

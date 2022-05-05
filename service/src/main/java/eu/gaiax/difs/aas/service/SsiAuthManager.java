@@ -17,13 +17,14 @@ public class SsiAuthManager implements AuthenticationManager {
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         log.debug("authenticate.enter; got authentication: {}", authentication);
-        // TODO: get claims from UserDetailService by requestId..?
         String subject = "user";
         if (authentication instanceof OidcUserInfoAuthenticationToken) {
             subject = ((JwtAuthenticationToken) authentication.getPrincipal()).getToken().getSubject(); 
         } else if (authentication instanceof BearerTokenAuthenticationToken) {
-            ((BearerTokenAuthenticationToken) authentication).getToken();
+            subject = ((BearerTokenAuthenticationToken) authentication).getName(); // .getToken();
         }
+        // TODO: get claims from UserDetailService by requestId..?
+        // get requested scopes from token, then use claims which corresponds to requested scopes only..
         OidcUserInfoAuthenticationToken token = new OidcUserInfoAuthenticationToken(authentication, 
                 OidcUserInfo.builder().name(subject).email(subject + "@oidc.ssi").subject(subject).build());
         log.debug("authenticate.exit; returning: {} for subject: {}", token, subject);

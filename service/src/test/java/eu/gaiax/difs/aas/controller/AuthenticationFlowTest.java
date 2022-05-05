@@ -6,6 +6,7 @@ import static eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto.TIMED_OUT
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
@@ -52,6 +53,8 @@ import com.google.zxing.NotFoundException;
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
 import com.google.zxing.common.HybridBinarizer;
 import com.google.zxing.qrcode.QRCodeReader;
+import com.nimbusds.jwt.JWT;
+import com.nimbusds.jwt.JWTParser;
 
 import eu.gaiax.difs.aas.client.LocalTrustServiceClientImpl;
 import eu.gaiax.difs.aas.client.TrustServiceClient;
@@ -81,9 +84,9 @@ public class AuthenticationFlowTest {
         setupTrustService(ACCEPTED);
 
         MvcResult result = mockMvc.perform(
-                        get("/oauth2/authorize?scope={scope}&state={state}&response_type={type}&client_id={id}&redirect_uri={uri}&nonce={nonce}",
+                        get("/oauth2/authorize?scope={scope}&state={state}&response_type={type}&client_id={id}&redirect_uri={uri}&nonce={nonce}&prompt={prompt}",
                                 "openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc",
-                                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg")
+                                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "none")
                                 .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(header().string("Location", containsString("/ssi/login")))
@@ -154,27 +157,34 @@ public class AuthenticationFlowTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        String jwtStr = result.getResponse().getContentAsString();
-        Map<String, Object> jwt = new JacksonJsonParser().parseMap(jwtStr);
+        String token = result.getResponse().getContentAsString();
+        Map<String, Object> tokenFields = new JacksonJsonParser().parseMap(token);
 
-        assertNotNull(jwt.get(OAuth2ParameterNames.ACCESS_TOKEN));
-        assertNotNull(jwt.get(OidcParameterNames.ID_TOKEN));
-        assertNotNull(jwt.get(OAuth2ParameterNames.EXPIRES_IN));
-        assertNotNull(jwt.get(OAuth2ParameterNames.TOKEN_TYPE));
-        assertTrue(((Integer) jwt.get(OAuth2ParameterNames.EXPIRES_IN)) > 500); // default is 300, we set it to 600
-        assertEquals("Bearer", jwt.get(OAuth2ParameterNames.TOKEN_TYPE));
+        assertNotNull(tokenFields.get(OAuth2ParameterNames.ACCESS_TOKEN));
+        assertNotNull(tokenFields.get(OidcParameterNames.ID_TOKEN));
+        assertNotNull(tokenFields.get(OAuth2ParameterNames.EXPIRES_IN));
+        assertNotNull(tokenFields.get(OAuth2ParameterNames.TOKEN_TYPE));
+        assertTrue(((Integer) tokenFields.get(OAuth2ParameterNames.EXPIRES_IN)) > 500); // default is 300, we set it to 600
+        assertEquals("Bearer", tokenFields.get(OAuth2ParameterNames.TOKEN_TYPE));
         // check session.getMaxInactiveInterval() too?
 
-        String accessToken = jwt.get(OAuth2ParameterNames.ACCESS_TOKEN).toString();
-        String idToken = jwt.get(OidcParameterNames.ID_TOKEN).toString();
+        String accessToken = tokenFields.get(OAuth2ParameterNames.ACCESS_TOKEN).toString();
+        JWT jwt = JWTParser.parse(accessToken);
+        Object o = jwt.getJWTClaimsSet().getClaim("auth_time");
+        assertNull(o);
+        
+        String idToken = tokenFields.get(OidcParameterNames.ID_TOKEN).toString();
+        jwt = JWTParser.parse(idToken);
+        o = jwt.getJWTClaimsSet().getClaim("auth_time");
+        assertNotNull(o);
 
         // now test session evaluation..
         result = mockMvc.perform(
                         get("/oauth2/authorize?scope={scope}&state={state}&response_type={type}&client_id={id}&redirect_uri={uri}&nonce={nonce}" +
                                         "&max_age={age}&id_token_hint={hint}",
                                 "openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc",
-                                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "10", idToken)
-                                .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
+                                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "1", idToken)
+                                .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML) // must re-login??
                         //.session((MockHttpSession) session)
                 )
                 .andExpect(status().is3xxRedirection())
@@ -454,7 +464,7 @@ public class AuthenticationFlowTest {
                 .andReturn();
         session = result.getRequest().getSession(false);
 
-        assertEquals(session.getAttribute("AUTH_ERROR"), "loginExpired");
+        assertEquals("loginTimeout", session.getAttribute("AUTH_ERROR"));
     }
 
     @Test
@@ -503,7 +513,7 @@ public class AuthenticationFlowTest {
                 .andReturn();
         session = result.getRequest().getSession(false);
 
-        assertEquals(session.getAttribute("AUTH_ERROR"), "loginRejected");
+        assertEquals("loginRejected", session.getAttribute("AUTH_ERROR"));
     }
 
     private void setupTrustService(AccessRequestStatusDto status) {
