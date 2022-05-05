@@ -3,8 +3,12 @@ package eu.gaiax.difs.aas.controller;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTParser;
 
+import eu.gaiax.difs.aas.service.IatService;
 import eu.gaiax.difs.aas.service.SsiBrokerService;
 import lombok.RequiredArgsConstructor;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.json.JacksonJsonParser;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -31,6 +35,8 @@ import java.util.ResourceBundle;
 @RequiredArgsConstructor
 @RequestMapping("/ssi")
 public class SsiController {
+    
+    //private static final Logger log = LoggerFactory.getLogger(SsiController.class);
 
     private final SsiBrokerService ssiBrokerService;
 
@@ -130,6 +136,14 @@ public class SsiController {
         }
         
         ssiBrokerService.processSiopLoginResponse(claims);
+    }
+    
+    @ResponseBody
+    @GetMapping(value = "/cip", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, Object> getClaims(@RequestParam Map<String, Object> params) { 
+        String subject = (String) params.remove("sub");
+        String required = (String) params.remove("req");
+        return ssiBrokerService.getSubjectClaims(subject, required == null ? false : Boolean.parseBoolean(required), params);
     }
     
 }
