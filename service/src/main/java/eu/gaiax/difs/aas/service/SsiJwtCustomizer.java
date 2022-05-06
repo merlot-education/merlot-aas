@@ -28,7 +28,7 @@ public class SsiJwtCustomizer implements OAuth2TokenCustomizer<JwtEncodingContex
             //context.getClaims().
             context.getClaims().claims(claims -> {
                 Object iat = claims.get("iat"); //issued_at?
-                Object authTime = iat == null ? Instant.now() : iat;
+                Object authTime = iat == null ? Instant.now().toEpochMilli() : iat instanceof Instant ? ((Instant) iat).toEpochMilli() : iat;
                 claims.putAll(userDetails);
                 claims.putIfAbsent("auth_time", authTime);
             });

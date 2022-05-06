@@ -54,15 +54,15 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
                     map.put("middle_name", null);
                     map.put("preferred_username", requestId = " " + stamp);
                     map.put("gender", stamp % 2 == 0 ? "F" : "M");
-                    map.put("birthdate", LocalDate.now().minusYears(21));
-                    map.put("updated_at", LocalDate.now().minusDays(1));
+                    map.put("birthdate", LocalDate.now().minusYears(21).toString());
+                    map.put("updated_at", Instant.now().minusSeconds(86400).toEpochMilli());
                     map.put("email", requestId + "@oidc.ssi");
                     map.put("email_verified", Boolean.TRUE);
                 }
             }
             map.put("sub", requestId);
             map.put("iss", issuerUri);
-            map.put("auth_time", Instant.now());
+            map.put("auth_time", Instant.now().toEpochMilli());
         }
 
         log.debug("Called local trust service client; policy: {}, params: {}, result: {} ", policyName, bodyParams, map);
