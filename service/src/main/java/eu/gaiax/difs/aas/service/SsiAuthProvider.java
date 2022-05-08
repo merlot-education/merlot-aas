@@ -19,14 +19,14 @@ public class SsiAuthProvider implements AuthenticationProvider {
     private static final Logger log = LoggerFactory.getLogger(SsiAuthProvider.class);
 
     @Autowired
-    private SsiUserService ssiUserService;
+    private SsiBrokerService ssiBrokerService;
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         log.debug("authenticate.enter; got authentication: {}; {}", authentication, authentication.getCredentials());
 
         boolean required = "OIDC".equals(authentication.getCredentials());
-        Map<String, Object> claims = ssiUserService.getUserClaims((String) authentication.getPrincipal(), required);
+        Map<String, Object> claims = ssiBrokerService.getUserClaims((String) authentication.getPrincipal(), required);
         if (claims == null) {
             // wrong principal/requestId?
             throw new OAuth2AuthenticationException("loginFailed");
@@ -39,7 +39,7 @@ public class SsiAuthProvider implements AuthenticationProvider {
             }
         }
         
-        GrantedAuthority gr = new SimpleGrantedAuthority("ROLE_ANY");
+        GrantedAuthority gr = new SimpleGrantedAuthority("ROLE_ANY"); //use granted scopes?
         UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(
                 authentication.getPrincipal(),
                 authentication.getCredentials(),
@@ -52,7 +52,8 @@ public class SsiAuthProvider implements AuthenticationProvider {
 
     @Override
     public boolean supports(Class<?> authentication) {
-        log.debug("supports.enter; got authentication: {}", authentication);
-        return authentication.equals(UsernamePasswordAuthenticationToken.class);
+        boolean result = authentication.equals(UsernamePasswordAuthenticationToken.class); 
+        log.debug("supports.exit; got authentication: {}, returning: {}", authentication, result);
+        return result;
     }
 }

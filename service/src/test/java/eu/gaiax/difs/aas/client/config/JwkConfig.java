@@ -1,4 +1,4 @@
-package eu.gaiax.difs.aas.controller;
+package eu.gaiax.difs.aas.client.config;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -27,30 +27,29 @@ import eu.gaiax.difs.aas.properties.ServerProperties;
 //@TestConfiguration
 public class JwkConfig {
 
-    @Autowired
-    private ServerProperties serverProps;
+    //@Autowired
+    //private ServerProperties serverProps;
 
-    private static RSAPublicKey _jwkKey;
-    
     @Bean
     public JwtDecoder jwtDecoder() throws JOSEException {
-        OAuth2TokenValidator<Jwt> jwtValidator = JwtValidators.createDefaultWithIssuer(serverProps.getBaseUrl());
-        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withPublicKey(_jwkKey).build();
+        //jwkSource();
+        OAuth2TokenValidator<Jwt> jwtValidator = JwtValidators.createDefault(); //WithIssuer(serverProps.getBaseUrl());
+        RSAPublicKey publicKey = (RSAPublicKey) generateRsa().toPublicKey();
+        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withPublicKey(publicKey).build();
         jwtDecoder.setJwtValidator(jwtValidator);
         return jwtDecoder;
     }
     
-    @Bean
-    public JWKSource<SecurityContext> jwkSource() {
-        RSAKey rsaKey = generateRsa();
-        JWKSet jwkSet = new JWKSet(rsaKey);
-        return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
-    }
+    //@Bean
+    //public JWKSource<SecurityContext> jwkSource() {
+    //    RSAKey rsaKey = generateRsa();
+    //    JWKSet jwkSet = new JWKSet(rsaKey);
+    //    return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
+    //}
 
     public static RSAKey generateRsa() {
         KeyPair keyPair = generateRsaKey();
         RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
-        _jwkKey = publicKey;
         RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
         return new RSAKey.Builder(publicKey)
                 .privateKey(privateKey)

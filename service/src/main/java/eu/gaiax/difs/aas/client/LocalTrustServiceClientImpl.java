@@ -11,18 +11,32 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 
+import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
+import eu.gaiax.difs.aas.properties.ServerProperties;
+import eu.gaiax.difs.aas.properties.StatusProperties;
+
 import static eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto.*;
 
 public class LocalTrustServiceClientImpl implements TrustServiceClient {
 
     private static final Logger log = LoggerFactory.getLogger("tsclaims");
 
-    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
-    private String issuerUri;
-
-    private static final int PENDING_REQUESTS_COUNT = 2;
     private final Map<String, Integer> countdowns = new ConcurrentHashMap<>();
-        
+    private final ServerProperties serverProperties;
+    private final StatusProperties statusProperties;
+
+    @Value("${aas.tsa.request.count}")
+    private int pendingRequestCount;
+    
+    public LocalTrustServiceClientImpl(ServerProperties serverProperties, StatusProperties statusProperties) {
+        this.serverProperties = serverProperties;
+        this.statusProperties = statusProperties;
+    }
+    
+    public void setStatusConfig(String policy, AccessRequestStatusDto status) {
+        statusProperties.setPolicyStatus(policy, status);
+    }
+    
     @Override
     public Map<String, Object> evaluate(String policyName, Map<String, Object> bodyParams) {
         Map<String, Object> map = new HashMap<>();
@@ -45,7 +59,11 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
             if (isPending(requestId)) {
                 map.put("status", PENDING);
             } else {
-                map.put("status", ACCEPTED);
+                AccessRequestStatusDto status = statusProperties.getPolicyStatus(policyName);
+                if (status == null) {
+                    status = ACCEPTED;
+                }
+                map.put("status", status);
                 if ("GetLoginProofResult".equals(policyName)) {
                     long stamp = System.currentTimeMillis();
                     map.put("name", requestId);
@@ -55,14 +73,14 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
                     map.put("preferred_username", requestId = " " + stamp);
                     map.put("gender", stamp % 2 == 0 ? "F" : "M");
                     map.put("birthdate", LocalDate.now().minusYears(21).toString());
-                    map.put("updated_at", Instant.now().minusSeconds(86400).toEpochMilli());
+                    map.put("updated_at", Instant.now().minusSeconds(86400).getEpochSecond());
                     map.put("email", requestId + "@oidc.ssi");
                     map.put("email_verified", Boolean.TRUE);
                 }
             }
             map.put("sub", requestId);
-            map.put("iss", issuerUri);
-            map.put("auth_time", Instant.now().toEpochMilli());
+            map.put("iss", serverProperties.getBaseUrl());
+            map.put("auth_time", Instant.now().getEpochSecond());
         }
 
         log.debug("Called local trust service client; policy: {}, params: {}, result: {} ", policyName, bodyParams, map);
@@ -70,7 +88,7 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
     }
 
     private synchronized boolean isPending(String requestId) {
-        int pendingCount = countdowns.getOrDefault(requestId, PENDING_REQUESTS_COUNT);
+        int pendingCount = countdowns.getOrDefault(requestId, pendingRequestCount);
         if (pendingCount <= 0) {
             countdowns.remove(requestId);
             return false;
@@ -78,4 +96,5 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
         countdowns.put(requestId, pendingCount - 1);
         return true;
     }
+    
 }

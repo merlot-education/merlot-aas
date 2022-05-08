@@ -3,10 +3,11 @@ package eu.gaiax.difs.aas.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.server.authorization.JwtEncodingContext;
+import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenCustomizer;
 
-import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -15,7 +16,7 @@ public class SsiJwtCustomizer implements OAuth2TokenCustomizer<JwtEncodingContex
     private static final Logger log = LoggerFactory.getLogger(SsiJwtCustomizer.class);
 
     @Autowired
-    private  SsiUserService ssiUserService;
+    private  SsiBrokerService ssiBrokerService;
 
     @Override
     public void customize(JwtEncodingContext context) {
@@ -23,15 +24,17 @@ public class SsiJwtCustomizer implements OAuth2TokenCustomizer<JwtEncodingContex
         String requestId = getRequestId(context);
         
         if ("id_token".equals(context.getTokenType().getValue())) {
-            Map<String, Object> userDetails = ssiUserService.getUserClaims(requestId, false);
-            //userDetails.co
-            //context.getClaims().
-            context.getClaims().claims(claims -> {
-                Object iat = claims.get("iat"); //issued_at?
-                Object authTime = iat == null ? Instant.now().toEpochMilli() : iat instanceof Instant ? ((Instant) iat).toEpochMilli() : iat;
-                claims.putAll(userDetails);
-                claims.putIfAbsent("auth_time", authTime);
-            });
+            OAuth2Authorization auth = context.get(OAuth2Authorization.class);
+            OAuth2AuthorizationRequest oar = auth.getAttribute(OAuth2AuthorizationRequest.class.getName());
+            Map<String, Object> userDetails = ssiBrokerService.getUserClaims(requestId, false, oar.getScopes()); // required?
+            boolean needAuthTime = oar.getAdditionalParameters().get("max_age") != null; 
+            if (userDetails != null) {
+                for (Map.Entry<String, Object> e: userDetails.entrySet()) {
+                    if (needAuthTime || !e.getKey().equals("auth_time")) {
+                        context.getClaims().claim(e.getKey(), e.getValue());
+                    }
+                }
+            }
         }
         log.debug("customize.exit; got subject: {}", requestId);
     }

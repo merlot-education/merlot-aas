@@ -15,16 +15,12 @@ import org.springframework.security.oauth2.server.authorization.oidc.authenticat
 import org.springframework.security.oauth2.server.resource.BearerTokenAuthenticationToken;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
-import eu.gaiax.difs.aas.properties.ScopeProperties;
-
 public class SsiAuthManager implements AuthenticationManager {
 
     private static final Logger log = LoggerFactory.getLogger(SsiAuthManager.class);
     
     @Autowired
-    private SsiUserService ssiUserService;
-    @Autowired
-    private ScopeProperties scopeProperties;
+    private SsiBrokerService ssiBrokerService;
     
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
@@ -38,18 +34,14 @@ public class SsiAuthManager implements AuthenticationManager {
             requestId = ((BearerTokenAuthenticationToken) authentication).getName(); // .getToken();
             scopes = Collections.emptyList();
         }
+        boolean needAuthTime = false; //oar.getAdditionalParameters().get("auth_time") != null; 
 
         OidcUserInfo.Builder uiBuilder = OidcUserInfo.builder();
-        Map<String, Object> userDetails = ssiUserService.getUserClaims(requestId, false);
-        // get requested scopes from token, then use claims which corresponds to requested scopes only..
+        Map<String, Object> userDetails = ssiBrokerService.getUserClaims(requestId, false, scopes); //required?
         if (userDetails != null) {
-            for (String scope: scopes) {
-                List<String> claims = scopeProperties.getScopes().get(scope);
-                for (String claim: claims) {
-                    Object value = userDetails.get(claim);
-                    if (value != null) {
-                        uiBuilder.claim(claim, value);
-                    }
+            for (Map.Entry<String, Object> e: userDetails.entrySet()) {
+                if (needAuthTime || !e.getKey().equals("auth_time")) {
+                    uiBuilder.claim(e.getKey(), e.getValue());
                 }
             }
         }
@@ -59,5 +51,3 @@ public class SsiAuthManager implements AuthenticationManager {
     }
 
 }
-
-//{sub=5a083275-8403-4fdb-af27-f6e27408e12e, aud=[aas-app-oidc], nbf=2022-05-05T18:20:56Z, scope=["openid"], iss=http://auth-server:9000, exp=2022-05-05T18:30:56Z, iat=2022-05-05T18:20:56Z}
