@@ -55,9 +55,10 @@ public class IatControllerTest {
     void getRequest_correctRequest_pending_200() throws Exception {
         Map<String, Object> serviceResponse = Map.of(
                 "iss", "responseSubject",
-                "sub", Map.of("scope", "responseScope", "did", "responseDid"),
+                "sub", "responseDid",
+                "scope", "responseScope",
                 "requestId", "responseRequestId",
-                "status", "pending");
+                "status", AccessRequestStatusDto.PENDING);
         AccessResponseDto expectedResponse = new AccessResponseDto()
                 .subject("responseSubject")
                 .entity(new ServiceAccessScopeDto().scope("responseScope").did("responseDid"))
@@ -78,9 +79,10 @@ public class IatControllerTest {
     void getRequest_correctRequest_accepted_200() throws Exception {
         Map<String, Object> serviceResponse = Map.of(
                 "iss", "responseSubject",
-                "sub", Map.of("scope", "responseScope", "did", "responseDid"),
+                "sub", "responseDid",
+                "scope", "responseScope",
                 "requestId", "responseRequestId",
-                "status", "accepted");
+                "status", AccessRequestStatusDto.ACCEPTED);
         AccessResponseDto expectedResponse = new AccessResponseDto()
                 .subject("responseSubject")
                 .entity(new ServiceAccessScopeDto().scope("responseScope").did("responseDid"))
@@ -89,7 +91,7 @@ public class IatControllerTest {
                 .initialAccessToken("keycloakIat");
 
         when(trustServiceClient.evaluate(eq("GetIatProofResult"), any())).thenReturn(serviceResponse);
-        when(iamClient.registerIam(any(), any())).thenReturn(Map.of("registration_access_token","keycloakIat"));
+        when(iamClient.registerIam(any(), any())).thenReturn(Map.of("registration_access_token", "keycloakIat"));
 
         mockMvc.perform(
                         get("/clients/iat/requests/testRequestId")
