@@ -70,7 +70,7 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
                     map.put("given_name", requestId + ": " + stamp);
                     map.put("family_name", String.valueOf(stamp));
                     map.put("middle_name", null);
-                    map.put("preferred_username", requestId = " " + stamp);
+                    map.put("preferred_username", requestId + " " + stamp);
                     map.put("gender", stamp % 2 == 0 ? "F" : "M");
                     map.put("birthdate", LocalDate.now().minusYears(21).toString());
                     map.put("updated_at", Instant.now().minusSeconds(86400).getEpochSecond());

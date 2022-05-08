@@ -3,7 +3,6 @@ package eu.gaiax.difs.aas.controller;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTParser;
 
-import eu.gaiax.difs.aas.service.IatService;
 import eu.gaiax.difs.aas.service.SsiBrokerService;
 import lombok.RequiredArgsConstructor;
 

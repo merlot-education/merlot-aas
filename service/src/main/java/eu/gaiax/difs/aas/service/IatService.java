@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,9 +42,10 @@ public class IatService {
 
     private Map<String, Object> iatRequestToMap(AccessRequestDto request) {
         Map<String, Object> map = new HashMap<>();
-        if (request.getEntity().getScope() != null) {
-            map.put("scope", Set.of("openid", request.getEntity().getScope()));
-        }
+        Set<String> scopes = new HashSet<>();
+        scopes.add("openid");
+        scopes.add(request.getEntity().getScope());
+        map.put("scope", scopes);
         map.put("sub", request.getEntity().getDid());
         map.put("iss", request.getSubject());
         map.put("namespace", "Access");
@@ -67,29 +69,21 @@ public class IatService {
     
     private AccessResponseDto mapToIatAccessResponse(Map<String, Object> map) {
         return new AccessResponseDto().subject((String) map.getOrDefault("iss", null))
-                .entity(mapAccessScope(map.getOrDefault("sub", null))) //???
-                .status(mapStatus(map.getOrDefault("status", null)))
+                .entity(mapAccessScope(map)) 
+                .status((AccessRequestStatusDto) map.getOrDefault("status", null))
                 .initialAccessToken((String) map.getOrDefault("iat", null))
-                // TODO: claims to be specified
                 .requestId((String) map.getOrDefault("requestId", null))
                 .policyEvaluationResult(map.getOrDefault("policyEvaluationResult", null));
     }
 
-    private ServiceAccessScopeDto mapAccessScope(Object input) {
+    private ServiceAccessScopeDto mapAccessScope(Map<String, Object> map) {
         try {
-            Map<String, String> map = (Map<String, String>) input;
-            return new ServiceAccessScopeDto().scope(map.getOrDefault("scope", null))
-                    .did(map.getOrDefault("did", null));
+            return new ServiceAccessScopeDto()
+                    .scope((String) map.getOrDefault("scope", null))
+                    .did((String) map.getOrDefault("sub", null));
         } catch (Exception ignored) {
             return new ServiceAccessScopeDto();
         }
-    }
-
-    private AccessRequestStatusDto mapStatus(Object input) {
-        if (input instanceof String) {
-            return AccessRequestStatusDto.fromValue((String) input);
-        }
-        return null;
     }
     
 }

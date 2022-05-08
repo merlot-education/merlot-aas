@@ -74,7 +74,8 @@ public class SsiBrokerService {
         Map<String, Object> params = new HashMap<>();
         params.put("namespace", "Login");
 
-        processScopes(model, params);
+        Set<String> scopes = processScopes(model);
+        params.put("scope", scopes);
 
         // they can be provided in re-login scenario..
         processAttribute(model, params, "sub");
@@ -97,12 +98,11 @@ public class SsiBrokerService {
     public Model siopAuthorize(Model model) {
         log.debug("siopAuthorize.enter; got model: {}", model);
 
-        Object o = model.getAttribute("scope");
-        String scope = String.join(" ", ((String[]) o));
+        Set<String> scopes = processScopes(model);
 
         UUID requestId = UUID.randomUUID();
-        String link = buildRequestString(model, requestId);
-        cacheSiopData(requestId.toString(), scope);
+        String link = buildRequestString(scopes, requestId);
+        cacheSiopData(requestId.toString(), scopes);
         
         String qrUrl = "/ssi/qr/" + Base64.getUrlEncoder().encodeToString(link.getBytes());
         model.addAttribute("qrUrl", qrUrl);
@@ -113,15 +113,13 @@ public class SsiBrokerService {
         return model;
     }
 
-    private Set<String> processScopes(Model model, Map<String, Object> params) {
+    private Set<String> processScopes(Model model) {
         Set<String> scopes = new HashSet<>();
         scopes.add("openid");
         Object o = model.getAttribute("scope");
         if (o != null) {
-            String[] sa = (String[]) o;
-            scopes.addAll(Arrays.asList(sa));
+            Arrays.stream((String[]) o).forEach(s -> scopes.addAll(Arrays.asList(s.split(" "))));
         }
-        params.put("scope", scopes);
         return scopes;
     }
 
@@ -132,16 +130,14 @@ public class SsiBrokerService {
         }
     }
 
-    private String buildRequestString(Model model, UUID requestId) {
+    private String buildRequestString(Set<String> scopes, UUID requestId) {
         List<String> params = new ArrayList<>();
-
-        processScopes(model, new HashMap<>()).forEach(scope -> params.add("scope=" + scope));
+        params.add("scope=" + String.join(" ", scopes));
         params.add("response_type=id_token");
         params.add("client_id=" + serverProperties.getBaseUrl());
         params.add("redirect_uri=" + serverProperties.getBaseUrl() + "/ssi/siop-callback");
         params.add("response_mode=post");
         params.add("nonce=" + requestId);
-
         return "openid://?" + String.join("&", params);
     }
 
@@ -175,13 +171,14 @@ public class SsiBrokerService {
         
         String error = (String) response.get("error");
         if (error == null) {
-            String requiredScope = (String) siopRequestCache.get(requestId).get("scope");
-            List<String> claims = scopeProperties.getScopes().get(requiredScope);
+            Set<String> requestedScopes = (Set<String>) siopRequestCache.get(requestId).get("scope");
+            Set<String> requestedClaims = scopeProperties.getScopes().entrySet().stream()
+                    .filter(e -> requestedScopes.contains(e.getKey())).flatMap(e -> e.getValue().stream()).collect(Collectors.toSet());
             
             DefaultJWTClaimsVerifier<?> verifier = new DefaultJWTClaimsVerifier<>(new JWTClaimsSet.Builder()
                 .issuer(idTokenIssuer)
                 .audience(serverProperties.getBaseUrl())
-                .build(), new HashSet<String>(claims));
+                .build(), requestedClaims);
             try {
                 verifier.verify(JWTClaimsSet.parse(response), null);
             } catch(ParseException | BadJWTException ex) {
@@ -208,11 +205,11 @@ public class SsiBrokerService {
         //log.debug("processSiopLoginResponse.exit; returning: {}", result);
     }
     
-    private void cacheSiopData(String requestId, String scope) {
+    private void cacheSiopData(String requestId, Set<String> scopes) {
         if (!siopRequestCache.containsKey(requestId)) {
             Map<String, Object> data = new HashMap<>();
             data.put("request_time", LocalDateTime.now());
-            data.put("scope", scope);
+            data.put("scope", scopes);
             siopRequestCache.put(requestId, data);
         } else {
             throw new OAuth2AuthenticationException("loginFailed");

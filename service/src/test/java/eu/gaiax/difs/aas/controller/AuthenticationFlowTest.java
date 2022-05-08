@@ -8,9 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyMap;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED_VALUE;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -20,13 +17,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 import javax.servlet.http.Cookie;
@@ -39,7 +40,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.json.JacksonJsonParser;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
@@ -53,6 +53,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.ChecksumException;
 import com.google.zxing.FormatException;
@@ -66,7 +67,6 @@ import com.nimbusds.jwt.JWTParser;
 import eu.gaiax.difs.aas.client.LocalTrustServiceClientImpl;
 import eu.gaiax.difs.aas.client.TrustServiceClient;
 import eu.gaiax.difs.aas.client.config.JwkConfig;
-import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
 import eu.gaiax.difs.aas.properties.ServerProperties;
 
 @SpringBootTest
@@ -88,6 +88,9 @@ public class AuthenticationFlowTest {
     private MockMvc mockMvc;
     
     @Autowired
+    protected ObjectMapper mapper;
+    
+    @Autowired
     private TrustServiceClient trustServiceClient;
 
     @Test
@@ -95,7 +98,7 @@ public class AuthenticationFlowTest {
 
         ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig("GetLoginProofResult", ACCEPTED);
 
-        Map<String, Object> claims = getOidcClaims("openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc",
+        Map<String, Object> claims = getAuthClaims("openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc",
                 keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", "secret", null, s -> "uri://" + s, null);
 
         // check claims..
@@ -158,7 +161,7 @@ public class AuthenticationFlowTest {
 
         ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig("GetLoginProofResult", ACCEPTED);
 
-        Map<String, Object> claims = getOidcClaims("openid profile email", "some.state", "code", "aas-app-oidc",
+        Map<String, Object> claims = getAuthClaims("openid profile email", "some.state", "code", "aas-app-oidc",
                 keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "some-nonce", "OIDC", "secret", Map.of("max_age", 1), s -> "uri://" + s, null);
 
         // check claims..
@@ -179,14 +182,20 @@ public class AuthenticationFlowTest {
     
     @Test
     void testSiopLoginFlow() throws Exception {
-        Map<String, Object> claims = getOidcClaims("openid", "QfjgI5XxMjNkvUU2f9sWQymGfKoaBr7Ro2jHprmBZrg.VTxL7FGKhi0.demo-app", "code", "aas-app-siop",
-                keycloakUri + "/realms/gaia-x/broker/ssi-siop/endpoint", "Q5h3noccV6Hwb4pVHps41A", "SIOP", "secret2", null, rid -> 
+        Map<String, Object> claims = getAuthClaims("openid", "QfjgI5XxMjNkvUU2f9sWQymGfKoaBr7Ro2jHprmBZrg.VTxL7FGKhi0.demo-app", "code", 
+                "aas-app-siop", keycloakUri + "/realms/gaia-x/broker/ssi-siop/endpoint", "Q5h3noccV6Hwb4pVHps41A", "SIOP", "secret2", null, rid -> 
                     "openid://?scope=openid&response_type=id_token&client_id=" + serverProps.getBaseUrl() + "&redirect_uri=" + serverProps.getBaseUrl() + 
                     "/ssi/siop-callback&response_mode=post&nonce=" + rid, rid -> {
                         try {
-                            String rq = "id_token={\"iss\": \"https://self-issued.me/v2\", \"sub\": \"NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs\", " + 
-                                    "\"aud\": \"" + serverProps.getBaseUrl() + "\", \"nonce\": \"" + rid + "\", \"exp\": " + new Date().getTime() + 
-                                    ", \"iat\": 1311280970, \"auth_time\": \"" + new Date().getTime() + "\"}";
+                            Map<String, Object> params = new HashMap<>();
+                            params.put("iss", "https://self-issued.me/v2");
+                            params.put("sub", "NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs");
+                            params.put("aud", serverProps.getBaseUrl());
+                            params.put("nonce", rid);
+                            params.put("exp", Instant.now().plusSeconds(600).getEpochSecond());
+                            params.put("iat", Instant.now().getEpochSecond());
+                            params.put("auth_time", Instant.now().getEpochSecond());
+                            String rq = "id_token=" + mapper.writeValueAsString(params);
                             mockMvc.perform(post("/ssi/siop-callback")
                                     .contentType(APPLICATION_FORM_URLENCODED_VALUE)
                                     .content(rq))
@@ -213,10 +222,126 @@ public class AuthenticationFlowTest {
         assertNull(claims.get("email_verified"));
     }
 
-    private Map<String, Object> getOidcClaims(String scope, String state, String responseType, String clientId, String redirectUri, String nonce, String protocol, 
+    @Test
+    void testSiopLoginMaxScope() throws Exception {
+        Map<String, Object> claims = getAuthClaims("openid profile email", "QfjgI5XxMjNkvUU2f9sWQymGfKoaBr7Ro2jHprmBZrg.VTxL7FGKhi0.demo-app", "code", 
+                "aas-app-siop", keycloakUri + "/realms/gaia-x/broker/ssi-siop/endpoint", "Q5h3noccV6Hwb4pVHps41A", "SIOP", "secret2", null, rid -> 
+                    "openid://?scope=openid profile email&response_type=id_token&client_id=" + serverProps.getBaseUrl() + "&redirect_uri=" + serverProps.getBaseUrl() + 
+                    "/ssi/siop-callback&response_mode=post&nonce=" + rid, rid -> {
+                        try {
+                            long stamp = System.currentTimeMillis();
+                            Map<String, Object> params = new HashMap<>();
+                            params.put("iss", "https://self-issued.me/v2");
+                            params.put("sub", "NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs");
+                            params.put("aud", serverProps.getBaseUrl());
+                            params.put("nonce", rid);
+                            params.put("exp", Instant.now().plusSeconds(600).getEpochSecond());
+                            params.put("iat", Instant.now().getEpochSecond());
+                            params.put("auth_time", Instant.now().getEpochSecond());
+                            params.put("name", rid);
+                            params.put("given_name", rid + ": " + stamp);
+                            params.put("family_name", String.valueOf(stamp));
+                            params.put("middle_name", "");
+                            params.put("preferred_username", rid + " " + stamp);
+                            params.put("gender", stamp % 2 == 0 ? "F" : "M");
+                            params.put("birthdate", LocalDate.now().minusYears(21).toString());
+                            params.put("updated_at", Instant.now().minusSeconds(86400).getEpochSecond());
+                            params.put("email", rid + "@oidc.ssi");
+                            params.put("email_verified", Boolean.TRUE);
+                            String rq = "id_token=" + mapper.writeValueAsString(params);
+                            mockMvc.perform(post("/ssi/siop-callback")
+                                    .contentType(APPLICATION_FORM_URLENCODED_VALUE)
+                                    .content(rq))
+                                .andExpect(status().isOk());
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                );
+
+        // check claims..
+        assertNotNull(claims.get("iss"));
+        assertNotNull(claims.get("sub"));
+        assertNull(claims.get("auth_time"));
+        assertNotNull(claims.get("name"));
+        assertNotNull(claims.get("given_name"));
+        assertNotNull(claims.get("family_name"));
+        //assertNotNull(claims.get("middle_name"));
+        assertNotNull(claims.get("preferred_username"));
+        assertNotNull(claims.get("gender"));
+        assertNotNull(claims.get("birthdate"));
+        assertNotNull(claims.get("updated_at"));
+        assertNotNull(claims.get("email"));
+        assertNotNull(claims.get("email_verified"));
+    }
+
+    @Test
+    void testOidcLoginTimeout() throws Exception {
+
+        ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig("GetLoginProofResult", TIMED_OUT);
+
+        MvcResult authResult = getAuthResult("openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc", 
+                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", null, s -> "uri://" + s, null, "/ssi/login");
+        HttpSession session = authResult.getRequest().getSession(false);
+        assertEquals("loginTimeout", session.getAttribute("AUTH_ERROR"));
+    }
+
+    @Test
+    void testOidcLoginReject() throws Exception {
+
+        ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig("GetLoginProofResult", REJECTED);
+
+        MvcResult authResult = getAuthResult("openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc", 
+                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", null, s -> "uri://" + s, null, "/ssi/login");
+        HttpSession session = authResult.getRequest().getSession(false);
+        assertEquals("loginRejected", session.getAttribute("AUTH_ERROR"));
+    }
+
+    @Test
+    void testSiopCallbackError() throws Exception {
+        
+        MvcResult authResult = getAuthResult("openid", "QfjgI5XxMjNkvUU2f9sWQymGfKoaBr7Ro2jHprmBZrg.VTxL7FGKhi0.demo-app", "code", "aas-app-siop", 
+                keycloakUri + "/realms/gaia-x/broker/ssi-siop/endpoint", "Q5h3noccV6Hwb4pVHps41A", "SIOP", null, rid -> 
+                    "openid://?scope=openid&response_type=id_token&client_id=" + serverProps.getBaseUrl() + "&redirect_uri=" + serverProps.getBaseUrl() + 
+                    "/ssi/siop-callback&response_mode=post&nonce=" + rid, null, "/ssi/login");
+        String requestId = authResult.getRequest().getParameter("username"); 
+        
+        mockMvc.perform(
+                    post("/ssi/siop-callback")
+                            .contentType(APPLICATION_FORM_URLENCODED_VALUE)
+                            .content("error=invalid_request&error_description=Unsupported%20response_type%20value&nonce=" + requestId))
+                // we had error response above, so we're redirected back to login page to see errors 
+                .andExpect(status().isOk())
+                .andReturn();
+        
+        Map<String, Object> params = new HashMap<>();
+        params.put("iss", "https://self-issued.me/v2");
+        params.put("sub", "NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs");
+        params.put("aud", serverProps.getBaseUrl());
+        params.put("nonce", requestId);
+        params.put("exp", Instant.now().plusSeconds(600).getEpochSecond());
+        params.put("iat", Instant.now().getEpochSecond());
+        mockMvc.perform(
+                    post("/ssi/siop-callback")
+                            .contentType(APPLICATION_FORM_URLENCODED_VALUE)
+                            .content("id_token=" + mapper.writeValueAsString(params)))
+            .andExpect(status().isBadRequest()) 
+            .andExpect(status().reason(containsString("invalid nonce"))) // no requestId any more
+            .andReturn();
+    }
+    
+    @Test
+    void testSiopCallbackMissingParameter() throws Exception {
+        mockMvc.perform(
+                    post("/ssi/siop-callback").contentType(APPLICATION_FORM_URLENCODED_VALUE))
+                .andExpect(status().isBadRequest())
+                .andExpect(status().reason(containsString("no id_token nor error provided")));
+    }
+    
+    private Map<String, Object> getAuthClaims(String scope, String state, String responseType, String clientId, String redirectUri, String nonce, String protocol, 
             String secret, Map<String, Object> optional, Function<String, String> urlBuilder, Consumer<String> callback) throws Exception {
 
-        String authCode = getOidcAuth(scope, state, responseType, clientId, redirectUri, nonce, protocol, optional, urlBuilder, callback);
+        String authCode = getAuthCode(scope, state, responseType, clientId, redirectUri, nonce, protocol, optional, urlBuilder, callback);
         String bearer = Base64.getEncoder().encodeToString((clientId + ":" + secret).getBytes());
         MvcResult result = mockMvc.perform(
                 post("/oauth2/token")
@@ -225,8 +350,8 @@ public class AuthenticationFlowTest {
                         .param(OAuth2ParameterNames.CODE, authCode)
                         .param(OAuth2ParameterNames.GRANT_TYPE, "authorization_code")
                         .param(OAuth2ParameterNames.REDIRECT_URI, redirectUri))
-        .andExpect(status().isOk())
-        .andReturn();
+                .andExpect(status().isOk())
+                .andReturn();
 
         String token = result.getResponse().getContentAsString();
         Map<String, Object> tokenFields = new JacksonJsonParser().parseMap(token);
@@ -254,33 +379,38 @@ public class AuthenticationFlowTest {
         return claims;
     }
     
-    private String getOidcAuth(String scope, String state, String responseType, String clientId, String redirectUri, String nonce, String protocol,
+    private String getAuthCode(String scope, String state, String responseType, String clientId, String redirectUri, String nonce, String protocol,
             Map<String, Object> optional, Function<String, String> urlBuilder, Consumer<String> callback) throws Exception {
 
-        Map<String, Object> params = new LinkedHashMap<>();
-        params.put("scope", scope);
-        params.put("state", state);
-        params.put("response_type", responseType);
-        params.put("client_id", clientId);
-        params.put("redirect_uri", redirectUri);
-        params.put("nonce", nonce);
-        if (optional != null) {
-            params.putAll(optional);
-        }
+        MvcResult authResult = getAuthResult(scope, state, responseType, clientId, redirectUri, nonce, protocol, optional, urlBuilder, callback, "/oauth2/authorize");
+        HttpSession session = authResult.getRequest().getSession(false);
 
-        int idx = 0;
-        StringBuilder sb = new StringBuilder();
-        for (String key : params.keySet()) {
-            if (idx > 0) {
-                sb.append("&");
-            }
-            sb.append(key).append("={").append(key).append("}");
-            idx++;
-        }
+        Map<String, Object> params = getAuthRequestParams(scope, state, responseType, clientId, redirectUri, nonce, optional);
+        String rq = getAuthRequest(params);
+        Object[] values = params.values().toArray(new Object[params.size()]);
+        
+        authResult = mockMvc
+                .perform(get("/oauth2/authorize?" + rq, values)
+                        .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
+                        .cookie(new Cookie("JSESSIONID", session.getId())).session((MockHttpSession) session))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(header().string("Location", containsString(redirectUri))) 
+                .andReturn();
+
+        String reUrl = authResult.getResponse().getRedirectedUrl();
+        MultiValueMap<String, String> queryParams = UriComponentsBuilder.fromUriString(reUrl).build().getQueryParams();
+        return queryParams.getFirst("code"); // responseType);
+    }
+
+    private MvcResult getAuthResult(String scope, String state, String responseType, String clientId, String redirectUri, String nonce, String protocol,
+            Map<String, Object> optional, Function<String, String> urlBuilder, Consumer<String> callback, String loginRedirect) throws Exception {
+
+        Map<String, Object> params = getAuthRequestParams(scope, state, responseType, clientId, redirectUri, nonce, optional);
+        String rq = getAuthRequest(params);
         Object[] values = params.values().toArray(new Object[params.size()]);
 
         MvcResult result = mockMvc
-                .perform(get("/oauth2/authorize?" + sb.toString(), values).accept(MediaType.TEXT_HTML,
+                .perform(get("/oauth2/authorize?" + rq, values).accept(MediaType.TEXT_HTML,
                         MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(header().string("Location", containsString("/ssi/login"))).andReturn();
@@ -317,325 +447,34 @@ public class AuthenticationFlowTest {
                         .cookie(new Cookie("JSESSIONID", session.getId())).session((MockHttpSession) session)
                         .param("username", requestId).param("password", protocol))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(header().string("Location", containsString("/oauth2/authorize")))
+                .andExpect(header().string("Location", containsString(loginRedirect))) //!!
                 .andReturn();
-        session = result.getRequest().getSession(false);
-
-        result = mockMvc
-                .perform(get("/oauth2/authorize?" + sb.toString(), values)
-                        .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
-                        .cookie(new Cookie("JSESSIONID", session.getId())).session((MockHttpSession) session))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(header().string("Location", containsString(redirectUri))) 
-                .andReturn();
-
-        String reUrl = result.getResponse().getRedirectedUrl();
-        MultiValueMap<String, String> queryParams = UriComponentsBuilder.fromUriString(reUrl).build().getQueryParams();
-        return queryParams.getFirst("code"); // responseType);
+        return result;
     }
-/*
-    @Test
-    void testSiopLoginFlow() throws Exception {
-
-        MvcResult result = mockMvc.perform(
-                        get("/oauth2/authorize?scope={scope}&state={state}&response_type={type}&client_id={id}&redirect_uri={uri}&nonce={nonce}",
-                                "openid", "QfjgI5XxMjNkvUU2f9sWQymGfKoaBr7Ro2jHprmBZrg.VTxL7FGKhi0.demo-app", "code", "aas-app-siop",
-                                keycloakUri + "/realms/gaia-x/broker/ssi-siop/endpoint", "Q5h3noccV6Hwb4pVHps41A")
-                                .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(header().string("Location", containsString("/ssi/login")))
-                .andReturn();
-
-        HttpSession session = result.getRequest().getSession(false);
-
-        result = mockMvc.perform(
-                        get("/ssi/login")
-                                .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
-                                .cookie(new Cookie("JSESSIONID", session.getId()))
-                                .session((MockHttpSession) session))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        session = result.getRequest().getSession(false);
-        String requestId = result.getModelAndView().getModel().get("requestId").toString();
-        String qrUrl = result.getModelAndView().getModel().get("qrUrl").toString();
-
-        result = mockMvc.perform(
-                        get(qrUrl)
-                                .accept(MediaType.IMAGE_PNG, MediaType.IMAGE_GIF)
-                                .cookie(new Cookie("JSESSIONID", session.getId()))
-                                .session((MockHttpSession) session))
-                .andExpect(status().isOk()).andReturn();
-
-        String expectedUrl = "openid://" +
-                "?scope=openid" +
-                "&response_type=id_token" +
-                "&client_id=" + serverProps.getBaseUrl() + 
-                "&redirect_uri=" + serverProps.getBaseUrl() + "/ssi/siop-callback" +
-                "&response_mode=post" +
-                "&nonce=" + requestId;
-        
-        String resultQrUrl = decodeQR(result.getResponse().getContentAsByteArray());
-        assertEquals(expectedUrl, resultQrUrl);
-
-        result = mockMvc.perform(
-                        post("/login")
-                                .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
-                                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                                .cookie(new Cookie("JSESSIONID", session.getId()))
-                                .session((MockHttpSession) session)
-                                .param("username", requestId)
-                                .param("password", "SIOP"))
-                // as callback was not invoked yet, then it must return error response and redirected back to login page 
-                .andExpect(status().is3xxRedirection())
-                .andExpect(header().string("Location", containsString("/ssi/login")))
-                .andReturn();
-
-        result = mockMvc.perform(
-                        post("/ssi/siop-callback")
-                                .contentType(APPLICATION_FORM_URLENCODED_VALUE)
-                                .content("id_token={ \"iss\": \"https://self-issued.me/v2\", " +
-                                        "\"sub\": \"NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs\", " +
-                                        "\"aud\": \"" + serverProps.getBaseUrl() + "\", " +
-                                        "\"nonce\": \"" + requestId + "\", " +
-                                        "\"auth_time\": " + new Date().getTime() + ", " +
-                                        "\"exp\": " + new Date().getTime() + ", " +
-                                        "\"iat\": 1311280970}"))
-                .andExpect(status().isOk())
-                .andReturn();
-        
-        result = mockMvc.perform(
-                        post("/login")
-                                .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
-                                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                                .cookie(new Cookie("JSESSIONID", session.getId()))
-                                .session((MockHttpSession) session)
-                                .param("username", requestId)
-                                .param("password", "SIOP"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(header().string("Location", containsString("/oauth2/authorize")))
-                .andReturn();
-
-        session = result.getRequest().getSession(false);
-
-        result = mockMvc.perform(
-                        get("/oauth2/authorize?scope={scope}&state={state}&response_type={type}&client_id={id}&redirect_uri={uri}&nonce={nonce}",
-                                "openid", "QfjgI5XxMjNkvUU2f9sWQymGfKoaBr7Ro2jHprmBZrg.VTxL7FGKhi0.demo-app", "code", "aas-app-siop",
-                                keycloakUri + "/realms/gaia-x/broker/ssi-siop/endpoint", "Q5h3noccV6Hwb4pVHps41A")
-                                .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
-                                .cookie(new Cookie("JSESSIONID", session.getId()))
-                                .session((MockHttpSession) session))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(header().string("Location", containsString("/gaia-x/broker/ssi-siop/endpoint")))
-                .andReturn();
-
-        String reUrl = result.getResponse().getRedirectedUrl();
-        MultiValueMap<String, String> params = UriComponentsBuilder.fromUriString(reUrl).build().getQueryParams();
-        String code = params.getFirst("code");
-
-        result = mockMvc.perform(
-                        post("/oauth2/token")
-                                .header("Authorization", "Basic YWFzLWFwcC1zaW9wOnNlY3JldDI=")
-                                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                                .param(OAuth2ParameterNames.CODE, code)
-                                .param(OAuth2ParameterNames.GRANT_TYPE, "authorization_code")
-                                .param(OAuth2ParameterNames.REDIRECT_URI, keycloakUri + "/realms/gaia-x/broker/ssi-siop/endpoint"))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        String jwtStr = result.getResponse().getContentAsString();
-        Map<String, Object> jwt = new JacksonJsonParser().parseMap(jwtStr);
-
-        assertNotNull(jwt.get(OAuth2ParameterNames.ACCESS_TOKEN));
-        assertNotNull(jwt.get(OidcParameterNames.ID_TOKEN));
-        assertNotNull(jwt.get(OAuth2ParameterNames.EXPIRES_IN));
-        assertNotNull(jwt.get(OAuth2ParameterNames.TOKEN_TYPE));
-        assertTrue(((Integer) jwt.get(OAuth2ParameterNames.EXPIRES_IN)) > 500); // default is 300, we set it to 600
-        assertEquals("Bearer", jwt.get(OAuth2ParameterNames.TOKEN_TYPE));
+    
+    private Map<String, Object> getAuthRequestParams(String scope, String state, String responseType, String clientId, String redirectUri, String nonce, 
+            Map<String, Object> optional) {
+        Map<String, Object> params = new LinkedHashMap<>();
+        params.put("scope", scope);
+        params.put("state", state);
+        params.put("response_type", responseType);
+        params.put("client_id", clientId);
+        params.put("redirect_uri", redirectUri);
+        params.put("nonce", nonce);
+        if (optional != null) {
+            params.putAll(optional);
+        }
+        return params;
     }
-*/
+    
+    private String getAuthRequest(Map<String, Object> params) {
+        return params.keySet().stream().map(k -> k + "={" + k + "}").collect(Collectors.joining("&"));
+    }
+    
     private String decodeQR(byte[] content) throws IOException, ChecksumException, NotFoundException, FormatException {
         BufferedImage image = ImageIO.read(new ByteArrayInputStream(content));
         BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(new BufferedImageLuminanceSource(image)));
         return new QRCodeReader().decode(bitmap).getText();
-    }
-
-    @Test
-    void siopCallback_missingParameter() throws Exception {
-        mockMvc.perform(
-                        post("/ssi/siop-callback").contentType(APPLICATION_FORM_URLENCODED_VALUE))
-                .andExpect(status().isBadRequest())
-                .andExpect(status().reason(containsString("no id_token nor error provided")));
-    }
-
-    @Test
-    void siopCallback_errorResponse() throws Exception {
-            MvcResult result = mockMvc.perform(
-                    get("/oauth2/authorize?scope={scope}&state={state}&response_type={type}&client_id={id}&redirect_uri={uri}&nonce={nonce}",
-                            "openid", "QfjgI5XxMjNkvUU2f9sWQymGfKoaBr7Ro2jHprmBZrg.VTxL7FGKhi0.demo-app", "code", "aas-app-siop",
-                            keycloakUri + "/realms/gaia-x/broker/ssi-siop/endpoint", "Q5h3noccV6Hwb4pVHps41A")
-                            .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML))
-            .andExpect(status().is3xxRedirection())
-            .andExpect(header().string("Location", containsString("/ssi/login")))
-            .andReturn();
-        
-        HttpSession session = result.getRequest().getSession(false);
-        
-        result = mockMvc.perform(
-                    get("/ssi/login")
-                            .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
-                            .cookie(new Cookie("JSESSIONID", session.getId()))
-                            .session((MockHttpSession) session))
-            .andExpect(status().isOk())
-            .andReturn();
-        
-        session = result.getRequest().getSession(false);
-        String requestId = result.getModelAndView().getModel().get("requestId").toString();
-        
-        result = mockMvc.perform(
-                    post("/login")
-                            .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
-                            .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                            .cookie(new Cookie("JSESSIONID", session.getId()))
-                            .session((MockHttpSession) session)
-                            .param("username", requestId)
-                            .param("password", "SIOP"))
-            // as callback was not invoked yet, then it must return error response and redirected back to login page 
-            .andExpect(status().is3xxRedirection())
-            .andExpect(header().string("Location", containsString("/ssi/login")))
-            .andReturn();
-        
-        result = mockMvc.perform(
-                        post("/ssi/siop-callback")
-                                .contentType(APPLICATION_FORM_URLENCODED_VALUE)
-                                .content("error=invalid_request&error_description=Unsupported%20response_type%20value&state=" + requestId))
-                // we had error response above, so we're redirected back to login page to see errors 
-                .andExpect(status().isOk())
-                .andReturn();
-        
-        result = mockMvc.perform(
-                    post("/ssi/siop-callback")
-                            .contentType(APPLICATION_FORM_URLENCODED_VALUE)
-                            .content("id_token={ \"iss\": \"https://self-issued.me/v2\", " +
-                                    "\"sub\": \"NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs\", " +
-                                    "\"aud\": \"" + serverProps.getBaseUrl() + "/ssi/siop-callback\", " +
-                                    "\"nonce\": \"" + requestId + "\", " +
-                                    "\"exp\": " + new Date().getTime() + ", " +
-                                    "\"iat\": 1311280970}"))
-            .andExpect(status().isBadRequest()) // no requestId any more
-            .andExpect(status().reason(containsString("invalid nonce")))
-            .andReturn();
-        
-        result = mockMvc.perform(
-                    post("/login")
-                            .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
-                            .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                            .cookie(new Cookie("JSESSIONID", session.getId()))
-                            .session((MockHttpSession) session)
-                            .param("username", requestId)
-                            .param("password", "SIOP"))
-            .andExpect(status().is3xxRedirection())
-            .andExpect(header().string("Location", containsString("/ssi/login")))
-            .andReturn();
-    }
-
-    
-    @Test
-    void testLoginFlowTimeout() throws Exception {
-
-        ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig("GetLoginProofResult", TIMED_OUT);
-
-        MvcResult result = mockMvc.perform(
-                        get("/oauth2/authorize?scope={scope}&state={state}&response_type={type}&client_id={id}&redirect_uri={uri}&nonce={nonce}",
-                                "openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc",
-                                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg")
-                                .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(header().string("Location", containsString("/ssi/login")))
-                .andReturn();
-        HttpSession session = result.getRequest().getSession(false);
-
-        result = mockMvc.perform(
-                        get("/ssi/login")
-                                .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
-                                .cookie(new Cookie("JSESSIONID", session.getId()))
-                                .session((MockHttpSession) session))
-                .andExpect(status().isOk())
-                .andReturn();
-        session = result.getRequest().getSession(false);
-
-        String qrUrl = (String) result.getModelAndView().getModel().get("qrUrl");
-        mockMvc.perform(
-                        get(qrUrl)
-                                .accept(MediaType.IMAGE_PNG, MediaType.IMAGE_GIF)
-                                .cookie(new Cookie("JSESSIONID", session.getId()))
-                                .session((MockHttpSession) session))
-                .andExpect(status().isOk());
-
-        String userId = (String) result.getModelAndView().getModel().get("requestId");
-        result = mockMvc.perform(
-                        post("/login")
-                                .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
-                                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                                .cookie(new Cookie("JSESSIONID", session.getId()))
-                                .session((MockHttpSession) session)
-                                .param("username", userId)
-                                .param("password", "OIDC"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(header().string("Location", containsString("/ssi/login")))
-                .andReturn();
-        session = result.getRequest().getSession(false);
-
-        assertEquals("loginTimeout", session.getAttribute("AUTH_ERROR"));
-    }
-
-    @Test
-    void testLoginFlowReject() throws Exception {
-
-        ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig("GetLoginProofResult", REJECTED);
-
-        MvcResult result = mockMvc.perform(
-                        get("/oauth2/authorize?scope={scope}&state={state}&response_type={type}&client_id={id}&redirect_uri={uri}&nonce={nonce}",
-                                "openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc",
-                                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg")
-                                .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(header().string("Location", containsString("/ssi/login")))
-                .andReturn();
-        HttpSession session = result.getRequest().getSession(false);
-
-        result = mockMvc.perform(
-                        get("/ssi/login")
-                                .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
-                                .cookie(new Cookie("JSESSIONID", session.getId()))
-                                .session((MockHttpSession) session))
-                .andExpect(status().isOk())
-                .andReturn();
-        session = result.getRequest().getSession(false);
-
-        String qrUrl = (String) result.getModelAndView().getModel().get("qrUrl");
-        mockMvc.perform(
-                        get(qrUrl)
-                                .accept(MediaType.IMAGE_PNG, MediaType.IMAGE_GIF)
-                                .cookie(new Cookie("JSESSIONID", session.getId()))
-                                .session((MockHttpSession) session))
-                .andExpect(status().isOk());
-
-        String userId = (String) result.getModelAndView().getModel().get("requestId");
-        result = mockMvc.perform(
-                        post("/login")
-                                .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
-                                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                                .cookie(new Cookie("JSESSIONID", session.getId()))
-                                .session((MockHttpSession) session)
-                                .param("username", userId)
-                                .param("password", "OIDC"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(header().string("Location", containsString("/ssi/login")))
-                .andReturn();
-        session = result.getRequest().getSession(false);
-
-        assertEquals("loginRejected", session.getAttribute("AUTH_ERROR"));
     }
 
 }
