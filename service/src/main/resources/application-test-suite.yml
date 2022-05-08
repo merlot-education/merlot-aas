@@ -1,15 +1,7 @@
 server:
   host: auth-server
   port: 9000
-
-spring:
-  security:    
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: http://${server.host}:${server.port}
-          jwk-set-uri: http://${server.host}:${server.port}/oauth2/jwks
-          
+        
 aas:
   iam:
     base-uri: https://localhost.emobix.co.uk:8443

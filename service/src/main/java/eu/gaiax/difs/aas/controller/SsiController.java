@@ -53,34 +53,31 @@ public class SsiController {
         }
 
         String[] clientId = auth.getParameterValues("client_id");
-
         if (clientId != null && clientId.length > 0) {
             if ("aas-app-oidc".equals(clientId[0])) {
-                return oidcLogin(model, auth);
+                String[] age = auth.getParameterValues("max_age");
+                if (age != null && age.length > 0) {
+                    model.addAttribute("max_age", age[0]);
+                }
+
+                String[] hint = auth.getParameterValues("id_token_hint");
+                if (hint != null && hint.length > 0) {
+                    String sub = getSubject(hint[0]);
+                    if (sub != null) {
+                        model.addAttribute("sub", sub);
+                    }
+                }
+
+                ssiBrokerService.oidcAuthorize(model);
+                return "login-template.html";
             }
             if ("aas-app-siop".equals(clientId[0])) {
-                return ssiBrokerService.siopAuthorize(model);
+                ssiBrokerService.siopAuthorize(model);
+                return "login-template.html";
             }
         }
 
         throw new OAuth2AuthenticationException("unknown client: " + (clientId == null ? "null" : Arrays.toString(clientId)));
-    }
-
-    private String oidcLogin(Model model, DefaultSavedRequest auth) {
-        String[] age = auth.getParameterValues("max_age");
-        if (age != null && age.length > 0) {
-            model.addAttribute("max_age", age[0]);
-        }
-
-        String[] hint = auth.getParameterValues("id_token_hint");
-        if (hint != null && hint.length > 0) {
-            String sub = getSubject(hint[0]);
-            if (sub != null) {
-                model.addAttribute("sub", sub);
-            }
-        }
-
-        return ssiBrokerService.oidcAuthorize(model);
     }
 
     private String getSubject(String idToken) {

@@ -1,12 +1,17 @@
 package eu.gaiax.difs.aas.service;
 
+import static java.time.temporal.ChronoUnit.MILLIS;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.text.ParseException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 
@@ -33,6 +38,7 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 
 import eu.gaiax.difs.aas.client.TrustServiceClient;
+import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -47,14 +53,22 @@ public class SsiBrokerService {
     @Value("${aas.id-token.issuer}")
     private String idTokenIssuer;
 
+    @Value("${aas.tsa.delay}")
+    private long millisecondsToDelay;
+
+    @Value("${aas.tsa.duration}")
+    private long requestingDuration;
+
+    
     private final TrustServiceClient trustServiceClient;
-    private final SsiUserService ssiUserService;
+    
     private final ScopeProperties scopeProperties;
     private final ServerProperties serverProperties;
 
     private final Map<String, Map<String, Object>> siopRequestCache = new ConcurrentHashMap<>();
+    private final Map<String, Map<String, Object>> userClaimsCache = new ConcurrentHashMap<>();
 
-    public String oidcAuthorize(Model model) {
+    public Model oidcAuthorize(Model model) {
         log.debug("authorize.enter; got model: {}", model);
 
         Map<String, Object> params = new HashMap<>();
@@ -77,20 +91,17 @@ public class SsiBrokerService {
         model.addAttribute("loginType", "OIDC");
 
         log.debug("authorize.exit; returning model: {}", model);
-        return "login-template.html";
+        return model;
     }
 
-    public String siopAuthorize(Model model) {
+    public Model siopAuthorize(Model model) {
         log.debug("siopAuthorize.enter; got model: {}", model);
 
         Object o = model.getAttribute("scope");
-        if (o == null) {
-            throw new OAuth2AuthenticationException("loginFailed");
-        }
+        String scope = String.join(" ", ((String[]) o));
 
         UUID requestId = UUID.randomUUID();
         String link = buildRequestString(model, requestId);
-        String scope = String.join(" ", ((String[]) o));
         cacheSiopData(requestId.toString(), scope);
         
         String qrUrl = "/ssi/qr/" + Base64.getUrlEncoder().encodeToString(link.getBytes());
@@ -99,7 +110,7 @@ public class SsiBrokerService {
         model.addAttribute("loginType", "SIOP");
 
         log.debug("siopAuthorize.exit; returning model: {}", model);
-        return "login-template.html";
+        return model;
     }
 
     private Set<String> processScopes(Model model, Map<String, Object> params) {
@@ -193,7 +204,7 @@ public class SsiBrokerService {
             }
         }
         siopRequestCache.remove(requestId);
-        ssiUserService.cacheUserClaims(requestId, response);
+        userClaimsCache.put(requestId, response);
         //log.debug("processSiopLoginResponse.exit; returning: {}", result);
     }
     
@@ -215,7 +226,7 @@ public class SsiBrokerService {
     
     public Map<String, Object> getSubjectClaims(String subjectId, boolean required, Map<String, Object> params) {
         log.debug("getSubjectClaims.enter; got subject: {}, required: {}", subjectId, required);
-        Map<String, Object> claims = ssiUserService.getUserClaims(subjectId, required);
+        Map<String, Object> claims = getUserClaims(subjectId, required);
         if (required) {
             // claims override params
             if (claims != null) {
@@ -230,8 +241,68 @@ public class SsiBrokerService {
                 claims.putAll(params);
             }
         }
-        log.debug("getSubjectClaims.exit; returning: {}", claims);
+        log.debug("getSubjectClaims.exit; returning: {}", claims == null ? null : claims.size());
         return claims;
+    }
+
+    public Map<String, Object> getUserClaims(String requestId, boolean required, Collection<String> requestedScopes) {
+        Map<String, Object> userClaims = getUserClaims(requestId, required);
+        if (userClaims == null) {
+            return null;
+        }
+        
+        // return claims which corresponds to requested scopes only..
+        Set<String> requestedClaims = scopeProperties.getScopes().entrySet().stream()
+                .filter(e -> requestedScopes.contains(e.getKey())).flatMap(e -> e.getValue().stream()).collect(Collectors.toSet());
+        return userClaims.entrySet().stream()
+                .filter(e -> e.getValue() != null && requestedClaims.contains(e.getKey())).collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+    }
+    
+    public Map<String, Object> getUserClaims(String requestId, boolean required) {
+        Map<String, Object> userClaims = userClaimsCache.get(requestId); 
+        if (userClaims == null && required) {
+            userClaims = loadUserClaims(requestId);
+        }
+        return userClaims;
+    }
+    
+    private Map<String, Object> loadUserClaims(String requestId) {
+        LocalTime requestingStart = LocalTime.now();
+        LocalTime durationRestriction = requestingStart.plusNanos(1_000_000 * requestingDuration);
+
+        while (LocalTime.now().isBefore(durationRestriction)) {
+            Map<String, Object> evaluation = trustServiceClient.evaluate("GetLoginProofResult", Collections.singletonMap("requestId", requestId));
+
+            if (evaluation.get("status") == null || !(evaluation.get("status") instanceof AccessRequestStatusDto)) {
+                log.error("Exception during call Evaluate of TrustServiceClient, response status is not specified: {}", evaluation.get("status"));
+                throw new OAuth2AuthenticationException("loginFailed");
+            }
+
+            switch ((AccessRequestStatusDto) evaluation.get("status")) {
+                case ACCEPTED:
+                    userClaimsCache.put(requestId, evaluation);
+                    return evaluation;
+                case PENDING:
+                    delayNextRequest();
+                    break;
+                case REJECTED:
+                    throw new OAuth2AuthenticationException("loginRejected");
+                case TIMED_OUT:
+                    log.error("Exception during call Evaluate of TrustServiceClient, response status: {}", evaluation.get("status"));
+                    throw new OAuth2AuthenticationException("loginTimeout");
+            }
+        }
+
+        log.error("Time for calling TrustServiceClient expired, time spent: {} ms", requestingStart.until(LocalTime.now(), MILLIS));
+        throw new OAuth2AuthenticationException("loginTimeout");
+    }
+
+    private void delayNextRequest() {
+        try {
+            TimeUnit.MILLISECONDS.sleep(millisecondsToDelay);
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+        }
     }
     
 }
