@@ -1,0 +1,129 @@
+server:
+  port: 8990
+spring:
+#  profiles:
+#    active: default
+  application:
+    name: keycloak-app
+  mvc:
+    log-request-details: true    
+
+keycloak:
+  auth-server-url: http://key-server:8080
+  realm: gaia-x
+  ssl-required: none #external
+  resource: demo-app
+  credentials:
+    secret: 6ava3PVOphwCwDFBQv7sGSvWCQKc5Iaq
+  principal-attribute: preferred_username
+  bearer-only: false
+  enable-basic-auth: true
+  
+#  verify-token-audience: false
+  cors: true
+#  use-resource-role-mappings: true   
+#  confidential-port: 0
+#  
+  security-constraints:
+    - auth-roles:
+      - "*"
+    - security-collections:
+ #     - name: 
+      - patterns:
+        - /*
+#         
+  policy-enforcer-config:
+#    enforcement-mode: DISABLED
+#    enforcement-mode: ENFORCING
+    enforcement-mode: PERMISSIVE
+    lazy-load-paths: true
+#    http-method-as-scope: false
+#    on-deny-redirect-to: /
+    paths:
+      - path: /sso/login
+        enforcement-mode: DISABLED
+        methods:
+          - method: GET
+#
+#      - name: Demo Resource
+      - path: /demo
+        enforcement-mode: DISABLED
+        methods:
+          - method: GET
+#        claim-information-point-config:
+#          claims:
+#            - some-claim: "{request.parameter['parameter-a']}" # get it from JWT somehow??
+#
+#      - name: Demo Read Resources
+      - path: /demo/read
+        enforcement-mode: DISABLED
+        scopes:
+          - test.read
+#        methods:
+#          - method: GET
+#            scopes-enforcement-mode: ANY
+#            scopes:
+#              - openid
+#              - test.read
+        claim-information-point-config:
+          http:
+            method: GET
+            url: http://auth-server:9000/cip/claims
+            headers:
+              Authorization: "Basic YWFzLWFwcC1vaWRjOnNlY3JldA=="
+            parameters:
+              usr: "{keycloak.access_token['/sub']}"
+              sub: "{keycloak.access_token['/preferred_username']}"
+              req: false
+              name: "{keycloak.access_token['/sub']}"
+              email: test@ssi.com
+              email_verified: true
+              scopes: openid, profile, email
+#
+#            method: POST
+#            url: http://auth-server:9000/oauth2/token
+#            headers:
+#              Content-Type: application/x-www-form-urlencoded
+##              Authorization: "Bearer {keycloak.access_token}"
+#              Authorization: "Basic YWFzLWFwcC1vaWRjOnNlY3JldA=="
+#            parameters:
+#              code: "{keycloak.access_token}"
+#              grant_type: client_credentials #authorization_code
+#              redirect_uri: ${keycloak.auth-server-url}/realms/gaia-x/broker/ssi-oidc/endpoint
+#              client_id: aas-app-oidc
+#
+#      - name: Demo Write Resources
+      - path: /demo/write
+        enforcement-mode: DISABLED
+#        scopes:
+#          - openid
+#          - test.read
+#          - test.write
+#        methods:
+#          - method: GET
+#            scopes-enforcement-mode: ANY
+#            scopes:
+#              - openid
+#              - test.write
+        claim-information-point-config: 
+          http:
+            method: GET
+            url: http://auth-server:9000/ssi/cip
+#            url: ${keycloak.auth-server-url}/realms/gaia-x/broker/ssi-oidc/token
+            headers:
+#              Content-Type: application/x-www-form-urlencoded
+              Authorization: "Bearer {keycloak.access_token}"
+#              Authorization: "Basic YWFzLWFwcC1vaWRjOnNlY3JldA=="
+            parameters:
+              usr: "{keycloak.access_token['/sub']}"
+              sub: "{keycloak.access_token['/preferred_username']}"
+              req: false
+
+logging:
+  level:
+    root: INFO
+    org.keycloak: TRACE
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.web.client.RestTemplate: DEBUG    
+    
