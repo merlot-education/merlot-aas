@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
+import eu.gaiax.difs.aas.properties.ServerProperties;
 
 import java.util.Collections;
 import java.util.Map;
@@ -17,8 +18,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class LocalTrustServiceClientTest {
 
-    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
-    private String issuerUri;
+    @Autowired
+    private ServerProperties serverProps;
     
     @Autowired
     private LocalTrustServiceClientImpl localTrustServiceClient;
@@ -35,7 +36,7 @@ public class LocalTrustServiceClientTest {
     void evaluateLoginProofResult() {
         Map<String, Object> response = localTrustServiceClient.evaluate("GetLoginProofResult", Map.of("requestId", "testRequestId"));
 
-        assertEquals(issuerUri, response.get("iss"));
+        assertEquals(serverProps.getBaseUrl(), response.get("iss"));
         assertEquals("testRequestId", response.get("requestId"));
         assertEquals("testRequestId", response.get("sub"));
         assertEquals(AccessRequestStatusDto.PENDING, response.get("status"));
@@ -52,7 +53,7 @@ public class LocalTrustServiceClientTest {
     void evaluateIatProofResult() {
         Map<String, Object> response = localTrustServiceClient.evaluate("GetIatProofResult", Map.of("requestId", "testRequestId"));
 
-        assertEquals(issuerUri, response.get("iss"));
+        assertEquals(serverProps.getBaseUrl(), response.get("iss"));
         assertEquals("testRequestId", response.get("requestId"));
         assertEquals("testRequestId", response.get("sub"));
         assertEquals(AccessRequestStatusDto.PENDING, response.get("status"));

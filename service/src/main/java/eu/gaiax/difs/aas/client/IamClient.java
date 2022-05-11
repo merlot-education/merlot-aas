@@ -32,7 +32,7 @@ public class IamClient {
         client = WebClient.builder()
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
-        }
+    }
 
     public Map<String, Object> registerIam(String clientName, List<String> redirectUris) {
 

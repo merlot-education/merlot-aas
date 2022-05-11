@@ -19,6 +19,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,11 +32,15 @@ public class IatService {
     private final IamClient iamClient;
 
     private final ClientsProperties clientsProperties;
+    
+    private final Map<String, Map<String, Object>> iatCache = new ConcurrentHashMap<>();
 
     public AccessResponseDto evaluateIatProofInvitation(AccessRequestDto accessRequestDto) {
         log.debug("evaluateIatProofInvitation.enter; got request: {}", accessRequestDto);
         Map<String, Object> evalRequest = iatRequestToMap(accessRequestDto);
         Map<String, Object> evalResponse = trustServiceClient.evaluate("GetIatProofInvitation", evalRequest);
+        String requestId = (String) evalResponse.get("requestId");
+        initIatRequest(requestId.toString(), evalRequest);
         AccessResponseDto accessResponseDto = mapToIatAccessResponse(evalResponse);
         log.debug("evaluateIatProofInvitation.exit; returning: {}", accessResponseDto);
         return accessResponseDto;
@@ -51,6 +57,10 @@ public class IatService {
         map.put("namespace", "Access");
         return map;
     }
+    
+    private void initIatRequest(String requestId, Map<String, Object> evalRequest) {
+        iatCache.put(requestId,  evalRequest);
+    }
 
     public AccessResponseDto evaluateIatProofResult(String requestId) {
         log.debug("evaluateIatProofResult.enter; got request: {}", requestId);
@@ -60,30 +70,56 @@ public class IatService {
 
         if (accessResponseDto.getStatus() == AccessRequestStatusDto.ACCEPTED) {
             Map<String, Object> regResponse = iamClient.registerIam(accessResponseDto.getSubject(), List.of(clientsProperties.getOidc().getRedirectUri()));
-            String iat = (String) regResponse.get("registration_access_token"); // not sure it is correct token!
+            //log.debug("evaluateIatProofResult; got registration response: {}", regResponse);
+            String iat = (String) regResponse.get("registration_access_token"); // not sure it is correct token!?
             accessResponseDto.setInitialAccessToken(iat);
         }
         log.debug("evaluateIatProofResult.exit; returning: {}", accessResponseDto);
         return accessResponseDto;
     }
     
+// got registration response: {redirect_uris=[http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint], 
+// token_endpoint_auth_method=client_secret_basic, grant_types=[authorization_code], response_types=[code, none], client_id=557bdca7-0b49-477b-bc67-f9d81a82a245, 
+// client_secret=NyAun7G2Htuz2EuSSsvoXetOi2FqjRO1, client_name=http://auth-server:9000, scope=address phone offline_access microprofile-jwt, subject_type=public, 
+// request_uris=[], tls_client_certificate_bound_access_tokens=false, client_id_issued_at=1652273791, client_secret_expires_at=0, 
+// registration_client_uri=http://key-server:8080/realms/gaia-x/clients-registrations/openid-connect/557bdca7-0b49-477b-bc67-f9d81a82a245, 
+// registration_access_token=eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJmMGUzNzY0Mi0zYWIzLTQ2NWItODcyYi1kNmZkMTljOTcwOWQifQ.eyJleHAiOjAsImlhdCI6MTY1MjI3Mzc5MSwianRpIjoiZmUxMmUwMmItNGZlOC00ZTg5LWExMzUtMjY4ZGYzZjNiZDNhIiwiaXNzIjoiaHR0cDovL2tleS1zZXJ2ZXI6ODA4MC9yZWFsbXMvZ2FpYS14IiwiYXVkIjoiaHR0cDovL2tleS1zZXJ2ZXI6ODA4MC9yZWFsbXMvZ2FpYS14IiwidHlwIjoiUmVnaXN0cmF0aW9uQWNjZXNzVG9rZW4iLCJyZWdpc3RyYXRpb25fYXV0aCI6ImF1dGhlbnRpY2F0ZWQifQ.JxLgfxoDY62FLP6A58JA1arPF2tB1yQO6w0iPhD8Txw, 
+// backchannel_logout_session_required=false, require_pushed_authorization_requests=false}
+    
     private AccessResponseDto mapToIatAccessResponse(Map<String, Object> map) {
-        return new AccessResponseDto().subject((String) map.getOrDefault("iss", null))
-                .entity(mapAccessScope(map)) 
+        String requestId = (String) map.get("requestId");
+        if (requestId == null) {
+            // throw error?
+            log.info("mapToIatAccessResponse; no requestId found in IAT response: {}", map);
+            return null;
+        }
+
+        String entity = null;
+        String subject = null;
+        Set<String> scopes = null;
+        Map<String, Object> iatRequest = iatCache.get(requestId);
+        if (iatRequest == null) {
+            log.info("mapToIatAccessResponse; no data found for requestId: {}", requestId);
+        } else {
+            entity = (String) iatRequest.get("iss");
+            subject = (String) iatRequest.get("sub");
+            scopes = (Set<String>) iatRequest.get("scope");
+        }
+        // update request with new data?
+        // remove request after acceptance?
+
+        return new AccessResponseDto().subject(entity)
+                .entity(mapAccessScope(subject, scopes)) 
                 .status((AccessRequestStatusDto) map.getOrDefault("status", null))
-                .initialAccessToken((String) map.getOrDefault("iat", null))
-                .requestId((String) map.getOrDefault("requestId", null))
-                .policyEvaluationResult(map.getOrDefault("policyEvaluationResult", null));
+                .requestId(requestId);
+                //.initialAccessToken((String) map.getOrDefault("iat", null))
+                //.policyEvaluationResult(map.getOrDefault("policyEvaluationResult", null));
     }
 
-    private ServiceAccessScopeDto mapAccessScope(Map<String, Object> map) {
-        try {
-            return new ServiceAccessScopeDto()
-                    .scope((String) map.getOrDefault("scope", null))
-                    .did((String) map.getOrDefault("sub", null));
-        } catch (Exception ignored) {
-            return new ServiceAccessScopeDto();
-        }
+    private ServiceAccessScopeDto mapAccessScope(String subject, Set<String> scopes) {
+        return new ServiceAccessScopeDto()
+            .scope(scopes == null ? null : scopes.stream().collect(Collectors.joining(" ")))
+            .did(subject);
     }
     
 }

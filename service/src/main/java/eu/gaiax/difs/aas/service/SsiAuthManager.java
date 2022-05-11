@@ -34,19 +34,23 @@ public class SsiAuthManager implements AuthenticationManager {
             requestId = ((BearerTokenAuthenticationToken) authentication).getName(); // .getToken();
             scopes = Collections.emptyList();
         }
-        boolean needAuthTime = false; //oar.getAdditionalParameters().get("auth_time") != null; 
+        Map<String, Object> additionalParams = ssiBrokerService.getAdditionalParameters(requestId);
+        boolean needAuthTime = additionalParams != null && additionalParams.get("max_age") != null; //oar.getAdditionalParameters().get("auth_time") != null; 
 
+        int ccnt = 0, pcnt = 0;
         OidcUserInfo.Builder uiBuilder = OidcUserInfo.builder();
         Map<String, Object> userDetails = ssiBrokerService.getUserClaims(requestId, false, scopes); //required?
         if (userDetails != null) {
             for (Map.Entry<String, Object> e: userDetails.entrySet()) {
                 if (needAuthTime || !e.getKey().equals("auth_time")) {
                     uiBuilder.claim(e.getKey(), e.getValue());
+                    pcnt++;
                 }
+                ccnt++;
             }
         }
         OidcUserInfoAuthenticationToken token = new OidcUserInfoAuthenticationToken(authentication, uiBuilder.build());
-        log.debug("authenticate.exit; returning userInfo: {} for subject: {}", token.getUserInfo().getClaims(), requestId);
+        log.debug("authenticate.exit; added {} claims out of {} for subject: {}", pcnt, ccnt, requestId);
         return token;
     }
 

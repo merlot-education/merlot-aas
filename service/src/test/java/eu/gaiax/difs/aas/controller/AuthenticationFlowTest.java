@@ -20,11 +20,9 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Base64;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.StringJoiner;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -40,19 +38,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.json.JacksonJsonParser;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.ChecksumException;
@@ -66,30 +62,25 @@ import com.nimbusds.jwt.JWTParser;
 
 import eu.gaiax.difs.aas.client.LocalTrustServiceClientImpl;
 import eu.gaiax.difs.aas.client.TrustServiceClient;
-import eu.gaiax.difs.aas.client.config.JwkConfig;
 import eu.gaiax.difs.aas.properties.ServerProperties;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @AutoConfigureMockMvc
-@Import(JwkConfig.class)
 public class AuthenticationFlowTest {
 
+    private static final TypeReference<Map<String, Object>> MAP_TYPE_REF = new TypeReference<Map<String, Object>>() {
+    };
+    
     @Value("${aas.iam.base-uri}")
     private String keycloakUri;
     
-    //@Autowired
-    //private JwtDecoder jwtDecoder;
-    
     @Autowired
     private ServerProperties serverProps;
-    
     @Autowired
     private MockMvc mockMvc;
-    
     @Autowired
     protected ObjectMapper mapper;
-    
     @Autowired
     private TrustServiceClient trustServiceClient;
 
@@ -139,21 +130,9 @@ public class AuthenticationFlowTest {
                 .andExpect(status().isOk())
                 .andReturn();
 */
-        // TODO: call to /userinfo doesn't work because of auth issue on /jwks endpoint
-        // but it works from oidc auth flow, and we do provide /userinfo endpoint
-        // so, will investigate it later..
-        
-        //String accessToken = (String) claims.get("access_token");
-        //Jwt jwt = jwtDecoder.decode(accessToken);
-        //assertNotNull(jwt);
-        
-        //MvcResult result = mockMvc.perform(
-        //        get("/userinfo")
-        //        .header("Authorization", "Bearer " + accessToken)
-        //        .accept(MediaType.APPLICATION_JSON))
-        //    .andExpect(status().isOk())
-        ////    .andDo(print())
-        //    .andReturn();
+        Map<String, Object> userInfo = getUserInfo((String) claims.get("access_token"));
+        assertEquals(claims.get("iss"), userInfo.get("iss"));
+        assertEquals(claims.get("sub"), userInfo.get("sub"));
     }
 
     @Test
@@ -167,17 +146,32 @@ public class AuthenticationFlowTest {
         // check claims..
         assertNotNull(claims.get("iss"));
         assertNotNull(claims.get("sub"));
-        assertNotNull(claims.get("auth_time"));
-        assertNotNull(claims.get("name"));
-        assertNotNull(claims.get("given_name"));
-        assertNotNull(claims.get("family_name"));
+        assertNull(claims.get("auth_time"));
+        assertNull(claims.get("name"));
+        assertNull(claims.get("given_name"));
+        assertNull(claims.get("family_name"));
         //assertNotNull(claims.get("middle_name"));
-        assertNotNull(claims.get("preferred_username"));
-        assertNotNull(claims.get("gender"));
-        assertNotNull(claims.get("birthdate"));
-        assertNotNull(claims.get("updated_at"));
-        assertNotNull(claims.get("email"));
-        assertNotNull(claims.get("email_verified"));
+        assertNull(claims.get("preferred_username"));
+        assertNull(claims.get("gender"));
+        assertNull(claims.get("birthdate"));
+        assertNull(claims.get("updated_at"));
+        assertNull(claims.get("email"));
+        assertNull(claims.get("email_verified"));
+
+        Map<String, Object> userInfo = getUserInfo((String) claims.get("access_token"));
+        assertEquals(claims.get("iss"), userInfo.get("iss"));
+        assertEquals(claims.get("sub"), userInfo.get("sub"));
+        assertNotNull(userInfo.get("auth_time"));
+        assertNotNull(userInfo.get("name"));
+        assertNotNull(userInfo.get("given_name"));
+        assertNotNull(userInfo.get("family_name"));
+        //assertNotNull(userInfo.get("middle_name"));
+        assertNotNull(userInfo.get("preferred_username"));
+        assertNotNull(userInfo.get("gender"));
+        assertNotNull(userInfo.get("birthdate"));
+        assertNotNull(userInfo.get("updated_at"));
+        assertNotNull(userInfo.get("email"));
+        assertNotNull(userInfo.get("email_verified"));
     }
     
     @Test
@@ -263,16 +257,31 @@ public class AuthenticationFlowTest {
         assertNotNull(claims.get("iss"));
         assertNotNull(claims.get("sub"));
         assertNull(claims.get("auth_time"));
-        assertNotNull(claims.get("name"));
-        assertNotNull(claims.get("given_name"));
-        assertNotNull(claims.get("family_name"));
-        //assertNotNull(claims.get("middle_name"));
-        assertNotNull(claims.get("preferred_username"));
-        assertNotNull(claims.get("gender"));
-        assertNotNull(claims.get("birthdate"));
-        assertNotNull(claims.get("updated_at"));
-        assertNotNull(claims.get("email"));
-        assertNotNull(claims.get("email_verified"));
+        assertNull(claims.get("name")); 
+        assertNull(claims.get("given_name"));
+        assertNull(claims.get("family_name"));
+        //assertNull(claims.get("middle_name"));
+        assertNull(claims.get("preferred_username"));
+        assertNull(claims.get("gender"));
+        assertNull(claims.get("birthdate"));
+        assertNull(claims.get("updated_at"));
+        assertNull(claims.get("email"));
+        assertNull(claims.get("email_verified"));
+
+        Map<String, Object> userInfo = getUserInfo((String) claims.get("access_token"));
+        //assertEquals(claims.get("iss"), userInfo.get("iss"));
+        //assertEquals(claims.get("sub"), userInfo.get("sub"));
+        //assertNotNull(userInfo.get("auth_time"));
+        assertNotNull(userInfo.get("name"));
+        assertNotNull(userInfo.get("given_name"));
+        assertNotNull(userInfo.get("family_name"));
+        //assertNotNull(userInfo.get("middle_name"));
+        assertNotNull(userInfo.get("preferred_username"));
+        assertNotNull(userInfo.get("gender"));
+        assertNotNull(userInfo.get("birthdate"));
+        assertNotNull(userInfo.get("updated_at"));
+        assertNotNull(userInfo.get("email"));
+        assertNotNull(userInfo.get("email_verified"));
     }
 
     @Test
@@ -305,6 +314,7 @@ public class AuthenticationFlowTest {
                     "openid://?scope=openid&response_type=id_token&client_id=" + serverProps.getBaseUrl() + "&redirect_uri=" + serverProps.getBaseUrl() + 
                     "/ssi/siop-callback&response_mode=post&nonce=" + rid, null, "/ssi/login");
         String requestId = authResult.getRequest().getParameter("username"); 
+        HttpSession session = authResult.getRequest().getSession(false);
         
         mockMvc.perform(
                     post("/ssi/siop-callback")
@@ -313,6 +323,15 @@ public class AuthenticationFlowTest {
                 // we had error response above, so we're redirected back to login page to see errors 
                 .andExpect(status().isOk())
                 .andReturn();
+
+        // get /ssi/login and check error presence..
+         authResult = mockMvc
+                .perform(get("/ssi/login")
+                        .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
+                        .cookie(new Cookie("JSESSIONID", session.getId())).session((MockHttpSession) session))
+                .andExpect(status().isOk()).andReturn();
+        session = authResult.getRequest().getSession(false);
+        assertEquals("loginFailed", session.getAttribute("AUTH_ERROR"));
         
         Map<String, Object> params = new HashMap<>();
         params.put("iss", "https://self-issued.me/v2");
@@ -325,8 +344,8 @@ public class AuthenticationFlowTest {
                     post("/ssi/siop-callback")
                             .contentType(APPLICATION_FORM_URLENCODED_VALUE)
                             .content("id_token=" + mapper.writeValueAsString(params)))
-            .andExpect(status().isBadRequest()) 
-            .andExpect(status().reason(containsString("invalid nonce"))) // no requestId any more
+            .andExpect(status().isOk()) 
+            //.andExpect(status().reason(containsString("invalid nonce"))) // no requestId any more
             .andReturn();
     }
     
@@ -450,6 +469,16 @@ public class AuthenticationFlowTest {
                 .andExpect(header().string("Location", containsString(loginRedirect))) //!!
                 .andReturn();
         return result;
+    }
+    
+    private Map<String, Object> getUserInfo(String accessToken) throws Exception {
+        MvcResult result = mockMvc.perform(
+                get("/userinfo")
+                    .header("Authorization", "Bearer " + accessToken)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
+        return mapper.readValue(result.getResponse().getContentAsString(), MAP_TYPE_REF);
     }
     
     private Map<String, Object> getAuthRequestParams(String scope, String state, String responseType, String clientId, String redirectUri, String nonce, 
