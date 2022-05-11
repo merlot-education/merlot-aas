@@ -11,7 +11,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import eu.gaiax.difs.aas.properties.ScopeProperties;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.ServletServerHttpResponse;
@@ -28,6 +27,8 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.util.Assert;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import eu.gaiax.difs.aas.properties.ScopeProperties;
 
 public final class SsiOidcProviderConfigurationEndpointFilter extends OncePerRequestFilter {
 

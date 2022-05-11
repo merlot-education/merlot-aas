@@ -73,7 +73,7 @@ public class SecurityConfig {
         return new SsiAuthProvider();
     }
 
-    @Bean
+    @Bean 
     public OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer() {
         return new SsiJwtCustomizer();
     }

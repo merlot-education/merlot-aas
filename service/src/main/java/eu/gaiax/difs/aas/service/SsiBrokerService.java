@@ -18,6 +18,7 @@ import javax.imageio.ImageIO;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.proc.BadJWTException;
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
+
 import eu.gaiax.difs.aas.properties.ScopeProperties;
 import eu.gaiax.difs.aas.properties.ServerProperties;
 
@@ -65,11 +66,10 @@ public class SsiBrokerService {
     private final ScopeProperties scopeProperties;
     private final ServerProperties serverProperties;
 
-    private final Map<String, Map<String, Object>> siopRequestCache = new ConcurrentHashMap<>();
-    private final Map<String, Map<String, Object>> userClaimsCache = new ConcurrentHashMap<>();
+    private final Map<String, Map<String, Object>> authCache = new ConcurrentHashMap<>();
 
     public Model oidcAuthorize(Model model) {
-        log.debug("authorize.enter; got model: {}", model);
+        log.debug("oidcAuthorize.enter; got model: {}", model);
 
         Map<String, Object> params = new HashMap<>();
         params.put("namespace", "Login");
@@ -84,6 +84,8 @@ public class SsiBrokerService {
         Map<String, Object> result = trustServiceClient.evaluate("GetLoginProofInvitation", params);
         String link = (String) result.get("link");
         String requestId = (String) result.get("requestId");
+        Map<String, Object> data = initAuthRequest(requestId.toString(), scopes, "OIDC");
+        log.debug("oidcAuthorize; OIDC request {} stored: {}", requestId, data);
 
         // encode link otherwise it'll not pass security check
         String qrUrl = "/ssi/qr/" + Base64.getUrlEncoder().encodeToString(link.getBytes());
@@ -91,7 +93,7 @@ public class SsiBrokerService {
         model.addAttribute("requestId", requestId);
         model.addAttribute("loginType", "OIDC");
 
-        log.debug("authorize.exit; returning model: {}", model);
+        log.debug("oidcAuthorize.exit; returning model: {}", model);
         return model;
     }
 
@@ -102,7 +104,7 @@ public class SsiBrokerService {
 
         UUID requestId = UUID.randomUUID();
         String link = buildRequestString(scopes, requestId);
-        cacheSiopData(requestId.toString(), scopes);
+        initAuthRequest(requestId.toString(), scopes, "SIOP");
         
         String qrUrl = "/ssi/qr/" + Base64.getUrlEncoder().encodeToString(link.getBytes());
         model.addAttribute("qrUrl", qrUrl);
@@ -171,9 +173,11 @@ public class SsiBrokerService {
         
         String error = (String) response.get("error");
         if (error == null) {
-            Set<String> requestedScopes = (Set<String>) siopRequestCache.get(requestId).get("scope");
+            Set<String> requestedScopes = (Set<String>) authCache.get(requestId).get("scope");
             Set<String> requestedClaims = scopeProperties.getScopes().entrySet().stream()
                     .filter(e -> requestedScopes.contains(e.getKey())).flatMap(e -> e.getValue().stream()).collect(Collectors.toSet());
+            // special handling for auth_time..
+            requestedClaims.remove("auth_time");
             
             DefaultJWTClaimsVerifier<?> verifier = new DefaultJWTClaimsVerifier<>(new JWTClaimsSet.Builder()
                 .issuer(idTokenIssuer)
@@ -182,7 +186,7 @@ public class SsiBrokerService {
             try {
                 verifier.verify(JWTClaimsSet.parse(response), null);
             } catch(ParseException | BadJWTException ex) {
-                siopRequestCache.remove(requestId);
+                authCache.remove(requestId);
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_response: " + ex.getMessage()); 
             }
                 
@@ -200,25 +204,58 @@ public class SsiBrokerService {
                 log.debug("processSiopLoginResponse; subject is not base64-encoded: {}", subject);
             }
         }
-        siopRequestCache.remove(requestId);
-        userClaimsCache.put(requestId, response);
+        addAuthData(requestId, response);
+        // check response?
         //log.debug("processSiopLoginResponse.exit; returning: {}", result);
     }
     
-    private void cacheSiopData(String requestId, Set<String> scopes) {
-        if (!siopRequestCache.containsKey(requestId)) {
-            Map<String, Object> data = new HashMap<>();
-            data.put("request_time", LocalDateTime.now());
-            data.put("scope", scopes);
-            siopRequestCache.put(requestId, data);
-        } else {
-            throw new OAuth2AuthenticationException("loginFailed");
+    private Map<String, Object> initAuthRequest(String requestId, Set<String> scopes, String authType) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("request_time", LocalDateTime.now());
+        data.put("scope", scopes);
+        data.put("auth_type", authType);
+        Map<String, Object> existing = authCache.put(requestId, data);
+        if (existing != null) {
+            log.warn("addAuthRequest; data for request {} alreday stored: {}", requestId, existing);
         }
+        return data;
+    }
+    
+    public boolean setAdditionalParameters(String requestId, Map<String, Object> additionalParams) {
+        log.debug("setAdditionalParameters.enter; got request: {} params: {}", requestId, additionalParams);
+        boolean result = true;
+        Map<String, Object> request = authCache.get(requestId);
+        if (request == null) {
+            // throw error?
+            result = false;
+        } else {
+            request.put("additional_parameters", additionalParams);
+            authCache.put(requestId, request);
+        }
+        log.debug("addAuthData.exit; updated: {}", result);
+        return result;
+        
+    }
+    
+    private boolean addAuthData(String requestId, Map<String, Object> data) {
+        log.debug("addAuthData.enter; got request: {} data: {}", requestId, data);
+        boolean result = true;
+        Map<String, Object> request = authCache.get(requestId);
+        if (request == null) {
+            // throw error?
+            result = false;
+        } else {
+            data.putAll(request);
+        }
+        authCache.put(requestId, data);
+        log.debug("addAuthData.exit; stored: {}, returning: {}", data, result);
+        return result;
     }
 
     private boolean isValidRequest(String requestId) {
-        Map<String, Object> request = siopRequestCache.get(requestId);
-        return request != null && ((LocalDateTime) request.get("request_time")).isAfter(LocalDateTime.now().minus(clockSkew));
+        Map<String, Object> request = authCache.get(requestId);
+        return request != null && //(request.get("sub") != null || request.get("error") != null) &&
+                ((LocalDateTime) request.get("request_time")).isAfter(LocalDateTime.now().minus(clockSkew));
     }
     
     public Map<String, Object> getSubjectClaims(String subjectId, boolean required, Map<String, Object> params) {
@@ -256,11 +293,48 @@ public class SsiBrokerService {
     }
     
     public Map<String, Object> getUserClaims(String requestId, boolean required) {
-        Map<String, Object> userClaims = userClaimsCache.get(requestId); 
-        if (userClaims == null && required) {
-            userClaims = loadUserClaims(requestId);
+        Map<String, Object> userClaims = authCache.get(requestId); 
+        if (userClaims == null) {
+            log.warn("getUserClaims; no claims found for request: {}, required: {}", requestId, required);
+            if (required) {
+                userClaims = loadUserClaims(requestId);
+                addAuthData(requestId, userClaims);
+            }
+        } else if (!userClaims.containsKey("sub") && !userClaims.containsKey("error")) {
+            if (required) {
+                userClaims = loadUserClaims(requestId);
+                addAuthData(requestId, userClaims);
+            } else {
+                userClaims = null;
+            }
         }
         return userClaims;
+    }
+
+    public Set<String> getUserScopes(String requestId) {
+        Map<String, Object> userClaims = authCache.get(requestId);
+        if (userClaims == null) {
+            log.warn("getUserScopes; no claims found for request: {}", requestId);
+            throw new OAuth2AuthenticationException("loginFailed");
+        }
+        
+        Set<String> scopes = (Set<String>) userClaims.get("scope");
+        if (scopes == null) {
+            log.warn("getUserScopes; no scopes found for request: {}", requestId);
+            throw new OAuth2AuthenticationException("loginFailed");
+        }
+
+        //Map<String, String> claims = scopeProperties.getScopes().entrySet().stream().map(e -> e.getValue())
+        return scopes; //userClaims.keySet().stream().filter(c -> scopeProperties.getScopes().entrySet() .values().contains(c)).collect(Collectors.toSet());
+    }
+    
+    public Map<String, Object> getAdditionalParameters(String requestId) {
+        Map<String, Object> userClaims = authCache.get(requestId);
+        if (userClaims == null) {
+            // log it..
+            return null;
+        }
+        return (Map<String, Object>) userClaims.get("additional_parameters");
     }
     
     private Map<String, Object> loadUserClaims(String requestId) {
@@ -270,14 +344,14 @@ public class SsiBrokerService {
         while (LocalTime.now().isBefore(durationRestriction)) {
             Map<String, Object> evaluation = trustServiceClient.evaluate("GetLoginProofResult", Collections.singletonMap("requestId", requestId));
 
-            if (evaluation.get("status") == null || !(evaluation.get("status") instanceof AccessRequestStatusDto)) {
-                log.error("Exception during call Evaluate of TrustServiceClient, response status is not specified: {}", evaluation.get("status"));
+            Object o = evaluation.get("status");
+            if (o == null || !(o instanceof AccessRequestStatusDto)) {
+                log.error("loadUserClaims; unknown response status: {}", o);
                 throw new OAuth2AuthenticationException("loginFailed");
             }
 
-            switch ((AccessRequestStatusDto) evaluation.get("status")) {
+            switch ((AccessRequestStatusDto) o) {
                 case ACCEPTED:
-                    userClaimsCache.put(requestId, evaluation);
                     return evaluation;
                 case PENDING:
                     delayNextRequest();
@@ -285,12 +359,11 @@ public class SsiBrokerService {
                 case REJECTED:
                     throw new OAuth2AuthenticationException("loginRejected");
                 case TIMED_OUT:
-                    log.error("Exception during call Evaluate of TrustServiceClient, response status: {}", evaluation.get("status"));
                     throw new OAuth2AuthenticationException("loginTimeout");
             }
         }
 
-        log.error("Time for calling TrustServiceClient expired, time spent: {} ms", requestingStart.until(LocalTime.now(), MILLIS));
+        log.error("loadUserClaims; Time for calling TrustServiceClient expired, time spent: {} ms", requestingStart.until(LocalTime.now(), MILLIS));
         throw new OAuth2AuthenticationException("loginTimeout");
     }
 
@@ -301,5 +374,7 @@ public class SsiBrokerService {
             Thread.currentThread().interrupt();
         }
     }
+    
+    
     
 }
