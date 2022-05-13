@@ -58,7 +58,9 @@ import org.springframework.security.oauth2.server.authorization.config.ProviderS
 import org.springframework.security.oauth2.server.authorization.config.TokenSettings;
 import org.springframework.security.oauth2.server.authorization.oidc.web.OidcProviderConfigurationEndpointFilter;
 import org.springframework.security.oauth2.server.authorization.oidc.web.OidcUserInfoEndpointFilter;
+import org.springframework.security.oauth2.server.authorization.web.OAuth2AuthorizationEndpointFilter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import com.nimbusds.jose.JOSEException;
@@ -118,9 +120,16 @@ public class AuthorizationServerConfig {
                 .authorizeRequests(authorizeRequests -> authorizeRequests.anyRequest().authenticated())
                 .csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher))
                 .objectPostProcessor(ssiObjectPostProcessor())
-                .apply(authorizationServerConfigurer);
+                .apply(authorizationServerConfigurer)
+                .and()
+                .addFilterAfter(new SsiOAuth2ValidationFilter(), LogoutFilter.class)
+                ;
     }
 
+    //CsrfFilter
+    //LogoutFilter
+    //OAuth2AuthorizationEndpointFilter    
+    
     private ObjectPostProcessor<Object> ssiObjectPostProcessor() {
         return new ObjectPostProcessor<>() {
             @Override
