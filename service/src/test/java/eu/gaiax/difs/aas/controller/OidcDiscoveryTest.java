@@ -71,7 +71,7 @@ public class OidcDiscoveryTest {
                 .elements()
                 .forEachRemaining(jsonNode -> supportedScopes.add(jsonNode.asText()));
 
-        assertTrue(List.of("openid", "profile", "email").containsAll(supportedScopes));
+        assertTrue(List.of("openid", "profile", "email", "protected").containsAll(supportedScopes));
     }
 
     @Test
@@ -88,7 +88,7 @@ public class OidcDiscoveryTest {
                 .forEachRemaining(jsonNode -> supportedClaims.add(jsonNode.asText()));
 
         assertTrue(List.of("sub", "iss", "auth_time", "name", "given_name", "family_name", "middle_name", "preferred_username", "gender",
-                "birthdate", "updated_at", "email", "email_verified").containsAll(supportedClaims));
+                "birthdate", "updated_at", "email", "email_verified", "read_access", "write_access").containsAll(supportedClaims));
     }
 
 }

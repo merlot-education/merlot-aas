@@ -28,6 +28,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
+import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpSession;
 
@@ -40,6 +41,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -146,7 +148,7 @@ public class AuthenticationFlowTest {
         // check claims..
         assertNotNull(claims.get("iss"));
         assertNotNull(claims.get("sub"));
-        assertNull(claims.get("auth_time"));
+        assertNotNull(claims.get("auth_time"));
         assertNull(claims.get("name"));
         assertNull(claims.get("given_name"));
         assertNull(claims.get("family_name"));
@@ -306,6 +308,26 @@ public class AuthenticationFlowTest {
         assertEquals("loginRejected", session.getAttribute("AUTH_ERROR"));
     }
 
+    @Test
+    void testOidcLoginErrorRequest() throws Exception {
+
+        Map<String, Object> params = getAuthRequestParams("openid", null, "code", "aas-app-oidc", keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", 
+                null, Map.of("request", "error-request"));
+        String rq = getAuthRequest(params);
+        Object[] values = params.values().toArray(new Object[params.size()]);
+
+        try {
+            mockMvc.perform(get("/oauth2/authorize?" + rq, values).accept(MediaType.TEXT_HTML,
+                            MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML))
+                    .andExpect(status().is3xxRedirection())
+                    .andExpect(header().string("Location", containsString("/ssi/login"))).andReturn();
+            assertEquals("servlet exception", "got redirect");
+        } catch (ServletException ex) {
+            // Redirecting to http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint?error=request_not_supported
+            assertTrue(ex.getCause() instanceof AccessDeniedException);
+        }
+    }    
+    
     @Test
     void testSiopCallbackError() throws Exception {
         
@@ -485,11 +507,15 @@ public class AuthenticationFlowTest {
             Map<String, Object> optional) {
         Map<String, Object> params = new LinkedHashMap<>();
         params.put("scope", scope);
-        params.put("state", state);
+        if (state != null) {
+            params.put("state", state);
+        }
         params.put("response_type", responseType);
         params.put("client_id", clientId);
         params.put("redirect_uri", redirectUri);
-        params.put("nonce", nonce);
+        if (nonce != null) {
+            params.put("nonce", nonce);
+        }
         if (optional != null) {
             params.putAll(optional);
         }

@@ -27,6 +27,6 @@ public class CipController {
         return ssiBrokerService.getSubjectClaims(subject, required == null ? false : Boolean.parseBoolean(required), params);
     }
     
-    // may be will expose one more method to return claims after additional ssi authorization..  
+    // maybe will expose one more method to return claims after additional ssi authorization..  
     
 }

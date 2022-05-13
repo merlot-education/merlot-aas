@@ -10,12 +10,6 @@ server:
 spring:
   application:
     name: auth-service
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: http://${server.host}:${server.port}
-          jwk-set-uri: http://${server.host}:${server.port}/oauth2/jwks
   messages:
     encoding: ISO-8859-1
     
@@ -65,6 +59,9 @@ aas:
     email:
       - email
       - email_verified
+    protected:
+      - read_access
+      - write_access
   tsa:
     url: http://trustservice/api
     repo: aisbl

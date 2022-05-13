@@ -8,6 +8,7 @@ import org.springframework.security.oauth2.server.authorization.JwtEncodingConte
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenCustomizer;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -31,17 +32,18 @@ public class SsiJwtCustomizer implements OAuth2TokenCustomizer<JwtEncodingContex
             if (additionalParams != null && !additionalParams.isEmpty()) {
                 updated = ssiBrokerService.setAdditionalParameters(requestId, additionalParams);
             }
+            
             // the below is required in case when additional claims were requested in id_token only.
             // but this parameter (request) is not supported by Spring Boot yet
-            //Map<String, Object> userDetails = ssiBrokerService.getUserClaims(requestId, false, oar.getScopes()); // required?
-            //boolean needAuthTime = oar.getAdditionalParameters().get("max_age") != null; 
-            //if (userDetails != null) {
-            //    for (Map.Entry<String, Object> e: userDetails.entrySet()) {
-            //        if (needAuthTime || !e.getKey().equals("auth_time")) {
-            //            context.getClaims().claim(e.getKey(), e.getValue());
-            //        }
-            //    }
-            //}            
+            if (additionalParams.get("max_age") != null) {
+                Map<String, Object> userDetails = ssiBrokerService.getUserClaims(requestId, false, List.of("openid")); // required?
+                if (userDetails != null) {
+                    Object authTime = userDetails.get("auth_time");
+                    if (authTime != null) {
+                        context.getClaims().claim("auth_time", authTime);
+                    }
+                }
+            }            
         }
         log.debug("customize.exit; updated claims: {} for request: {}", updated, requestId);
     }
