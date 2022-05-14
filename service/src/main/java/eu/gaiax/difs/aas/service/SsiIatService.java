@@ -2,6 +2,7 @@ package eu.gaiax.difs.aas.service;
 
 import eu.gaiax.difs.aas.client.IamClient;
 import eu.gaiax.difs.aas.client.TrustServiceClient;
+import eu.gaiax.difs.aas.client.TrustServicePolicy;
 import eu.gaiax.difs.aas.generated.model.AccessRequestDto;
 import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
 import eu.gaiax.difs.aas.generated.model.AccessResponseDto;
@@ -23,22 +24,25 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
-public class IatService {
+public class SsiIatService extends SsiClaimsService {
 
-    private static final Logger log = LoggerFactory.getLogger(IatService.class);
+    private static final Logger log = LoggerFactory.getLogger(SsiIatService.class);
 
-    private final TrustServiceClient trustServiceClient;
-    private final IamClient iamClient;
-
-    private final ClientsProperties clientsProperties;
-    
     private final Map<String, Map<String, Object>> iatCache = new ConcurrentHashMap<>();
+    
+    private final IamClient iamClient;
+    private final ClientsProperties clientsProperties;
+
+    public SsiIatService(TrustServiceClient trustServiceClient, IamClient iamClient, ClientsProperties clientsProperties) {
+        super(trustServiceClient);
+        this.iamClient = iamClient;
+        this.clientsProperties = clientsProperties;
+    }
 
     public AccessResponseDto evaluateIatProofInvitation(AccessRequestDto accessRequestDto) {
         log.debug("evaluateIatProofInvitation.enter; got request: {}", accessRequestDto);
         Map<String, Object> evalRequest = iatRequestToMap(accessRequestDto);
-        Map<String, Object> evalResponse = trustServiceClient.evaluate("GetIatProofInvitation", evalRequest);
+        Map<String, Object> evalResponse = trustServiceClient.evaluate(TrustServicePolicy.GET_IAT_PROOF_INVITATION, evalRequest);
         String requestId = (String) evalResponse.get("requestId");
         initIatRequest(requestId.toString(), evalRequest);
         AccessResponseDto accessResponseDto = mapToIatAccessResponse(evalResponse);
@@ -65,16 +69,30 @@ public class IatService {
     public AccessResponseDto evaluateIatProofResult(String requestId) {
         log.debug("evaluateIatProofResult.enter; got request: {}", requestId);
         Map<String, Object> evalRequest =  Collections.singletonMap("requestId", requestId);
-        Map<String, Object> evalResponse = trustServiceClient.evaluate("GetIatProofResult", evalRequest);
+        Map<String, Object> evalResponse = trustServiceClient.evaluate(TrustServicePolicy.GET_IAT_PROOF_RESULT, evalRequest);
         AccessResponseDto accessResponseDto = mapToIatAccessResponse(evalResponse);
 
         if (accessResponseDto.getStatus() == AccessRequestStatusDto.ACCEPTED) {
             Map<String, Object> regResponse = iamClient.registerIam(accessResponseDto.getSubject(), List.of(clientsProperties.getOidc().getRedirectUri()));
-            //log.debug("evaluateIatProofResult; got registration response: {}", regResponse);
-            String iat = (String) regResponse.get("registration_access_token"); // not sure it is correct token!?
+            String iat = (String) regResponse.get("registration_access_token");
             accessResponseDto.setInitialAccessToken(iat);
         }
         log.debug("evaluateIatProofResult.exit; returning: {}", accessResponseDto);
+        return accessResponseDto;
+    }
+
+    public AccessResponseDto getIatProofResult(String requestId) {
+        log.debug("getIatProofResult.enter; got request: {}", requestId);
+        Map<String, Object> iatClaims = iatCache.get(requestId); 
+        AccessResponseDto accessResponseDto = mapToIatAccessResponse(iatClaims);
+        if (iatClaims == null) {
+            iatClaims = loadTrustedClaims(TrustServicePolicy.GET_IAT_PROOF_RESULT, requestId);
+            //addAuthData(requestId, iatClaims);
+            Map<String, Object> regResponse = iamClient.registerIam(accessResponseDto.getSubject(), List.of(clientsProperties.getOidc().getRedirectUri()));
+            String iat = (String) regResponse.get("registration_access_token");
+            accessResponseDto.setInitialAccessToken(iat);
+        }
+        log.debug("getIatProofResult.exit; returning: {}", accessResponseDto);
         return accessResponseDto;
     }
     
@@ -109,17 +127,13 @@ public class IatService {
         // remove request after acceptance?
 
         return new AccessResponseDto().subject(entity)
-                .entity(mapAccessScope(subject, scopes)) 
+                .entity(new ServiceAccessScopeDto()
+                        .scope(scopes == null ? null : scopes.stream().collect(Collectors.joining(" ")))
+                        .did(subject)) 
                 .status((AccessRequestStatusDto) map.getOrDefault("status", null))
                 .requestId(requestId);
                 //.initialAccessToken((String) map.getOrDefault("iat", null))
                 //.policyEvaluationResult(map.getOrDefault("policyEvaluationResult", null));
     }
 
-    private ServiceAccessScopeDto mapAccessScope(String subject, Set<String> scopes) {
-        return new ServiceAccessScopeDto()
-            .scope(scopes == null ? null : scopes.stream().collect(Collectors.joining(" ")))
-            .did(subject);
-    }
-    
 }

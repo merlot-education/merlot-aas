@@ -26,7 +26,7 @@ public class LocalTrustServiceClientTest {
 
     @Test
     void evaluateLoginProofInvitation() {
-        Map<String, Object> response = localTrustServiceClient.evaluate("GetLoginProofInvitation", Collections.emptyMap());
+        Map<String, Object> response = localTrustServiceClient.evaluate(TrustServicePolicy.GET_LOGIN_PROOF_INVITATION, Collections.emptyMap());
 
         assertNotNull(response.get("requestId"));
         assertNotNull(response.get("link"));
@@ -34,7 +34,7 @@ public class LocalTrustServiceClientTest {
 
     @Test
     void evaluateLoginProofResult() {
-        Map<String, Object> response = localTrustServiceClient.evaluate("GetLoginProofResult", Map.of("requestId", "testRequestId"));
+        Map<String, Object> response = localTrustServiceClient.evaluate(TrustServicePolicy.GET_LOGIN_PROOF_RESULT, Map.of("requestId", "testRequestId"));
 
         assertEquals(serverProps.getBaseUrl(), response.get("iss"));
         assertEquals("testRequestId", response.get("requestId"));
@@ -44,14 +44,14 @@ public class LocalTrustServiceClientTest {
 
     @Test
     void evaluateIatProofInvitation() {
-        Map<String, Object> response = localTrustServiceClient.evaluate("GetIatProofInvitation", Collections.emptyMap());
+        Map<String, Object> response = localTrustServiceClient.evaluate(TrustServicePolicy.GET_IAT_PROOF_INVITATION, Collections.emptyMap());
 
         assertNotNull(response.get("requestId"));
     }
 
     @Test
     void evaluateIatProofResult() {
-        Map<String, Object> response = localTrustServiceClient.evaluate("GetIatProofResult", Map.of("requestId", "testRequestId"));
+        Map<String, Object> response = localTrustServiceClient.evaluate(TrustServicePolicy.GET_IAT_PROOF_RESULT, Map.of("requestId", "testRequestId"));
 
         assertEquals(serverProps.getBaseUrl(), response.get("iss"));
         assertEquals("testRequestId", response.get("requestId"));
@@ -61,9 +61,8 @@ public class LocalTrustServiceClientTest {
 
     @Test
     void evaluateNotSameRequestId() {
-        Map<String, Object> firstResponse = localTrustServiceClient.evaluate("GetLoginProofInvitation", Collections.emptyMap());
-
-        Map<String, Object> secondResponse = localTrustServiceClient.evaluate("GetLoginProofInvitation", Collections.emptyMap());
+        Map<String, Object> firstResponse = localTrustServiceClient.evaluate(TrustServicePolicy.GET_LOGIN_PROOF_INVITATION, Collections.emptyMap());
+        Map<String, Object> secondResponse = localTrustServiceClient.evaluate(TrustServicePolicy.GET_LOGIN_PROOF_INVITATION, Collections.emptyMap());
 
         assertNotNull(firstResponse.get("requestId"));
         assertNotNull(secondResponse.get("requestId"));

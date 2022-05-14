@@ -1,8 +1,10 @@
 package eu.gaiax.difs.aas.service;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,23 +36,37 @@ public class SsiAuthManager implements AuthenticationManager {
             requestId = ((BearerTokenAuthenticationToken) authentication).getName(); // .getToken();
             scopes = Collections.emptyList();
         }
+        
+        boolean needAuthTime = false;
+        Set<String> additionalClaims;
         Map<String, Object> additionalParams = ssiBrokerService.getAdditionalParameters(requestId);
-        boolean needAuthTime = additionalParams != null && additionalParams.get("max_age") != null; //oar.getAdditionalParameters().get("auth_time") != null; 
+        if (additionalParams != null) {
+            additionalClaims = new HashSet<>();
+            Map<String, Object> userInfo = (Map<String, Object>) additionalParams.get("userinfo");
+            if (userInfo != null) {
+                additionalClaims.addAll(userInfo.keySet());
+            }
+            if (additionalParams.get("auth_time") != null || additionalParams.get("max_age") != null) {
+                additionalClaims.add("auth_time");
+                needAuthTime = true;
+            }
+        } else {
+            additionalClaims = Collections.emptySet();
+        }
 
-        int ccnt = 0, pcnt = 0;
+        int cnt = 0;
         OidcUserInfo.Builder uiBuilder = OidcUserInfo.builder();
-        Map<String, Object> userDetails = ssiBrokerService.getUserClaims(requestId, false, scopes); //required?
+        Map<String, Object> userDetails = ssiBrokerService.getUserClaims(requestId, false, scopes, additionalClaims); //required?
         if (userDetails != null) {
             for (Map.Entry<String, Object> e: userDetails.entrySet()) {
-                if (needAuthTime || !e.getKey().equals("auth_time")) {
+                if (!"auth_time".equals(e.getKey()) || needAuthTime) {
                     uiBuilder.claim(e.getKey(), e.getValue());
-                    pcnt++;
+                    cnt++;
                 }
-                ccnt++;
             }
         }
         OidcUserInfoAuthenticationToken token = new OidcUserInfoAuthenticationToken(authentication, uiBuilder.build());
-        log.debug("authenticate.exit; added {} claims out of {} for subject: {}", pcnt, ccnt, requestId);
+        log.debug("authenticate.exit; added {} claims for subject: {}", cnt, requestId);
         return token;
     }
 

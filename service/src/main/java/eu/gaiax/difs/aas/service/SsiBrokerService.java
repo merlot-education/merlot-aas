@@ -1,16 +1,12 @@
 package eu.gaiax.difs.aas.service;
 
-import static java.time.temporal.ChronoUnit.MILLIS;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.text.ParseException;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
@@ -39,12 +35,10 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 
 import eu.gaiax.difs.aas.client.TrustServiceClient;
-import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
-import lombok.RequiredArgsConstructor;
+import eu.gaiax.difs.aas.client.TrustServicePolicy;
 
 @Service
-@RequiredArgsConstructor
-public class SsiBrokerService {
+public class SsiBrokerService extends SsiClaimsService {
 
     private final static Logger log = LoggerFactory.getLogger(SsiBrokerService.class);
 
@@ -54,19 +48,16 @@ public class SsiBrokerService {
     @Value("${aas.id-token.issuer}")
     private String idTokenIssuer;
 
-    @Value("${aas.tsa.delay}")
-    private long millisecondsToDelay;
-
-    @Value("${aas.tsa.duration}")
-    private long requestingDuration;
-
-    
-    private final TrustServiceClient trustServiceClient;
-    
     private final ScopeProperties scopeProperties;
     private final ServerProperties serverProperties;
 
     private final Map<String, Map<String, Object>> authCache = new ConcurrentHashMap<>();
+    
+    public SsiBrokerService(TrustServiceClient trustServiceClient, ScopeProperties scopeProperties, ServerProperties serverProperties) {
+        super(trustServiceClient);
+        this.scopeProperties = scopeProperties;
+        this.serverProperties = serverProperties;
+    }
 
     public Model oidcAuthorize(Model model) {
         log.debug("oidcAuthorize.enter; got model: {}", model);
@@ -81,7 +72,7 @@ public class SsiBrokerService {
         processAttribute(model, params, "sub");
         processAttribute(model, params, "max_age");
 
-        Map<String, Object> result = trustServiceClient.evaluate("GetLoginProofInvitation", params);
+        Map<String, Object> result = trustServiceClient.evaluate(TrustServicePolicy.GET_LOGIN_PROOF_INVITATION, params);
         String link = (String) result.get("link");
         String requestId = (String) result.get("requestId");
         Map<String, Object> data = initAuthRequest(requestId.toString(), scopes, "OIDC");
@@ -279,17 +270,28 @@ public class SsiBrokerService {
         return claims;
     }
 
-    public Map<String, Object> getUserClaims(String requestId, boolean required, Collection<String> requestedScopes) {
+    public Map<String, Object> getUserClaims(String requestId, boolean required, Collection<String> requestedClaims) {
+        Map<String, Object> userClaims = getUserClaims(requestId, required);
+        if (userClaims == null) {
+            return null;
+        }
+        
+        return userClaims.entrySet().stream()
+                .filter(e -> e.getValue() != null && requestedClaims.contains(e.getKey())).collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+    }
+    
+    public Map<String, Object> getUserClaims(String requestId, boolean required, Collection<String> requestedScopes, Collection<String> requestedClaims) {
         Map<String, Object> userClaims = getUserClaims(requestId, required);
         if (userClaims == null) {
             return null;
         }
         
         // return claims which corresponds to requested scopes only..
-        Set<String> requestedClaims = scopeProperties.getScopes().entrySet().stream()
+        Set<String> scopedClaims = scopeProperties.getScopes().entrySet().stream()
                 .filter(e -> requestedScopes.contains(e.getKey())).flatMap(e -> e.getValue().stream()).collect(Collectors.toSet());
         return userClaims.entrySet().stream()
-                .filter(e -> e.getValue() != null && requestedClaims.contains(e.getKey())).collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+                .filter(e -> e.getValue() != null && (scopedClaims.contains(e.getKey()) || requestedClaims.contains(e.getKey())))
+                .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
     }
     
     public Map<String, Object> getUserClaims(String requestId, boolean required) {
@@ -297,12 +299,12 @@ public class SsiBrokerService {
         if (userClaims == null) {
             log.warn("getUserClaims; no claims found for request: {}, required: {}", requestId, required);
             if (required) {
-                userClaims = loadUserClaims(requestId);
+                userClaims = loadTrustedClaims(TrustServicePolicy.GET_LOGIN_PROOF_RESULT, requestId);
                 addAuthData(requestId, userClaims);
             }
         } else if (!userClaims.containsKey("sub") && !userClaims.containsKey("error")) {
             if (required) {
-                userClaims = loadUserClaims(requestId);
+                userClaims = loadTrustedClaims(TrustServicePolicy.GET_LOGIN_PROOF_RESULT, requestId);
                 addAuthData(requestId, userClaims);
             } else {
                 userClaims = null;
@@ -334,47 +336,11 @@ public class SsiBrokerService {
             // log it..
             return null;
         }
-        return (Map<String, Object>) userClaims.get("additional_parameters");
-    }
-    
-    private Map<String, Object> loadUserClaims(String requestId) {
-        LocalTime requestingStart = LocalTime.now();
-        LocalTime durationRestriction = requestingStart.plusNanos(1_000_000 * requestingDuration);
-
-        while (LocalTime.now().isBefore(durationRestriction)) {
-            Map<String, Object> evaluation = trustServiceClient.evaluate("GetLoginProofResult", Collections.singletonMap("requestId", requestId));
-
-            Object o = evaluation.get("status");
-            if (o == null || !(o instanceof AccessRequestStatusDto)) {
-                log.error("loadUserClaims; unknown response status: {}", o);
-                throw new OAuth2AuthenticationException("loginFailed");
-            }
-
-            switch ((AccessRequestStatusDto) o) {
-                case ACCEPTED:
-                    return evaluation;
-                case PENDING:
-                    delayNextRequest();
-                    break;
-                case REJECTED:
-                    throw new OAuth2AuthenticationException("loginRejected");
-                case TIMED_OUT:
-                    throw new OAuth2AuthenticationException("loginTimeout");
-            }
+        Map<String, Object> params = (Map<String, Object>) userClaims.get("additional_parameters");
+        if (params == null) {
+            return null;
         }
-
-        log.error("loadUserClaims; Time for calling TrustServiceClient expired, time spent: {} ms", requestingStart.until(LocalTime.now(), MILLIS));
-        throw new OAuth2AuthenticationException("loginTimeout");
+        return new HashMap<>(params);
     }
-
-    private void delayNextRequest() {
-        try {
-            TimeUnit.MILLISECONDS.sleep(millisecondsToDelay);
-        } catch (InterruptedException ie) {
-            Thread.currentThread().interrupt();
-        }
-    }
-    
-    
     
 }
