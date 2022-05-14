@@ -64,6 +64,7 @@ import com.nimbusds.jwt.JWTParser;
 
 import eu.gaiax.difs.aas.client.LocalTrustServiceClientImpl;
 import eu.gaiax.difs.aas.client.TrustServiceClient;
+import eu.gaiax.difs.aas.client.TrustServicePolicy;
 import eu.gaiax.difs.aas.properties.ServerProperties;
 
 @SpringBootTest
@@ -89,7 +90,7 @@ public class AuthenticationFlowTest {
     @Test
     void testOidcLoginFlow() throws Exception {
 
-        ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig("GetLoginProofResult", ACCEPTED);
+        ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig(TrustServicePolicy.GET_LOGIN_PROOF_RESULT, ACCEPTED);
 
         Map<String, Object> claims = getAuthClaims("openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc",
                 keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", "secret", null, s -> "uri://" + s, null);
@@ -140,7 +141,7 @@ public class AuthenticationFlowTest {
     @Test
     void testOidcLoginMaxScope() throws Exception {
 
-        ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig("GetLoginProofResult", ACCEPTED);
+        ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig(TrustServicePolicy.GET_LOGIN_PROOF_RESULT, ACCEPTED);
 
         Map<String, Object> claims = getAuthClaims("openid profile email", "some.state", "code", "aas-app-oidc",
                 keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "some-nonce", "OIDC", "secret", Map.of("max_age", 1), s -> "uri://" + s, null);
@@ -174,6 +175,31 @@ public class AuthenticationFlowTest {
         assertNotNull(userInfo.get("updated_at"));
         assertNotNull(userInfo.get("email"));
         assertNotNull(userInfo.get("email_verified"));
+    }
+    
+    @Test
+    void testOidcLoginAdditionalClaims() throws Exception {
+
+        ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig(TrustServicePolicy.GET_LOGIN_PROOF_RESULT, ACCEPTED);
+
+        Map<String, Object> claims = getAuthClaims("openid", "some.state", "code", "aas-app-oidc",
+                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "some-nonce", "OIDC", "secret", 
+                Map.of("claims", "{\"userinfo\": {\"name\": {\"essential\": true}, \"email\": null}, \"id_token\": {\"auth_time\": {\"essential\": true}}}"), 
+                s -> "uri://" + s, null);
+
+        // check claims..
+        assertNotNull(claims.get("iss"));
+        assertNotNull(claims.get("sub"));
+        assertNotNull(claims.get("auth_time"));
+        assertNull(claims.get("name"));
+        assertNull(claims.get("email"));
+
+        Map<String, Object> userInfo = getUserInfo((String) claims.get("access_token"));
+        assertEquals(claims.get("iss"), userInfo.get("iss"));
+        assertEquals(claims.get("sub"), userInfo.get("sub"));
+        assertNull(userInfo.get("auth_time"));
+        assertNotNull(userInfo.get("name"));
+        assertNotNull(userInfo.get("email"));
     }
     
     @Test
@@ -289,7 +315,7 @@ public class AuthenticationFlowTest {
     @Test
     void testOidcLoginTimeout() throws Exception {
 
-        ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig("GetLoginProofResult", TIMED_OUT);
+        ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig(TrustServicePolicy.GET_LOGIN_PROOF_RESULT, TIMED_OUT);
 
         MvcResult authResult = getAuthResult("openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc", 
                 keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", null, s -> "uri://" + s, null, "/ssi/login");
@@ -300,7 +326,7 @@ public class AuthenticationFlowTest {
     @Test
     void testOidcLoginReject() throws Exception {
 
-        ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig("GetLoginProofResult", REJECTED);
+        ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig(TrustServicePolicy.GET_LOGIN_PROOF_RESULT, REJECTED);
 
         MvcResult authResult = getAuthResult("openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc", 
                 keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", null, s -> "uri://" + s, null, "/ssi/login");

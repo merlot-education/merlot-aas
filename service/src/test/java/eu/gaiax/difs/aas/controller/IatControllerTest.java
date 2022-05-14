@@ -3,6 +3,7 @@ package eu.gaiax.difs.aas.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.gaiax.difs.aas.client.IamClient;
 import eu.gaiax.difs.aas.client.TrustServiceClient;
+import eu.gaiax.difs.aas.client.TrustServicePolicy;
 import eu.gaiax.difs.aas.generated.model.AccessRequestDto;
 import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
 import eu.gaiax.difs.aas.generated.model.AccessResponseDto;
@@ -65,7 +66,7 @@ public class IatControllerTest {
                 .requestId("responseRequestId")
                 .status(AccessRequestStatusDto.PENDING);
 
-        when(trustServiceClient.evaluate(eq("GetIatProofResult"), any())).thenReturn(serviceResponse);
+        when(trustServiceClient.evaluate(eq(TrustServicePolicy.GET_IAT_PROOF_RESULT), any())).thenReturn(serviceResponse);
 
         mockMvc.perform(
                         get("/clients/iat/requests/testRequestId")
@@ -90,7 +91,7 @@ public class IatControllerTest {
                 .status(AccessRequestStatusDto.ACCEPTED)
                 .initialAccessToken("keycloakIat");
 
-        when(trustServiceClient.evaluate(eq("GetIatProofResult"), any())).thenReturn(serviceResponse);
+        when(trustServiceClient.evaluate(eq(TrustServicePolicy.GET_IAT_PROOF_RESULT), any())).thenReturn(serviceResponse);
         when(iamClient.registerIam(any(), any())).thenReturn(Map.of("registration_access_token", "keycloakIat"));
 
         mockMvc.perform(
@@ -171,7 +172,7 @@ public class IatControllerTest {
                 .subject("testSubject")
                 .entity(new ServiceAccessScopeDto().scope("openid testScope").did("testDid"));
 
-        when(trustServiceClient.evaluate(eq("GetIatProofInvitation"), any())).thenReturn(serviceResponse);
+        when(trustServiceClient.evaluate(eq(TrustServicePolicy.GET_IAT_PROOF_INVITATION), any())).thenReturn(serviceResponse);
 
         mockMvc.perform(
                         post("/clients/iat/requests")

@@ -33,38 +33,38 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
         this.statusProperties = statusProperties;
     }
     
-    public void setStatusConfig(String policy, AccessRequestStatusDto status) {
+    public void setStatusConfig(TrustServicePolicy policy, AccessRequestStatusDto status) {
         statusProperties.setPolicyStatus(policy, status);
     }
     
     @Override
-    public Map<String, Object> evaluate(String policyName, Map<String, Object> bodyParams) {
+    public Map<String, Object> evaluate(TrustServicePolicy policy, Map<String, Object> params) {
         Map<String, Object> map = new HashMap<>();
-        String requestId = (String) bodyParams.get("requestId");
+        String requestId = (String) params.get("requestId");
         if (requestId == null) {
             requestId = UUID.randomUUID().toString();
         }
         map.put("requestId", requestId);
 
-        if ("GetIatProofInvitation".equals(policyName)) {
+        if (policy == TrustServicePolicy.GET_IAT_PROOF_INVITATION) {
             return map;
         }
 
-        if ("GetLoginProofInvitation".equals(policyName)) {
+        if (policy == TrustServicePolicy.GET_LOGIN_PROOF_INVITATION) {
             map.put("link", "uri://" + requestId);
             return map;
         }
 
-        if ("GetLoginProofResult".equals(policyName) || "GetIatProofResult".equals(policyName)) {
+        if (policy == TrustServicePolicy.GET_LOGIN_PROOF_RESULT || policy == TrustServicePolicy.GET_IAT_PROOF_RESULT) {
             if (isPending(requestId)) {
                 map.put("status", PENDING);
             } else {
-                AccessRequestStatusDto status = statusProperties.getPolicyStatus(policyName);
+                AccessRequestStatusDto status = statusProperties.getPolicyStatus(policy);
                 if (status == null) {
                     status = ACCEPTED;
                 }
                 map.put("status", status);
-                if ("GetLoginProofResult".equals(policyName)) {
+                if (policy == TrustServicePolicy.GET_LOGIN_PROOF_RESULT) {
                     long stamp = System.currentTimeMillis();
                     map.put("name", requestId);
                     map.put("given_name", requestId + ": " + stamp);
@@ -87,7 +87,7 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
             map.put("iss", serverProperties.getBaseUrl());
         }
 
-        log.debug("Called local trust service client; policy: {}, params: {}, result: {} ", policyName, bodyParams, map);
+        log.debug("Called local trust service client; policy: {}, params: {}, result: {} ", policy, params, map);
         return map;
     }
 

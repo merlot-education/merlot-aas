@@ -1,5 +1,6 @@
 package eu.gaiax.difs.aas.controller;
 
+import static eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -14,6 +15,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -25,8 +27,10 @@ import org.springframework.test.web.servlet.MvcResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import eu.gaiax.difs.aas.client.IamClient;
+import eu.gaiax.difs.aas.client.LocalTrustServiceClientImpl;
+import eu.gaiax.difs.aas.client.TrustServiceClient;
+import eu.gaiax.difs.aas.client.TrustServicePolicy;
 import eu.gaiax.difs.aas.generated.model.AccessRequestDto;
-import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
 import eu.gaiax.difs.aas.generated.model.AccessResponseDto;
 import eu.gaiax.difs.aas.generated.model.ServiceAccessScopeDto;
 
@@ -36,64 +40,90 @@ import eu.gaiax.difs.aas.generated.model.ServiceAccessScopeDto;
 public class IatProvisionFlowTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+    
+    @Value("${aas.tsa.request.count}")
+    private int loopCount = 2;
 
     @Autowired
     private MockMvc mockMvc;
+    @Autowired
+    private TrustServiceClient trustServiceClient;
 
     @MockBean
     IamClient iamClient;
 
     @Test
     public void testIatRequestFlow() throws Exception {
+
+        ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig(TrustServicePolicy.GET_IAT_PROOF_RESULT, ACCEPTED);
+
+        String requestId = getIatRequestId();
+
+        when(iamClient.registerIam(any(), any())).thenReturn(Map.of("registration_access_token", "keycloakIat"));
+        
+        AccessResponseDto result = getIatResult(requestId);
+        assertEquals(requestId, result.getRequestId());
+        assertEquals(ACCEPTED, result.getStatus());
+        assertNotNull(result.getInitialAccessToken());
+    }
+
+    @Test
+    public void testIatRequestReject() throws Exception {
+        
+        ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig(TrustServicePolicy.GET_IAT_PROOF_RESULT, REJECTED);
+        
+        String requestId = getIatRequestId();
+        AccessResponseDto result = getIatResult(requestId);
+        assertEquals(requestId, result.getRequestId());
+        assertEquals(REJECTED, result.getStatus());
+        assertNull(result.getInitialAccessToken());
+    }
+
+    @Test
+    public void testIatRequestTimeout() throws Exception {
+        
+        ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig(TrustServicePolicy.GET_IAT_PROOF_RESULT, TIMED_OUT);
+        
+        String requestId = getIatRequestId();
+        AccessResponseDto result = getIatResult(requestId);
+        assertEquals(requestId, result.getRequestId());
+        assertEquals(TIMED_OUT, result.getStatus());
+        assertNull(result.getInitialAccessToken());
+    }
+
+    private String getIatRequestId() throws Exception {
+        
         AccessRequestDto requestDto = new AccessRequestDto()
                 .subject("did:sample:1234567890")
                 .entity(new ServiceAccessScopeDto().scope("openid").did("did:sample:qwerty"));
         MvcResult result = mockMvc.perform(
-                        post("/clients/iat/requests")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(requestDto)))
+                post("/clients/iat/requests")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isOk())
                 .andReturn();
         String response = result.getResponse().getContentAsString();
         AccessResponseDto ard = objectMapper.readValue(response, AccessResponseDto.class);
         assertNull(ard.getInitialAccessToken());
         assertNotNull(ard.getRequestId());
-        String requestId = ard.getRequestId();
-        
-        result = mockMvc.perform(
-                        get("/clients/iat/requests/" + requestId)
-                                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn();
-        response = result.getResponse().getContentAsString();
-        ard = objectMapper.readValue(response, AccessResponseDto.class);
-        assertEquals(requestId, ard.getRequestId());
-        assertEquals(AccessRequestStatusDto.PENDING, ard.getStatus());
-        assertNull(ard.getInitialAccessToken());
-        
-        result = mockMvc.perform(
-                        get("/clients/iat/requests/" + requestId)
-                                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn();
-        response = result.getResponse().getContentAsString();
-        ard = objectMapper.readValue(response, AccessResponseDto.class);
-        assertEquals(requestId, ard.getRequestId());
-        assertEquals(AccessRequestStatusDto.PENDING, ard.getStatus());
-        assertNull(ard.getInitialAccessToken());
-
-        when(iamClient.registerIam(any(), any())).thenReturn(Map.of("registration_access_token", "keycloakIat"));
-        
-        result = mockMvc.perform(
-                        get("/clients/iat/requests/" + requestId)
-                                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn();
-        response = result.getResponse().getContentAsString();
-        ard = objectMapper.readValue(response, AccessResponseDto.class);
-        assertEquals(requestId, ard.getRequestId());
-        assertEquals(AccessRequestStatusDto.ACCEPTED, ard.getStatus());        
-        assertNotNull(ard.getInitialAccessToken());
+        return ard.getRequestId();
     }
     
+    private AccessResponseDto getIatResult(String requestId) throws Exception {
+
+        int cnt = 0;
+        AccessResponseDto ard;
+        do {
+            MvcResult result = mockMvc.perform(
+                    get("/clients/iat/requests/" + requestId)
+                            .contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andReturn();
+            String response = result.getResponse().getContentAsString();
+            ard = objectMapper.readValue(response, AccessResponseDto.class);
+            assertEquals(requestId, ard.getRequestId());
+            cnt++;
+        } while (cnt <= loopCount);
+        return ard;
+    }
 }

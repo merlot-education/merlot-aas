@@ -5,6 +5,7 @@ import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import eu.gaiax.difs.aas.client.TrustServicePolicy;
 import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
 import lombok.Data;
 
@@ -13,13 +14,13 @@ import lombok.Data;
 @ConfigurationProperties(prefix = "aas.tsa")
 public class StatusProperties {
 
-    private Map<String, AccessRequestStatusDto> statuses;
+    private Map<TrustServicePolicy, AccessRequestStatusDto> statuses;
     
-    public AccessRequestStatusDto getPolicyStatus(String policy) {
+    public AccessRequestStatusDto getPolicyStatus(TrustServicePolicy policy) {
         return statuses.get(policy);
     }
     
-    public void setPolicyStatus(String policy, AccessRequestStatusDto status) {
+    public void setPolicyStatus(TrustServicePolicy policy, AccessRequestStatusDto status) {
         statuses.put(policy, status);
     }
 
