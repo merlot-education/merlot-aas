@@ -22,7 +22,9 @@ import java.time.LocalDate;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -373,7 +375,7 @@ public class AuthenticationFlowTest {
                         .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
                         .cookie(new Cookie("JSESSIONID", session.getId())).session((MockHttpSession) session))
                 .andExpect(status().isOk()).andReturn();
-        assertEquals("server_error", (String) authResult.getModelAndView().getModel().get("errorMessage"));
+        assertEquals(getMessage("server_error", authResult.getRequest().getLocale()), (String) authResult.getModelAndView().getModel().get("errorMessage"));
         
         mockMvc.perform(
                     post("/ssi/siop-callback")
@@ -388,7 +390,7 @@ public class AuthenticationFlowTest {
                         .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
                         .cookie(new Cookie("JSESSIONID", session.getId())).session((MockHttpSession) session))
                 .andExpect(status().isOk()).andReturn();
-        assertEquals("invalid_request", (String) authResult.getModelAndView().getModel().get("errorMessage"));
+        assertEquals(getMessage("invalid_request", authResult.getRequest().getLocale()), (String) authResult.getModelAndView().getModel().get("errorMessage"));
         
         Map<String, Object> params = new HashMap<>();
         params.put("iss", "https://self-issued.me/v2");
@@ -565,6 +567,15 @@ public class AuthenticationFlowTest {
         BufferedImage image = ImageIO.read(new ByteArrayInputStream(content));
         BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(new BufferedImageLuminanceSource(image)));
         return new QRCodeReader().decode(bitmap).getText();
+    }
+    
+    private String getMessage(String code, Locale locale) {
+        ResourceBundle resourceBundle = ResourceBundle.getBundle("language/messages", locale);
+        try {
+            return resourceBundle.getString(code);
+        } catch (Exception ex) {
+            return code;
+        }
     }
 
 }

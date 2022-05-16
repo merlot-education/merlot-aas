@@ -129,7 +129,7 @@ public final class SsiOidcProviderConfigurationEndpointFilter extends OncePerReq
             claims.put("display_values_supported", List.of("page"));
             claims.put("claims_supported", supportedClaims);
             claims.put("claims_locales_supported", List.of("en"));
-            claims.put("ui_locales_supported", List.of("en", "de", "fr"));
+            claims.put("ui_locales_supported", List.of("en", "de", "fr", "ru"));
         };
     }
 
