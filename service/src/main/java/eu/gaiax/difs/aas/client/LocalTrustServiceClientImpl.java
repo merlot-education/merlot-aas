@@ -15,6 +15,7 @@ import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
 import eu.gaiax.difs.aas.properties.ServerProperties;
 import eu.gaiax.difs.aas.properties.StatusProperties;
 
+import static eu.gaiax.difs.aas.model.TrustServicePolicy.*;
 import static eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto.*;
 
 public class LocalTrustServiceClientImpl implements TrustServiceClient {
@@ -33,12 +34,12 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
         this.statusProperties = statusProperties;
     }
     
-    public void setStatusConfig(TrustServicePolicy policy, AccessRequestStatusDto status) {
+    public void setStatusConfig(String policy, AccessRequestStatusDto status) {
         statusProperties.setPolicyStatus(policy, status);
     }
     
     @Override
-    public Map<String, Object> evaluate(TrustServicePolicy policy, Map<String, Object> params) {
+    public Map<String, Object> evaluate(String policy, Map<String, Object> params) {
         Map<String, Object> map = new HashMap<>();
         String requestId = (String) params.get("requestId");
         if (requestId == null) {
@@ -46,16 +47,16 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
         }
         map.put("requestId", requestId);
 
-        if (policy == TrustServicePolicy.GET_IAT_PROOF_INVITATION) {
+        if (GET_IAT_PROOF_INVITATION.equals(policy)) {
             return map;
         }
 
-        if (policy == TrustServicePolicy.GET_LOGIN_PROOF_INVITATION) {
+        if (GET_LOGIN_PROOF_INVITATION.equals(policy)) {
             map.put("link", "uri://" + requestId);
             return map;
         }
 
-        if (policy == TrustServicePolicy.GET_LOGIN_PROOF_RESULT || policy == TrustServicePolicy.GET_IAT_PROOF_RESULT) {
+        if (GET_LOGIN_PROOF_RESULT.equals(policy) || GET_IAT_PROOF_RESULT.equals(policy)) {
             if (isPending(requestId)) {
                 map.put("status", PENDING);
             } else {
@@ -64,7 +65,7 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
                     status = ACCEPTED;
                 }
                 map.put("status", status);
-                if (policy == TrustServicePolicy.GET_LOGIN_PROOF_RESULT) {
+                if (GET_LOGIN_PROOF_RESULT.equals(policy)) {
                     long stamp = System.currentTimeMillis();
                     map.put("name", requestId);
                     map.put("given_name", requestId + ": " + stamp);

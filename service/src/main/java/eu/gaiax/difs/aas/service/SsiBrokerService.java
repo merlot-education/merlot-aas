@@ -2,6 +2,8 @@ package eu.gaiax.difs.aas.service;
 
 import static org.springframework.security.oauth2.core.OAuth2ErrorCodes.INVALID_REQUEST;
 import static org.springframework.security.oauth2.core.OAuth2ErrorCodes.INVALID_SCOPE;
+import static eu.gaiax.difs.aas.model.TrustServicePolicy.GET_LOGIN_PROOF_INVITATION;
+import static eu.gaiax.difs.aas.model.TrustServicePolicy.GET_LOGIN_PROOF_RESULT;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -38,7 +40,6 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 
 import eu.gaiax.difs.aas.client.TrustServiceClient;
-import eu.gaiax.difs.aas.client.TrustServicePolicy;
 
 @Service
 public class SsiBrokerService extends SsiClaimsService {
@@ -75,7 +76,7 @@ public class SsiBrokerService extends SsiClaimsService {
         processAttribute(model, params, "sub");
         processAttribute(model, params, "max_age");
 
-        Map<String, Object> result = trustServiceClient.evaluate(TrustServicePolicy.GET_LOGIN_PROOF_INVITATION, params);
+        Map<String, Object> result = trustServiceClient.evaluate(GET_LOGIN_PROOF_INVITATION, params);
         String link = (String) result.get("link");
         String requestId = (String) result.get("requestId");
         Map<String, Object> data = initAuthRequest(requestId.toString(), scopes, "OIDC");
@@ -301,12 +302,12 @@ public class SsiBrokerService extends SsiClaimsService {
         if (userClaims == null) {
             log.warn("getUserClaims; no claims found for request: {}, required: {}", requestId, required);
             if (required) {
-                userClaims = loadTrustedClaims(TrustServicePolicy.GET_LOGIN_PROOF_RESULT, requestId);
+                userClaims = loadTrustedClaims(GET_LOGIN_PROOF_RESULT, requestId);
                 addAuthData(requestId, userClaims);
             }
         } else if (!userClaims.containsKey("sub") && !userClaims.containsKey("error")) {
             if (required) {
-                userClaims = loadTrustedClaims(TrustServicePolicy.GET_LOGIN_PROOF_RESULT, requestId);
+                userClaims = loadTrustedClaims(GET_LOGIN_PROOF_RESULT, requestId);
                 addAuthData(requestId, userClaims);
             } else {
                 userClaims = null;

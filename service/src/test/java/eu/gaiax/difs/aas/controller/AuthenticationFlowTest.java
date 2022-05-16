@@ -66,7 +66,7 @@ import com.nimbusds.jwt.JWTParser;
 
 import eu.gaiax.difs.aas.client.LocalTrustServiceClientImpl;
 import eu.gaiax.difs.aas.client.TrustServiceClient;
-import eu.gaiax.difs.aas.client.TrustServicePolicy;
+import eu.gaiax.difs.aas.model.TrustServicePolicy;
 import eu.gaiax.difs.aas.properties.ServerProperties;
 
 @SpringBootTest

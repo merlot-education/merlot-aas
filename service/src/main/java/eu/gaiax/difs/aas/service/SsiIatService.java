@@ -1,14 +1,15 @@
 package eu.gaiax.difs.aas.service;
 
+import static eu.gaiax.difs.aas.model.TrustServicePolicy.GET_IAT_PROOF_INVITATION;
+import static eu.gaiax.difs.aas.model.TrustServicePolicy.GET_IAT_PROOF_RESULT;
+
 import eu.gaiax.difs.aas.client.IamClient;
 import eu.gaiax.difs.aas.client.TrustServiceClient;
-import eu.gaiax.difs.aas.client.TrustServicePolicy;
 import eu.gaiax.difs.aas.generated.model.AccessRequestDto;
 import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
 import eu.gaiax.difs.aas.generated.model.AccessResponseDto;
 import eu.gaiax.difs.aas.generated.model.ServiceAccessScopeDto;
 import eu.gaiax.difs.aas.properties.ClientsProperties;
-import lombok.RequiredArgsConstructor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +43,7 @@ public class SsiIatService extends SsiClaimsService {
     public AccessResponseDto evaluateIatProofInvitation(AccessRequestDto accessRequestDto) {
         log.debug("evaluateIatProofInvitation.enter; got request: {}", accessRequestDto);
         Map<String, Object> evalRequest = iatRequestToMap(accessRequestDto);
-        Map<String, Object> evalResponse = trustServiceClient.evaluate(TrustServicePolicy.GET_IAT_PROOF_INVITATION, evalRequest);
+        Map<String, Object> evalResponse = trustServiceClient.evaluate(GET_IAT_PROOF_INVITATION, evalRequest);
         String requestId = (String) evalResponse.get("requestId");
         initIatRequest(requestId.toString(), evalRequest);
         AccessResponseDto accessResponseDto = mapToIatAccessResponse(evalResponse);
@@ -69,7 +70,7 @@ public class SsiIatService extends SsiClaimsService {
     public AccessResponseDto evaluateIatProofResult(String requestId) {
         log.debug("evaluateIatProofResult.enter; got request: {}", requestId);
         Map<String, Object> evalRequest =  Collections.singletonMap("requestId", requestId);
-        Map<String, Object> evalResponse = trustServiceClient.evaluate(TrustServicePolicy.GET_IAT_PROOF_RESULT, evalRequest);
+        Map<String, Object> evalResponse = trustServiceClient.evaluate(GET_IAT_PROOF_RESULT, evalRequest);
         AccessResponseDto accessResponseDto = mapToIatAccessResponse(evalResponse);
 
         if (accessResponseDto.getStatus() == AccessRequestStatusDto.ACCEPTED) {
@@ -86,7 +87,7 @@ public class SsiIatService extends SsiClaimsService {
         Map<String, Object> iatClaims = iatCache.get(requestId); 
         AccessResponseDto accessResponseDto = mapToIatAccessResponse(iatClaims);
         if (iatClaims == null) {
-            iatClaims = loadTrustedClaims(TrustServicePolicy.GET_IAT_PROOF_RESULT, requestId);
+            iatClaims = loadTrustedClaims(GET_IAT_PROOF_RESULT, requestId);
             //addAuthData(requestId, iatClaims);
             Map<String, Object> regResponse = iamClient.registerIam(accessResponseDto.getSubject(), List.of(clientsProperties.getOidc().getRedirectUri()));
             String iat = (String) regResponse.get("registration_access_token");
