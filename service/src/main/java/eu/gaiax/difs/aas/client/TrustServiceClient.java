@@ -4,6 +4,6 @@ import java.util.Map;
 
 public interface TrustServiceClient {
 
-    Map<String, Object> evaluate(TrustServicePolicy policy, Map<String, Object> params);
+    Map<String, Object> evaluate(String policy, Map<String, Object> params);
 
 }

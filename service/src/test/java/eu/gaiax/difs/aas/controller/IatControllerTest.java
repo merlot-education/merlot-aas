@@ -3,11 +3,12 @@ package eu.gaiax.difs.aas.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.gaiax.difs.aas.client.IamClient;
 import eu.gaiax.difs.aas.client.TrustServiceClient;
-import eu.gaiax.difs.aas.client.TrustServicePolicy;
 import eu.gaiax.difs.aas.generated.model.AccessRequestDto;
 import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
 import eu.gaiax.difs.aas.generated.model.AccessResponseDto;
 import eu.gaiax.difs.aas.generated.model.ServiceAccessScopeDto;
+import eu.gaiax.difs.aas.model.TrustServicePolicy;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -12,9 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 
 import eu.gaiax.difs.aas.client.TrustServiceClient;
-import eu.gaiax.difs.aas.client.TrustServicePolicy;
 import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
-import lombok.RequiredArgsConstructor;
 
 public abstract class SsiClaimsService {
     
@@ -29,7 +27,7 @@ public abstract class SsiClaimsService {
         this.trustServiceClient = trustServiceClient;
     }
     
-    protected Map<String, Object> loadTrustedClaims(TrustServicePolicy policy, String requestId) {
+    protected Map<String, Object> loadTrustedClaims(String policy, String requestId) {
         LocalTime requestingStart = LocalTime.now();
         LocalTime durationRestriction = requestingStart.plusNanos(1_000_000 * requestingDuration);
 

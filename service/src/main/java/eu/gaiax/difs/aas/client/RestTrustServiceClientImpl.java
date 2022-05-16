@@ -37,13 +37,13 @@ public class RestTrustServiceClientImpl implements TrustServiceClient {
     }
 
     @Override
-    public Map<String, Object> evaluate(TrustServicePolicy policy, Map<String, Object> params) {
+    public Map<String, Object> evaluate(String policy, Map<String, Object> params) {
         log.debug("evaluate.enter; got policy: {}, params: {}", policy, params);
         String uri = "/{repo}/policies/{group}/{policyname}/{version}/{action}";
         Map<String, String> uriParams = new HashMap<>();
         uriParams.put("repo", repo);
         uriParams.put("group", group);
-        uriParams.put("policyname", policy.name());
+        uriParams.put("policyname", policy);
         uriParams.put("version", version);
         uriParams.put("action", action);
 

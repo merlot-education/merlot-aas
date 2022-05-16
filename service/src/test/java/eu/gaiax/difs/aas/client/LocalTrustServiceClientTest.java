@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
+import eu.gaiax.difs.aas.model.TrustServicePolicy;
 import eu.gaiax.difs.aas.properties.ServerProperties;
 
 import java.util.Collections;
