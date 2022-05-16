@@ -35,7 +35,7 @@ import java.util.ResourceBundle;
 @RequestMapping("/ssi")
 public class SsiController {
     
-    //private static final Logger log = LoggerFactory.getLogger(SsiController.class);
+    private static final Logger log = LoggerFactory.getLogger(SsiController.class);
 
     private final SsiBrokerService ssiBrokerService;
 
@@ -44,11 +44,17 @@ public class SsiController {
         DefaultSavedRequest auth = (DefaultSavedRequest) request.getSession().getAttribute("SPRING_SECURITY_SAVED_REQUEST");
         model.addAttribute("scope", auth.getParameterValues("scope"));
 
-        String errorMessage = (String) request.getSession().getAttribute("AUTH_ERROR");
-        if (errorMessage != null) {
-            Locale locale = (Locale) request.getSession().getAttribute("session.current.locale");
-            ResourceBundle resourceBundle = ResourceBundle.getBundle("language/messages", locale != null ? locale : Locale.getDefault());
-            model.addAttribute("errorMessage", resourceBundle.getString(errorMessage));
+        String error = request.getParameter("error");
+        if (error != null) {
+            //Locale locale = (Locale) request.getSession().getAttribute("session.current.locale");
+            //ResourceBundle resourceBundle = ResourceBundle.getBundle("language/messages", locale != null ? locale : Locale.getDefault());
+            ResourceBundle resourceBundle = ResourceBundle.getBundle("language/messages", request.getLocale());
+            try {
+                error = resourceBundle.getString(error);
+            } catch (Exception ex) {
+                log.warn("login.error; no resource found for error: {}", error);
+            }
+            model.addAttribute("errorMessage", error);
         }
 
         String[] clientId = auth.getParameterValues("client_id");
@@ -68,12 +74,10 @@ public class SsiController {
                 }
 
                 ssiBrokerService.oidcAuthorize(model);
-                return "login-template.html";
-            }
-            if ("aas-app-siop".equals(clientId[0])) {
+            } else if ("aas-app-siop".equals(clientId[0])) {
                 ssiBrokerService.siopAuthorize(model);
-                return "login-template.html";
             }
+            return "login-template.html";
         }
 
         throw new OAuth2AuthenticationException("unknown client: " + (clientId == null ? "null" : Arrays.toString(clientId)));
@@ -84,7 +88,7 @@ public class SsiController {
             JWT jwt = JWTParser.parse(idToken);
             return jwt.getJWTClaimsSet().getSubject();
         } catch (Exception ex) {
-            // log it.. then assume idToken is String
+            log.debug("getSubject; cannot parse JWT: {}", idToken);
             // better have it in local var. but don't know is it thread-safe or not..
             JacksonJsonParser jsonParser = new JacksonJsonParser();
             Map<String, Object> params = jsonParser.parseMap(idToken);
@@ -132,14 +136,6 @@ public class SsiController {
         }
         
         ssiBrokerService.processSiopLoginResponse(claims);
-    }
-    
-    @ResponseBody
-    @GetMapping(value = "/cip", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Map<String, Object> getClaims(@RequestParam Map<String, Object> params) { 
-        String subject = (String) params.remove("sub");
-        String required = (String) params.remove("req");
-        return ssiBrokerService.getSubjectClaims(subject, required == null ? false : Boolean.parseBoolean(required), params);
     }
     
 }

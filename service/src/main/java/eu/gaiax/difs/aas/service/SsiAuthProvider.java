@@ -1,5 +1,7 @@
 package eu.gaiax.difs.aas.service;
 
+import static org.springframework.security.oauth2.core.OAuth2ErrorCodes.SERVER_ERROR;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,6 +17,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
 
 public class SsiAuthProvider implements AuthenticationProvider {
 
@@ -33,13 +36,22 @@ public class SsiAuthProvider implements AuthenticationProvider {
         Map<String, Object> claims = ssiBrokerService.getUserClaims(requestId, required);
         if (claims == null) {
             // wrong principal/requestId?
-            throw new OAuth2AuthenticationException("loginFailed");
+            log.warn("authenticate.error; no claims found for {}:{}", authType, requestId);
+            throw new OAuth2AuthenticationException(SERVER_ERROR);
         }
         
         if ("SIOP".equals(authType)) {
             String error = (String) claims.get("error");
             if (error != null) {
-                throw new OAuth2AuthenticationException(error);
+                OAuth2Error err;
+                String[] parts = error.split(":");
+                if (parts.length > 1) {
+                    err = new OAuth2Error(parts[0].trim(), parts[1].trim(), null);
+                } else {
+                    err = new OAuth2Error(parts[0]);
+                }
+                log.warn("authenticate.error; got SIOP callback error: {}", error);
+                throw new OAuth2AuthenticationException(err);
             }
         }
         

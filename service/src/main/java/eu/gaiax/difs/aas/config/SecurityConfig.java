@@ -84,8 +84,7 @@ public class SecurityConfig {
             if (error == null && exception instanceof OAuth2AuthenticationException) {
                 error = ((OAuth2AuthenticationException) exception).getError().getErrorCode();
             }
-            request.getSession().setAttribute("AUTH_ERROR", error);
-            String redirectUrl = request.getContextPath() + "/ssi/login";
+            String redirectUrl = request.getContextPath() + "/ssi/login?error=" + error;
             response.sendRedirect(redirectUrl);
         };
     }

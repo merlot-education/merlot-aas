@@ -1,6 +1,7 @@
 package eu.gaiax.difs.aas.service;
 
-import static java.time.temporal.ChronoUnit.MILLIS;
+import static eu.gaiax.difs.aas.model.SsiAuthErrorCodes.*;
+import static org.springframework.security.oauth2.core.OAuth2ErrorCodes.SERVER_ERROR;
 
 import java.time.LocalTime;
 import java.util.Collections;
@@ -38,7 +39,7 @@ public abstract class SsiClaimsService {
             Object o = evaluation.get("status");
             if (o == null || !(o instanceof AccessRequestStatusDto)) {
                 //log.error("loadTrustedClaims; unknown response status: {}", o);
-                throw new OAuth2AuthenticationException("loginFailed");
+                throw new OAuth2AuthenticationException(SERVER_ERROR);
             }
 
             switch ((AccessRequestStatusDto) o) {
@@ -48,14 +49,14 @@ public abstract class SsiClaimsService {
                     delayNextRequest();
                     break;
                 case REJECTED:
-                    throw new OAuth2AuthenticationException("loginRejected");
+                    throw new OAuth2AuthenticationException(LOGIN_REJECTED);
                 case TIMED_OUT:
-                    throw new OAuth2AuthenticationException("loginTimeout");
+                    throw new OAuth2AuthenticationException(LOGIN_TIMED_OUT);
             }
         }
 
         //log.error("loadTrustedClaims; Time for calling TrustServiceClient expired, time spent: {} ms", requestingStart.until(LocalTime.now(), MILLIS));
-        throw new OAuth2AuthenticationException("loginTimeout");
+        throw new OAuth2AuthenticationException(LOGIN_TIMED_OUT);
     }
 
     private void delayNextRequest() {

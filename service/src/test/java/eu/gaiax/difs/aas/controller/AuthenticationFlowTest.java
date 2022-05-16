@@ -318,9 +318,10 @@ public class AuthenticationFlowTest {
         ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig(TrustServicePolicy.GET_LOGIN_PROOF_RESULT, TIMED_OUT);
 
         MvcResult authResult = getAuthResult("openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc", 
-                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", null, s -> "uri://" + s, null, "/ssi/login");
-        HttpSession session = authResult.getRequest().getSession(false);
-        assertEquals("loginTimeout", session.getAttribute("AUTH_ERROR"));
+                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", null, s -> "uri://" + s, null, 
+                "/ssi/login?error=login_timed_out");
+        assertNotNull(authResult.getRequest().getParameter("username"));
+        assertNotNull(authResult.getRequest().getParameter("password"));
     }
 
     @Test
@@ -329,9 +330,10 @@ public class AuthenticationFlowTest {
         ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig(TrustServicePolicy.GET_LOGIN_PROOF_RESULT, REJECTED);
 
         MvcResult authResult = getAuthResult("openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc", 
-                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", null, s -> "uri://" + s, null, "/ssi/login");
-        HttpSession session = authResult.getRequest().getSession(false);
-        assertEquals("loginRejected", session.getAttribute("AUTH_ERROR"));
+                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", null, s -> "uri://" + s, null, 
+                "/ssi/login?error=login_rejected");
+        assertNotNull(authResult.getRequest().getParameter("username"));
+        assertNotNull(authResult.getRequest().getParameter("password"));
     }
 
     @Test
@@ -352,7 +354,7 @@ public class AuthenticationFlowTest {
             // Redirecting to http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint?error=request_not_supported
             assertTrue(ex.getCause() instanceof AccessDeniedException);
         }
-    }    
+    }
     
     @Test
     void testSiopCallbackError() throws Exception {
@@ -360,9 +362,18 @@ public class AuthenticationFlowTest {
         MvcResult authResult = getAuthResult("openid", "QfjgI5XxMjNkvUU2f9sWQymGfKoaBr7Ro2jHprmBZrg.VTxL7FGKhi0.demo-app", "code", "aas-app-siop", 
                 keycloakUri + "/realms/gaia-x/broker/ssi-siop/endpoint", "Q5h3noccV6Hwb4pVHps41A", "SIOP", null, rid -> 
                     "openid://?scope=openid&response_type=id_token&client_id=" + serverProps.getBaseUrl() + "&redirect_uri=" + serverProps.getBaseUrl() + 
-                    "/ssi/siop-callback&response_mode=post&nonce=" + rid, null, "/ssi/login");
+                    "/ssi/siop-callback&response_mode=post&nonce=" + rid, null, "/ssi/login?error=server_error");
         String requestId = authResult.getRequest().getParameter("username"); 
         HttpSession session = authResult.getRequest().getSession(false);
+        String reUrl = authResult.getResponse().getHeader("Location");
+        
+        // get /ssi/login and check error presence..
+        authResult = mockMvc
+                .perform(get(reUrl) 
+                        .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
+                        .cookie(new Cookie("JSESSIONID", session.getId())).session((MockHttpSession) session))
+                .andExpect(status().isOk()).andReturn();
+        assertEquals("server_error", (String) authResult.getModelAndView().getModel().get("errorMessage"));
         
         mockMvc.perform(
                     post("/ssi/siop-callback")
@@ -372,14 +383,12 @@ public class AuthenticationFlowTest {
                 .andExpect(status().isOk())
                 .andReturn();
 
-        // get /ssi/login and check error presence..
-         authResult = mockMvc
-                .perform(get("/ssi/login")
+        authResult = mockMvc
+                .perform(get("/ssi/login?error=invalid_request")
                         .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
                         .cookie(new Cookie("JSESSIONID", session.getId())).session((MockHttpSession) session))
                 .andExpect(status().isOk()).andReturn();
-        session = authResult.getRequest().getSession(false);
-        assertEquals("loginFailed", session.getAttribute("AUTH_ERROR"));
+        assertEquals("invalid_request", (String) authResult.getModelAndView().getModel().get("errorMessage"));
         
         Map<String, Object> params = new HashMap<>();
         params.put("iss", "https://self-issued.me/v2");

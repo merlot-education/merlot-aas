@@ -1,5 +1,8 @@
 package eu.gaiax.difs.aas.service;
 
+import static org.springframework.security.oauth2.core.OAuth2ErrorCodes.INVALID_REQUEST;
+import static org.springframework.security.oauth2.core.OAuth2ErrorCodes.INVALID_SCOPE;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.text.ParseException;
@@ -185,7 +188,7 @@ public class SsiBrokerService extends SsiClaimsService {
             String subject = (String) response.get("sub");
             // should be the same..
             if (!issuer.equals(subject)) {
-                log.warn("processSiopLoginResponse; issuer and subject have different values");
+                log.info("processSiopLoginResponse; issuer and subject have different values");
             }
                 
             try {
@@ -196,8 +199,7 @@ public class SsiBrokerService extends SsiClaimsService {
             }
         }
         addAuthData(requestId, response);
-        // check response?
-        //log.debug("processSiopLoginResponse.exit; returning: {}", result);
+        log.debug("processSiopLoginResponse.exit; error processed: {}", error != null);
     }
     
     private Map<String, Object> initAuthRequest(String requestId, Set<String> scopes, String authType) {
@@ -229,7 +231,7 @@ public class SsiBrokerService extends SsiClaimsService {
     }
     
     private boolean addAuthData(String requestId, Map<String, Object> data) {
-        log.debug("addAuthData.enter; got request: {} data: {}", requestId, data);
+        log.debug("addAuthData.enter; got request: {} claims size: {}", requestId, data.size());
         boolean result = true;
         Map<String, Object> request = authCache.get(requestId);
         if (request == null) {
@@ -239,7 +241,7 @@ public class SsiBrokerService extends SsiClaimsService {
             data.putAll(request);
         }
         authCache.put(requestId, data);
-        log.debug("addAuthData.exit; stored: {}, returning: {}", data, result);
+        log.debug("addAuthData.exit; returning: {}, stored claims: {}", result, data.size());
         return result;
     }
 
@@ -317,13 +319,13 @@ public class SsiBrokerService extends SsiClaimsService {
         Map<String, Object> userClaims = authCache.get(requestId);
         if (userClaims == null) {
             log.warn("getUserScopes; no claims found for request: {}", requestId);
-            throw new OAuth2AuthenticationException("loginFailed");
+            throw new OAuth2AuthenticationException(INVALID_REQUEST);
         }
         
         Set<String> scopes = (Set<String>) userClaims.get("scope");
         if (scopes == null) {
             log.warn("getUserScopes; no scopes found for request: {}", requestId);
-            throw new OAuth2AuthenticationException("loginFailed");
+            throw new OAuth2AuthenticationException(INVALID_SCOPE);
         }
 
         //Map<String, String> claims = scopeProperties.getScopes().entrySet().stream().map(e -> e.getValue())
