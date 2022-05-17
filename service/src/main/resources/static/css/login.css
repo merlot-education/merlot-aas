@@ -220,6 +220,10 @@ body {
     margin-left: auto;
 }
 
+.display-language-component {
+    text-decoration: underline;
+}
+
 .display-language-component:hover {
     text-decoration: underline;
     text-decoration-line: underline;
