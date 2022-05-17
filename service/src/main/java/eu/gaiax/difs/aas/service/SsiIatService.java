@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -54,8 +55,7 @@ public class SsiIatService extends SsiClaimsService {
     private Map<String, Object> iatRequestToMap(AccessRequestDto request) {
         Map<String, Object> map = new HashMap<>();
         Set<String> scopes = new HashSet<>();
-        scopes.add("openid");
-        scopes.add(request.getEntity().getScope());
+        Arrays.stream(request.getEntity().getScope().split(" ")).forEach(s -> scopes.add(s));
         map.put("scope", scopes);
         map.put("sub", request.getEntity().getDid());
         map.put("iss", request.getSubject());

@@ -112,7 +112,6 @@ public class SsiBrokerService extends SsiClaimsService {
 
     private Set<String> processScopes(Model model) {
         Set<String> scopes = new HashSet<>();
-        //scopes.add("openid");
         Object o = model.getAttribute("scope");
         if (o != null) {
             Arrays.stream((String[]) o).forEach(s -> scopes.addAll(Arrays.asList(s.split(" "))));

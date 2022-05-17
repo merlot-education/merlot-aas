@@ -11,3 +11,4 @@ document.getElementById("Deutsch").addEventListener("click", () => translate("de
 document.getElementById("English").addEventListener("click", () => translate("en"));
 document.getElementById("Français").addEventListener("click", () => translate("fr"));
 document.getElementById("Русский").addEventListener("click", () => translate("ru"));
+document.getElementById("Slovensky").addEventListener("click", () => translate("sk"));
