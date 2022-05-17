@@ -42,19 +42,27 @@ public class SsiController {
     @GetMapping(value = "/login")
     public String login(HttpServletRequest request, Model model) {
         DefaultSavedRequest auth = (DefaultSavedRequest) request.getSession().getAttribute("SPRING_SECURITY_SAVED_REQUEST");
+        String lang = request.getParameter("lang");
+        Locale locale; 
+        if (lang == null) {
+            locale = (Locale) request.getSession().getAttribute("session.current.locale");
+            if (locale == null) {
+                locale = request.getLocale();
+            }
+        } else {
+            locale = Locale.forLanguageTag(lang);
+        }
+        
+        if (auth == null) {
+            log.debug("login; session attributes: {}", request.getSession().getAttributeNames());
+            model.addAttribute("errorMessage", getErrorMessage("sessionTimeout", locale));
+            return "login-template.html";
+        }
+        
         model.addAttribute("scope", auth.getParameterValues("scope"));
-
         String error = request.getParameter("error");
         if (error != null) {
-            //Locale locale = (Locale) request.getSession().getAttribute("session.current.locale");
-            //ResourceBundle resourceBundle = ResourceBundle.getBundle("language/messages", locale != null ? locale : Locale.getDefault());
-            ResourceBundle resourceBundle = ResourceBundle.getBundle("language/messages", request.getLocale());
-            try {
-                error = resourceBundle.getString(error);
-            } catch (Exception ex) {
-                log.warn("login.error; no resource found for error: {}", error);
-            }
-            model.addAttribute("errorMessage", error);
+            model.addAttribute("errorMessage", getErrorMessage(error, locale));
         }
 
         String[] clientId = auth.getParameterValues("client_id");
@@ -80,7 +88,17 @@ public class SsiController {
             return "login-template.html";
         }
 
-        throw new OAuth2AuthenticationException("unknown client: " + (clientId == null ? "null" : Arrays.toString(clientId)));
+        throw new OAuth2AuthenticationException("unknown client: " + (clientId == null ? null : Arrays.toString(clientId)));
+    }
+    
+    private String getErrorMessage(String errorCode, Locale locale) {
+        ResourceBundle resourceBundle = ResourceBundle.getBundle("language/messages", locale);
+        try {
+            return resourceBundle.getString(errorCode);
+        } catch (Exception ex) {
+            log.warn("login.error; no resource found for error: {}", errorCode);
+        }
+        return errorCode;
     }
 
     private String getSubject(String idToken) {
@@ -98,7 +116,6 @@ public class SsiController {
 
     @GetMapping(value = "/qr/{qrid}", produces = MediaType.IMAGE_PNG_VALUE)
     public ResponseEntity<byte[]> getQR(@PathVariable String qrid) {
-
         return ResponseEntity.ok(ssiBrokerService.getQR(qrid));
     }
 
