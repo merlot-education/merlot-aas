@@ -221,6 +221,7 @@ body {
 }
 
 .display-language-component:hover {
+    text-decoration: underline;
     text-decoration-line: underline;
     text-decoration-thickness: 1.1px;
     text-decoration-color: #737679;
@@ -229,7 +230,6 @@ body {
 
 .language-component:hover .locale-list {
     display: block;
-
 }
 
 .locale {
