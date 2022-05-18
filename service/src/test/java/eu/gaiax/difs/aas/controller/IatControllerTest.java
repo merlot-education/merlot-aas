@@ -166,12 +166,12 @@ public class IatControllerTest {
     void postRequest_correctRequest_200() throws Exception {
         AccessRequestDto requestDto = new AccessRequestDto()
                 .subject("testSubject")
-                .entity(new ServiceAccessScopeDto().scope("testScope").did("testDid"));
+                .entity(new ServiceAccessScopeDto().scope("profile testScope").did("testDid"));
         Map<String, Object> serviceResponse = Map.of("requestId", "responseRequestId");
         AccessResponseDto expectedResponse = new AccessResponseDto()
                 .requestId("responseRequestId")
                 .subject("testSubject")
-                .entity(new ServiceAccessScopeDto().scope("openid testScope").did("testDid"));
+                .entity(new ServiceAccessScopeDto().scope("profile testScope").did("testDid"));
 
         when(trustServiceClient.evaluate(eq(TrustServicePolicy.GET_IAT_PROOF_INVITATION), any())).thenReturn(serviceResponse);
 
