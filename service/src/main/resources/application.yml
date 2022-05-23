@@ -1,6 +1,7 @@
 server:
   host: auth-server
   port: 8090
+  schema: http
   servlet:
     session:
       timeout: 10m

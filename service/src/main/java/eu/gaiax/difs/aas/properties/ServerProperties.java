@@ -15,8 +15,11 @@ public class ServerProperties {
     private String serverHost;
     @Value("${server.port}")
     private String serverPort;
+    @Value("${server.schema}")
+    private String serverSchema;
 
     public String getBaseUrl() {
-        return (sslEnabled ? "https" : "http") + "://" + serverHost + ":" + serverPort;
+        //return (sslEnabled ? "https" : "http") + "://" + serverHost + ":" + serverPort;
+        return serverSchema + "://" + serverHost + ":" + serverPort;
     }
 }
