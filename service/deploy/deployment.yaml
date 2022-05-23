@@ -5,7 +5,7 @@ metadata:
   labels:
     app: auth-server
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: auth-server
@@ -24,18 +24,24 @@ spec:
           image: registry.gitlab.com/gaia-x/data-infrastructure-federation-services/authenticationauthorization/auth-service-image
           imagePullPolicy: Always
           env:
-            - name: "AAS_TSA_DURATION"
-              value: 100000
+            - name: AAS_TSA_DURATION
+              value: "100000"
+            - name: SPRING_PROFILES_ACTIVE
+              value: test-suite
+            - name: SERVER_HOST
+              value: 78.138.66.89
           ports:
             - name: "http"
               containerPort: 9000
             - name: "https"
               containerPort: 9443
+          resources: {}
+      restartPolicy: Always
 
-          readinessProbe:
-            httpGet:
-              path: "/ssi/qr/test"
-              port: 9000
+#          readinessProbe:
+#            httpGet:
+#              path: "/ssi/qr/test"
+#              port: 9000
 
 #        resources: {}
 #        terminationMessagePath: /dev/termination-log

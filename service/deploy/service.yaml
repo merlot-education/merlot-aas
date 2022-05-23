@@ -6,7 +6,12 @@ metadata:
     app: auth-server
 spec: 
   ports: 
-    - port: 53582
+#    - port: 53582
+    - name: "9000"
+      port: 9000
       targetPort: 9000
   selector: 
     app: auth-server
+  type: LoadBalancer
+#status:
+#  loadBalancer: {}
