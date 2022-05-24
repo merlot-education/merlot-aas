@@ -9,7 +9,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.text.ParseException;
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -29,8 +29,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
+import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
+import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
 import org.springframework.stereotype.Service;
-import org.springframework.ui.Model;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.google.zxing.BarcodeFormat;
@@ -63,64 +65,66 @@ public class SsiBrokerService extends SsiClaimsService {
         this.serverProperties = serverProperties;
     }
 
-    public Model oidcAuthorize(Model model) {
+    public void oidcAuthorize(Map<String, Object> model) {
         log.debug("oidcAuthorize.enter; got model: {}", model);
 
         Map<String, Object> params = new HashMap<>();
-        params.put("namespace", "Login");
+        params.put(TrustServiceClient.PN_NAMESPACE, TrustServiceClient.NS_LOGIN);
 
         Set<String> scopes = processScopes(model);
-        params.put("scope", scopes);
-
+        params.put(OAuth2ParameterNames.SCOPE, scopes);
+        
         // they can be provided in re-login scenario..
-        processAttribute(model, params, "sub");
+        processAttribute(model, params, IdTokenClaimNames.SUB);
         processAttribute(model, params, "max_age");
+        // check with local cache??
 
         Map<String, Object> result = trustServiceClient.evaluate(GET_LOGIN_PROOF_INVITATION, params);
-        String link = (String) result.get("link");
-        String requestId = (String) result.get("requestId");
-        Map<String, Object> data = initAuthRequest(requestId.toString(), scopes, "OIDC");
+        String link = (String) result.get(TrustServiceClient.PN_LINK);
+        String requestId = (String) result.get(TrustServiceClient.PN_REQUEST_ID);
+        Map<String, Object> data = initAuthRequest(requestId, scopes, "OIDC");
         log.debug("oidcAuthorize; OIDC request {} stored: {}", requestId, data);
 
         // encode link otherwise it'll not pass security check
         String qrUrl = "/ssi/qr/" + Base64.getUrlEncoder().encodeToString(link.getBytes());
-        model.addAttribute("qrUrl", qrUrl);
-        model.addAttribute("requestId", requestId);
-        model.addAttribute("loginType", "OIDC");
+        model.put("qrUrl", qrUrl);
+        model.put(TrustServiceClient.PN_REQUEST_ID, requestId);
+        model.put("loginType", "OIDC");
 
         log.debug("oidcAuthorize.exit; returning model: {}", model);
-        return model;
+        //return model;
     }
 
-    public Model siopAuthorize(Model model) {
+    public void siopAuthorize(Map<String, Object> model) {
         log.debug("siopAuthorize.enter; got model: {}", model);
 
         Set<String> scopes = processScopes(model);
 
         UUID requestId = UUID.randomUUID();
         String link = buildRequestString(scopes, requestId);
-        initAuthRequest(requestId.toString(), scopes, "SIOP");
+        Map<String, Object> data = initAuthRequest(requestId.toString(), scopes, "SIOP");
+        log.debug("siopAuthorize; SIOP request {} stored: {}", requestId, data);
         
         String qrUrl = "/ssi/qr/" + Base64.getUrlEncoder().encodeToString(link.getBytes());
-        model.addAttribute("qrUrl", qrUrl);
-        model.addAttribute("requestId", requestId);
-        model.addAttribute("loginType", "SIOP");
+        model.put("qrUrl", qrUrl);
+        model.put(TrustServiceClient.PN_REQUEST_ID, requestId);
+        model.put("loginType", "SIOP");
 
         log.debug("siopAuthorize.exit; returning model: {}", model);
-        return model;
+        //return model;
     }
 
-    private Set<String> processScopes(Model model) {
+    private Set<String> processScopes(Map<String, Object> model) {
         Set<String> scopes = new HashSet<>();
-        Object o = model.getAttribute("scope");
+        Object o = model.get(OAuth2ParameterNames.SCOPE);
         if (o != null) {
             Arrays.stream((String[]) o).forEach(s -> scopes.addAll(Arrays.asList(s.split(" "))));
         }
         return scopes;
     }
 
-    private void processAttribute(Model model, Map<String, Object> params, String attribute) {
-        Object o = model.getAttribute(attribute);
+    private void processAttribute(Map<String, Object> model, Map<String, Object> params, String attribute) {
+        Object o = model.get(attribute);
         if (o != null) {
             params.put(attribute, o);
         }
@@ -128,12 +132,12 @@ public class SsiBrokerService extends SsiClaimsService {
 
     private String buildRequestString(Set<String> scopes, UUID requestId) {
         List<String> params = new ArrayList<>();
-        params.add("scope=" + String.join(" ", scopes));
-        params.add("response_type=id_token");
-        params.add("client_id=" + serverProperties.getBaseUrl());
-        params.add("redirect_uri=" + serverProperties.getBaseUrl() + "/ssi/siop-callback");
+        params.add(OAuth2ParameterNames.SCOPE + "=" + String.join(" ", scopes));
+        params.add(OAuth2ParameterNames.RESPONSE_TYPE + "=" + OidcParameterNames.ID_TOKEN);
+        params.add(OAuth2ParameterNames.CLIENT_ID +  "=" + serverProperties.getBaseUrl());
+        params.add(OAuth2ParameterNames.REDIRECT_URI + "=" + serverProperties.getBaseUrl() + "/ssi/siop-callback");
         params.add("response_mode=post");
-        params.add("nonce=" + requestId);
+        params.add(OidcParameterNames.NONCE + "=" + requestId);
         return "openid://?" + String.join("&", params);
     }
 
@@ -160,18 +164,18 @@ public class SsiBrokerService extends SsiClaimsService {
 
     public void processSiopLoginResponse(Map<String, Object> response) {
         log.debug("processSiopLoginResponse.enter; got response: {}", response);
-        String requestId = (String) response.get("nonce");
+        String requestId = (String) response.get(IdTokenClaimNames.NONCE);
         if (requestId == null || !isValidRequest(requestId)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_response: invalid nonce"); 
         } 
         
-        String error = (String) response.get("error");
+        String error = (String) response.get(OAuth2ParameterNames.ERROR);
         if (error == null) {
-            Set<String> requestedScopes = (Set<String>) authCache.get(requestId).get("scope");
+            Set<String> requestedScopes = (Set<String>) authCache.get(requestId).get(OAuth2ParameterNames.SCOPE);
             Set<String> requestedClaims = scopeProperties.getScopes().entrySet().stream()
                     .filter(e -> requestedScopes.contains(e.getKey())).flatMap(e -> e.getValue().stream()).collect(Collectors.toSet());
             // special handling for auth_time..
-            requestedClaims.remove("auth_time");
+            requestedClaims.remove(IdTokenClaimNames.AUTH_TIME);
             
             DefaultJWTClaimsVerifier<?> verifier = new DefaultJWTClaimsVerifier<>(new JWTClaimsSet.Builder()
                 .issuer(idTokenIssuer)
@@ -184,8 +188,8 @@ public class SsiBrokerService extends SsiClaimsService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_response: " + ex.getMessage()); 
             }
                 
-            String issuer = (String) response.get("iss");
-            String subject = (String) response.get("sub");
+            String issuer = (String) response.get(IdTokenClaimNames.ISS);
+            String subject = (String) response.get(IdTokenClaimNames.SUB);
             // should be the same..
             if (!issuer.equals(subject)) {
                 log.info("processSiopLoginResponse; issuer and subject have different values");
@@ -204,8 +208,8 @@ public class SsiBrokerService extends SsiClaimsService {
     
     private Map<String, Object> initAuthRequest(String requestId, Set<String> scopes, String authType) {
         Map<String, Object> data = new HashMap<>();
-        data.put("request_time", LocalDateTime.now());
-        data.put("scope", scopes);
+        data.put("request_time", Instant.now());
+        data.put(OAuth2ParameterNames.SCOPE, scopes);
         data.put("auth_type", authType);
         Map<String, Object> existing = authCache.put(requestId, data);
         if (existing != null) {
@@ -248,40 +252,28 @@ public class SsiBrokerService extends SsiClaimsService {
     private boolean isValidRequest(String requestId) {
         Map<String, Object> request = authCache.get(requestId);
         return request != null && //(request.get("sub") != null || request.get("error") != null) &&
-                ((LocalDateTime) request.get("request_time")).isAfter(LocalDateTime.now().minus(clockSkew));
+                ((Instant) request.get("request_time")).isAfter(Instant.now().minus(clockSkew));
     }
     
-    public Map<String, Object> getSubjectClaims(String subjectId, boolean required, Map<String, Object> params) {
-        log.debug("getSubjectClaims.enter; got subject: {}, required: {}", subjectId, required);
-        Map<String, Object> claims = getUserClaims(subjectId, required);
-        if (required) {
-            // claims override params
-            if (claims != null) {
-                params.putAll(claims);
-            }
-            claims = params;
-        } else {
-            // params override claims
-            if (claims == null) {
-                claims = params;
-            } else {
-                claims.putAll(params);
-            }
+    public Map<String, Object> getSubjectClaims(String subjectId, Collection<String> requestedScopes) {
+        log.debug("getSubjectClaims.enter; got subject: {}, scopes: {}", subjectId, requestedScopes);
+        Map<String, Object> userClaims;
+        try {
+            userClaims = getUserClaims(subjectId, true, requestedScopes, null);
+        } catch (OAuth2AuthenticationException ex) {
+            userClaims = new HashMap<>();
+            userClaims.put(OAuth2ParameterNames.SCOPE, requestedScopes.toArray(new String[0]));
+            userClaims.put(IdTokenClaimNames.SUB, subjectId);
+            oidcAuthorize(userClaims);
+            String qrUrl = (String) userClaims.remove("qrUrl");
+            qrUrl = qrUrl.substring(8); // remove /ssi/qr/ prefix
+            String link = new String(Base64.getUrlDecoder().decode(qrUrl));
+            userClaims.put(TrustServiceClient.PN_LINK, link);
         }
-        log.debug("getSubjectClaims.exit; returning: {}", claims == null ? null : claims.size());
-        return claims;
+        log.debug("getSubjectClaims.exit; returning: {}", userClaims == null ? null : userClaims.size());
+        return userClaims;
     }
 
-    public Map<String, Object> getUserClaims(String requestId, boolean required, Collection<String> requestedClaims) {
-        Map<String, Object> userClaims = getUserClaims(requestId, required);
-        if (userClaims == null) {
-            return null;
-        }
-        
-        return userClaims.entrySet().stream()
-                .filter(e -> e.getValue() != null && requestedClaims.contains(e.getKey())).collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
-    }
-    
     public Map<String, Object> getUserClaims(String requestId, boolean required, Collection<String> requestedScopes, Collection<String> requestedClaims) {
         Map<String, Object> userClaims = getUserClaims(requestId, required);
         if (userClaims == null) {
@@ -289,10 +281,18 @@ public class SsiBrokerService extends SsiClaimsService {
         }
         
         // return claims which corresponds to requested scopes only..
-        Set<String> scopedClaims = scopeProperties.getScopes().entrySet().stream()
+        Set<String> scopedClaims;
+        if (requestedScopes == null) {
+            scopedClaims = new HashSet<>();
+        } else {
+            scopedClaims = scopeProperties.getScopes().entrySet().stream()
                 .filter(e -> requestedScopes.contains(e.getKey())).flatMap(e -> e.getValue().stream()).collect(Collectors.toSet());
+        }
+        if (requestedClaims != null) {
+            scopedClaims.addAll(requestedClaims);
+        }
         return userClaims.entrySet().stream()
-                .filter(e -> e.getValue() != null && (scopedClaims.contains(e.getKey()) || requestedClaims.contains(e.getKey())))
+                .filter(e -> e.getValue() != null && scopedClaims.contains(e.getKey()))
                 .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
     }
     
@@ -304,7 +304,7 @@ public class SsiBrokerService extends SsiClaimsService {
                 userClaims = loadTrustedClaims(GET_LOGIN_PROOF_RESULT, requestId);
                 addAuthData(requestId, userClaims);
             }
-        } else if (!userClaims.containsKey("sub") && !userClaims.containsKey("error")) {
+        } else if (!userClaims.containsKey(IdTokenClaimNames.SUB) && !userClaims.containsKey(OAuth2ParameterNames.ERROR)) {
             if (required) {
                 userClaims = loadTrustedClaims(GET_LOGIN_PROOF_RESULT, requestId);
                 addAuthData(requestId, userClaims);
@@ -322,7 +322,7 @@ public class SsiBrokerService extends SsiClaimsService {
             throw new OAuth2AuthenticationException(INVALID_REQUEST);
         }
         
-        Set<String> scopes = (Set<String>) userClaims.get("scope");
+        Set<String> scopes = (Set<String>) userClaims.get(OAuth2ParameterNames.SCOPE);
         if (scopes == null) {
             log.warn("getUserScopes; no scopes found for request: {}", requestId);
             throw new OAuth2AuthenticationException(INVALID_SCOPE);

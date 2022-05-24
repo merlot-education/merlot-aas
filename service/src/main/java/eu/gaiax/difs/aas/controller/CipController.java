@@ -1,8 +1,11 @@
 package eu.gaiax.difs.aas.controller;
 
+import java.util.Arrays;
 import java.util.Map;
 
 import org.springframework.http.MediaType;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
+import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,14 +22,14 @@ public class CipController {
 
     private final SsiBrokerService ssiBrokerService;
 
+    // this method can be used for asynch ssi authentication too..  
+
     @ResponseBody
     @GetMapping(value = "/claims", produces = MediaType.APPLICATION_JSON_VALUE)
     public Map<String, Object> getClaims(@RequestParam Map<String, Object> params) { 
-        String subject = (String) params.remove("sub");
-        String required = (String) params.remove("req");
-        return ssiBrokerService.getSubjectClaims(subject, required == null ? false : Boolean.parseBoolean(required), params);
+        String subject = (String) params.remove(IdTokenClaimNames.SUB);
+        String scope = (String) params.remove(OAuth2ParameterNames.SCOPE);
+        return ssiBrokerService.getSubjectClaims(subject, Arrays.asList(scope.split(" ")));
     }
-    
-    // maybe will expose one more method to return claims after additional ssi authorization..  
-    
+
 }

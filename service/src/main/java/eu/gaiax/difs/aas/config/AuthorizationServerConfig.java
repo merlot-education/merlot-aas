@@ -58,7 +58,6 @@ import org.springframework.security.oauth2.server.authorization.config.ProviderS
 import org.springframework.security.oauth2.server.authorization.config.TokenSettings;
 import org.springframework.security.oauth2.server.authorization.oidc.web.OidcProviderConfigurationEndpointFilter;
 import org.springframework.security.oauth2.server.authorization.oidc.web.OidcUserInfoEndpointFilter;
-import org.springframework.security.oauth2.server.authorization.web.OAuth2AuthorizationEndpointFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.security.web.util.matcher.RequestMatcher;
@@ -84,7 +83,11 @@ public class AuthorizationServerConfig {
 
     @Value("${aas.iam.ttl}")
     private Duration ttl;
-
+    @Value("${aas.jwk.length}")
+    private int jwkLength;
+    @Value("${aas.jwk.secret}")
+    private String jwkSecret;
+    
     private final ScopeProperties scopeProperties;
     private final ClientsProperties clientsProperties;
     private final ServerProperties serverProperties;
@@ -189,9 +192,9 @@ public class AuthorizationServerConfig {
     
     @Bean
     public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) throws JOSEException {
-        //JWKSource<SecurityContext> jwkSource = jwkSource();
         JWK jwk = jwkSource.get(new JWKSelector(new JWKMatcher.Builder().build()), null).get(0);
-        OAuth2TokenValidator<Jwt> jwtValidator = JwtValidators.createDefault(); //WithIssuer(serverProps.getBaseUrl());
+        //OAuth2TokenValidator<Jwt> jwtValidator = JwtValidators.createDefault(); 
+        OAuth2TokenValidator<Jwt> jwtValidator = JwtValidators.createDefaultWithIssuer(serverProperties.getBaseUrl());
         RSAPublicKey publicKey = jwk.toRSAKey().toRSAPublicKey();
         NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withPublicKey(publicKey).build();
         jwtDecoder.setJwtValidator(jwtValidator);
@@ -205,20 +208,20 @@ public class AuthorizationServerConfig {
         return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
     }
 
-    private static RSAKey generateRsa() {
+    private RSAKey generateRsa() {
         KeyPair keyPair = generateRsaKey();
         RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
         RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
         return new RSAKey.Builder(publicKey)
                 .privateKey(privateKey)
-                .keyID(UUID.randomUUID().toString())
+                .keyID(jwkSecret)
                 .build();
     }
 
-    private static KeyPair generateRsaKey() {
+    private KeyPair generateRsaKey() {
         try {
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-            keyPairGenerator.initialize(3072);
+            keyPairGenerator.initialize(jwkLength);
             return keyPairGenerator.generateKeyPair();
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
