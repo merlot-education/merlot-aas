@@ -3,8 +3,7 @@ package eu.gaiax.difs.aas.service;
 import static eu.gaiax.difs.aas.model.SsiAuthErrorCodes.*;
 import static org.springframework.security.oauth2.core.OAuth2ErrorCodes.SERVER_ERROR;
 
-import java.time.LocalTime;
-import java.util.Collections;
+import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -28,13 +27,11 @@ public abstract class SsiClaimsService {
     }
     
     protected Map<String, Object> loadTrustedClaims(String policy, String requestId) {
-        LocalTime requestingStart = LocalTime.now();
-        LocalTime durationRestriction = requestingStart.plusNanos(1_000_000 * requestingDuration);
+        Instant finish = Instant.now().plusNanos(1_000_000 * requestingDuration);
+        while (Instant.now().isBefore(finish)) {
+            Map<String, Object> evaluation = trustServiceClient.evaluate(policy, Map.of(TrustServiceClient.PN_REQUEST_ID, requestId));
 
-        while (LocalTime.now().isBefore(durationRestriction)) {
-            Map<String, Object> evaluation = trustServiceClient.evaluate(policy, Collections.singletonMap("requestId", requestId));
-
-            Object o = evaluation.get("status");
+            Object o = evaluation.get(TrustServiceClient.PN_STATUS);
             if (o == null || !(o instanceof AccessRequestStatusDto)) {
                 //log.error("loadTrustedClaims; unknown response status: {}", o);
                 throw new OAuth2AuthenticationException(SERVER_ERROR);

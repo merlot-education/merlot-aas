@@ -39,12 +39,10 @@ public class IatControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
-
     @MockBean
-    TrustServiceClient trustServiceClient;
-
+    private TrustServiceClient trustServiceClient;
     @MockBean
-    IamClient iamClient;
+    private IamClient iamClient;
 
     @Test
     void getRequest_missingRequestId_404() throws Exception {

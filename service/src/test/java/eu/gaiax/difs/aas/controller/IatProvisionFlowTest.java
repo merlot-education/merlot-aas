@@ -50,7 +50,7 @@ public class IatProvisionFlowTest {
     private TrustServiceClient trustServiceClient;
 
     @MockBean
-    IamClient iamClient;
+    private IamClient iamClient;
 
     @Test
     public void testIatRequestFlow() throws Exception {

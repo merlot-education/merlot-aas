@@ -13,7 +13,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
+import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
 import org.springframework.security.web.savedrequest.DefaultSavedRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -59,13 +61,13 @@ public class SsiController {
             return "login-template.html";
         }
         
-        model.addAttribute("scope", auth.getParameterValues("scope"));
-        String error = request.getParameter("error");
+        model.addAttribute(OAuth2ParameterNames.SCOPE, auth.getParameterValues(OAuth2ParameterNames.SCOPE));
+        String error = request.getParameter(OAuth2ParameterNames.ERROR);
         if (error != null) {
             model.addAttribute("errorMessage", getErrorMessage(error, locale));
         }
 
-        String[] clientId = auth.getParameterValues("client_id");
+        String[] clientId = auth.getParameterValues(OAuth2ParameterNames.CLIENT_ID);
         if (clientId != null && clientId.length > 0) {
             if ("aas-app-oidc".equals(clientId[0])) {
                 String[] age = auth.getParameterValues("max_age");
@@ -77,13 +79,13 @@ public class SsiController {
                 if (hint != null && hint.length > 0) {
                     String sub = getSubject(hint[0]);
                     if (sub != null) {
-                        model.addAttribute("sub", sub);
+                        model.addAttribute(IdTokenClaimNames.SUB, sub);
                     }
                 }
 
-                ssiBrokerService.oidcAuthorize(model);
+                ssiBrokerService.oidcAuthorize(model.asMap());
             } else if ("aas-app-siop".equals(clientId[0])) {
-                ssiBrokerService.siopAuthorize(model);
+                ssiBrokerService.siopAuthorize(model.asMap());
             }
             return "login-template.html";
         }
@@ -125,18 +127,18 @@ public class SsiController {
 
         String error;
         Map<String, Object> claims;
-        String idToken = (String) body.getFirst("id_token");
+        String idToken = (String) body.getFirst(OidcParameterNames.ID_TOKEN);
         if (idToken == null) {
-            error = (String) body.getFirst("error");
-            String desc = (String) body.getFirst("error_description");
+            error = (String) body.getFirst(OAuth2ParameterNames.ERROR);
+            String desc = (String) body.getFirst(OAuth2ParameterNames.ERROR_DESCRIPTION);
             if (error != null || desc != null) {
                 claims = new HashMap<>();
-                claims.put("error", String.join(": ", error, desc));
-                String nonce = (String) body.getFirst("nonce");
+                claims.put(OAuth2ParameterNames.ERROR, String.join(": ", error, desc));
+                String nonce = (String) body.getFirst(OidcParameterNames.NONCE);
                 if (nonce == null) {
-                    nonce = (String) body.getFirst("state");
+                    nonce = (String) body.getFirst(OAuth2ParameterNames.STATE);
                 }
-                claims.put("nonce", nonce);
+                claims.put(OidcParameterNames.NONCE, nonce);
             } else {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_response: no id_token nor error provided"); 
             }

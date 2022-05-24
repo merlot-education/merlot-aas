@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.server.authorization.oidc.authentication.OidcUserInfoAuthenticationToken;
 import org.springframework.security.oauth2.server.resource.BearerTokenAuthenticationToken;
@@ -46,8 +47,8 @@ public class SsiAuthManager implements AuthenticationManager {
             if (userInfo != null) {
                 additionalClaims.addAll(userInfo.keySet());
             }
-            if (additionalParams.get("auth_time") != null || additionalParams.get("max_age") != null) {
-                additionalClaims.add("auth_time");
+            if (additionalParams.get(IdTokenClaimNames.AUTH_TIME) != null || additionalParams.get("max_age") != null) {
+                additionalClaims.add(IdTokenClaimNames.AUTH_TIME);
                 needAuthTime = true;
             }
         } else {
@@ -59,7 +60,7 @@ public class SsiAuthManager implements AuthenticationManager {
         Map<String, Object> userDetails = ssiBrokerService.getUserClaims(requestId, false, scopes, additionalClaims); //required?
         if (userDetails != null) {
             for (Map.Entry<String, Object> e: userDetails.entrySet()) {
-                if (!"auth_time".equals(e.getKey()) || needAuthTime) {
+                if (!IdTokenClaimNames.AUTH_TIME.equals(e.getKey()) || needAuthTime) {
                     uiBuilder.claim(e.getKey(), e.getValue());
                     cnt++;
                 }

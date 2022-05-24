@@ -13,6 +13,8 @@ import eu.gaiax.difs.aas.properties.ClientsProperties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
+import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -29,6 +31,7 @@ import java.util.stream.Collectors;
 public class SsiIatService extends SsiClaimsService {
 
     private static final Logger log = LoggerFactory.getLogger(SsiIatService.class);
+    private static final String PN_TOKEN = "registration_access_token";
 
     private final Map<String, Map<String, Object>> iatCache = new ConcurrentHashMap<>();
     
@@ -45,7 +48,7 @@ public class SsiIatService extends SsiClaimsService {
         log.debug("evaluateIatProofInvitation.enter; got request: {}", accessRequestDto);
         Map<String, Object> evalRequest = iatRequestToMap(accessRequestDto);
         Map<String, Object> evalResponse = trustServiceClient.evaluate(GET_IAT_PROOF_INVITATION, evalRequest);
-        String requestId = (String) evalResponse.get("requestId");
+        String requestId = (String) evalResponse.get(TrustServiceClient.PN_REQUEST_ID);
         initIatRequest(requestId.toString(), evalRequest);
         AccessResponseDto accessResponseDto = mapToIatAccessResponse(evalResponse);
         log.debug("evaluateIatProofInvitation.exit; returning: {}", accessResponseDto);
@@ -56,10 +59,10 @@ public class SsiIatService extends SsiClaimsService {
         Map<String, Object> map = new HashMap<>();
         Set<String> scopes = new HashSet<>();
         Arrays.stream(request.getEntity().getScope().split(" ")).forEach(s -> scopes.add(s));
-        map.put("scope", scopes);
-        map.put("sub", request.getEntity().getDid());
-        map.put("iss", request.getSubject());
-        map.put("namespace", "Access");
+        map.put(OAuth2ParameterNames.SCOPE, scopes);
+        map.put(IdTokenClaimNames.SUB, request.getEntity().getDid());
+        map.put(IdTokenClaimNames.ISS, request.getSubject());
+        map.put(TrustServiceClient.PN_NAMESPACE, TrustServiceClient.NS_ACCESS);
         return map;
     }
     
@@ -69,13 +72,13 @@ public class SsiIatService extends SsiClaimsService {
 
     public AccessResponseDto evaluateIatProofResult(String requestId) {
         log.debug("evaluateIatProofResult.enter; got request: {}", requestId);
-        Map<String, Object> evalRequest =  Collections.singletonMap("requestId", requestId);
+        Map<String, Object> evalRequest =  Collections.singletonMap(TrustServiceClient.PN_REQUEST_ID, requestId);
         Map<String, Object> evalResponse = trustServiceClient.evaluate(GET_IAT_PROOF_RESULT, evalRequest);
         AccessResponseDto accessResponseDto = mapToIatAccessResponse(evalResponse);
 
         if (accessResponseDto.getStatus() == AccessRequestStatusDto.ACCEPTED) {
             Map<String, Object> regResponse = iamClient.registerIam(accessResponseDto.getSubject(), List.of(clientsProperties.getOidc().getRedirectUri()));
-            String iat = (String) regResponse.get("registration_access_token");
+            String iat = (String) regResponse.get(PN_TOKEN);
             accessResponseDto.setInitialAccessToken(iat);
         }
         log.debug("evaluateIatProofResult.exit; returning: {}", accessResponseDto);
@@ -90,23 +93,15 @@ public class SsiIatService extends SsiClaimsService {
             iatClaims = loadTrustedClaims(GET_IAT_PROOF_RESULT, requestId);
             //addAuthData(requestId, iatClaims);
             Map<String, Object> regResponse = iamClient.registerIam(accessResponseDto.getSubject(), List.of(clientsProperties.getOidc().getRedirectUri()));
-            String iat = (String) regResponse.get("registration_access_token");
+            String iat = (String) regResponse.get(PN_TOKEN);
             accessResponseDto.setInitialAccessToken(iat);
         }
         log.debug("getIatProofResult.exit; returning: {}", accessResponseDto);
         return accessResponseDto;
     }
     
-// got registration response: {redirect_uris=[http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint], 
-// token_endpoint_auth_method=client_secret_basic, grant_types=[authorization_code], response_types=[code, none], client_id=557bdca7-0b49-477b-bc67-f9d81a82a245, 
-// client_secret=NyAun7G2Htuz2EuSSsvoXetOi2FqjRO1, client_name=http://auth-server:9000, scope=address phone offline_access microprofile-jwt, subject_type=public, 
-// request_uris=[], tls_client_certificate_bound_access_tokens=false, client_id_issued_at=1652273791, client_secret_expires_at=0, 
-// registration_client_uri=http://key-server:8080/realms/gaia-x/clients-registrations/openid-connect/557bdca7-0b49-477b-bc67-f9d81a82a245, 
-// registration_access_token=eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJmMGUzNzY0Mi0zYWIzLTQ2NWItODcyYi1kNmZkMTljOTcwOWQifQ.eyJleHAiOjAsImlhdCI6MTY1MjI3Mzc5MSwianRpIjoiZmUxMmUwMmItNGZlOC00ZTg5LWExMzUtMjY4ZGYzZjNiZDNhIiwiaXNzIjoiaHR0cDovL2tleS1zZXJ2ZXI6ODA4MC9yZWFsbXMvZ2FpYS14IiwiYXVkIjoiaHR0cDovL2tleS1zZXJ2ZXI6ODA4MC9yZWFsbXMvZ2FpYS14IiwidHlwIjoiUmVnaXN0cmF0aW9uQWNjZXNzVG9rZW4iLCJyZWdpc3RyYXRpb25fYXV0aCI6ImF1dGhlbnRpY2F0ZWQifQ.JxLgfxoDY62FLP6A58JA1arPF2tB1yQO6w0iPhD8Txw, 
-// backchannel_logout_session_required=false, require_pushed_authorization_requests=false}
-    
     private AccessResponseDto mapToIatAccessResponse(Map<String, Object> map) {
-        String requestId = (String) map.get("requestId");
+        String requestId = (String) map.get(TrustServiceClient.PN_REQUEST_ID);
         if (requestId == null) {
             // throw error?
             log.info("mapToIatAccessResponse; no requestId found in IAT response: {}", map);
@@ -120,9 +115,9 @@ public class SsiIatService extends SsiClaimsService {
         if (iatRequest == null) {
             log.info("mapToIatAccessResponse; no data found for requestId: {}", requestId);
         } else {
-            entity = (String) iatRequest.get("iss");
-            subject = (String) iatRequest.get("sub");
-            scopes = (Set<String>) iatRequest.get("scope");
+            entity = (String) iatRequest.get(IdTokenClaimNames.ISS);
+            subject = (String) iatRequest.get(IdTokenClaimNames.SUB);
+            scopes = (Set<String>) iatRequest.get(OAuth2ParameterNames.SCOPE);
         }
         // update request with new data?
         // remove request after acceptance?
@@ -131,7 +126,7 @@ public class SsiIatService extends SsiClaimsService {
                 .entity(new ServiceAccessScopeDto()
                         .scope(scopes == null ? null : scopes.stream().collect(Collectors.joining(" ")))
                         .did(subject)) 
-                .status((AccessRequestStatusDto) map.getOrDefault("status", null))
+                .status((AccessRequestStatusDto) map.getOrDefault(TrustServiceClient.PN_STATUS, null))
                 .requestId(requestId);
                 //.initialAccessToken((String) map.getOrDefault("iat", null))
                 //.policyEvaluationResult(map.getOrDefault("policyEvaluationResult", null));

@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Base64;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Locale;
@@ -45,6 +46,8 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
+import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
+import org.springframework.security.oauth2.core.oidc.StandardClaimNames;
 import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
@@ -85,7 +88,7 @@ public class AuthenticationFlowTest {
     @Autowired
     private MockMvc mockMvc;
     @Autowired
-    protected ObjectMapper mapper;
+    private ObjectMapper mapper;
     @Autowired
     private TrustServiceClient trustServiceClient;
 
@@ -98,48 +101,46 @@ public class AuthenticationFlowTest {
                 keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", "secret", null, s -> "uri://" + s, null);
 
         // check claims..
-        assertNotNull(claims.get("iss"));
-        assertNotNull(claims.get("sub"));
-        assertNull(claims.get("auth_time"));
-        assertNull(claims.get("name"));
-        assertNull(claims.get("given_name"));
-        assertNull(claims.get("family_name"));
-        assertNull(claims.get("middle_name"));
-        assertNull(claims.get("preferred_username"));
-        assertNull(claims.get("gender"));
-        assertNull(claims.get("birthdate"));
-        assertNull(claims.get("updated_at"));
-        assertNull(claims.get("email"));
-        assertNull(claims.get("email_verified"));
-/*
-        //Map.of("max_age", 1), 
-        // now test session evaluation..
-        MvcResult result = mockMvc.perform(
-                        get("/oauth2/authorize?scope={scope}&state={state}&response_type={type}&client_id={id}&redirect_uri={uri}&nonce={nonce}" +
-                                        "&max_age={age}&id_token_hint={hint}",
-                                "openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc",
-                                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "1", idToken)
-                                .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML) // must re-login??
-                        //.session((MockHttpSession) session)
-                )
-                .andExpect(status().is3xxRedirection())
-                .andExpect(header().string("Location", containsString("/ssi/login")))
-                .andReturn();
+        assertNotNull(claims.get(IdTokenClaimNames.ISS));
+        assertNotNull(claims.get(IdTokenClaimNames.SUB));
+        assertNull(claims.get(IdTokenClaimNames.AUTH_TIME));
+        assertNull(claims.get(StandardClaimNames.NAME));
+        assertNull(claims.get(StandardClaimNames.GIVEN_NAME));
+        assertNull(claims.get(StandardClaimNames.FAMILY_NAME));
+        assertNull(claims.get(StandardClaimNames.MIDDLE_NAME));
+        assertNull(claims.get(StandardClaimNames.PREFERRED_USERNAME));
+        assertNull(claims.get(StandardClaimNames.GENDER));
+        assertNull(claims.get(StandardClaimNames.BIRTHDATE));
+        assertNull(claims.get(StandardClaimNames.UPDATED_AT));
+        assertNull(claims.get(StandardClaimNames.EMAIL));
+        assertNull(claims.get(StandardClaimNames.EMAIL_VERIFIED));
 
-        HttpSession session = result.getRequest().getSession(false);
-
-        mockMvc.perform(
-                        get("/ssi/login")
-                                .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
-                                .session((MockHttpSession) session))
-                .andExpect(status().isOk())
-                .andReturn();
-*/
-        Map<String, Object> userInfo = getUserInfo((String) claims.get("access_token"));
-        assertEquals(claims.get("iss"), userInfo.get("iss"));
-        assertEquals(claims.get("sub"), userInfo.get("sub"));
+        Map<String, Object> userInfo = getUserInfo((String) claims.get(OAuth2ParameterNames.ACCESS_TOKEN));
+        assertEquals(claims.get(IdTokenClaimNames.ISS), userInfo.get(IdTokenClaimNames.ISS));
+        assertEquals(claims.get(IdTokenClaimNames.SUB), userInfo.get(IdTokenClaimNames.SUB));
     }
 
+    @Test
+    void testOidcLoginHint() throws Exception {
+
+        ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig(TrustServicePolicy.GET_LOGIN_PROOF_RESULT, ACCEPTED);
+
+        Map<String, Object> claims = getAuthClaims("openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc",
+                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", "secret", null, s -> "uri://" + s, null);
+
+        String token = (String) claims.get(OAuth2ParameterNames.ACCESS_TOKEN);
+
+        Map<String, Object> claims2 = getAuthClaims("openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc",
+                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", "secret", Map.of("max_age", 10, "id_token_hint", token), 
+                s -> "uri://" + s, null);
+        
+        assertEquals(claims.get(IdTokenClaimNames.SUB), claims2.get(IdTokenClaimNames.SUB));
+        Long iat = ((Date) claims.get(IdTokenClaimNames.IAT)).toInstant().getEpochSecond();
+        Long authTime = (Long) claims2.get(IdTokenClaimNames.AUTH_TIME);
+        assertTrue((authTime - iat) >= 0);
+        assertTrue((authTime - iat) < 10);
+    }
+    
     @Test
     void testOidcLoginMaxScope() throws Exception {
 
@@ -147,36 +148,36 @@ public class AuthenticationFlowTest {
 
         Map<String, Object> claims = getAuthClaims("openid profile email", "some.state", "code", "aas-app-oidc",
                 keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "some-nonce", "OIDC", "secret", Map.of("max_age", 1), s -> "uri://" + s, null);
-
+        
         // check claims..
-        assertNotNull(claims.get("iss"));
-        assertNotNull(claims.get("sub"));
-        assertNotNull(claims.get("auth_time"));
-        assertNull(claims.get("name"));
-        assertNull(claims.get("given_name"));
-        assertNull(claims.get("family_name"));
-        //assertNotNull(claims.get("middle_name"));
-        assertNull(claims.get("preferred_username"));
-        assertNull(claims.get("gender"));
-        assertNull(claims.get("birthdate"));
-        assertNull(claims.get("updated_at"));
-        assertNull(claims.get("email"));
-        assertNull(claims.get("email_verified"));
+        assertNotNull(claims.get(IdTokenClaimNames.ISS));
+        assertNotNull(claims.get(IdTokenClaimNames.SUB));
+        assertNotNull(claims.get(IdTokenClaimNames.AUTH_TIME));
+        assertNull(claims.get(StandardClaimNames.NAME));
+        assertNull(claims.get(StandardClaimNames.GIVEN_NAME));
+        assertNull(claims.get(StandardClaimNames.FAMILY_NAME));
+        assertNull(claims.get(StandardClaimNames.MIDDLE_NAME));
+        assertNull(claims.get(StandardClaimNames.PREFERRED_USERNAME));
+        assertNull(claims.get(StandardClaimNames.GENDER));
+        assertNull(claims.get(StandardClaimNames.BIRTHDATE));
+        assertNull(claims.get(StandardClaimNames.UPDATED_AT));
+        assertNull(claims.get(StandardClaimNames.EMAIL));
+        assertNull(claims.get(StandardClaimNames.EMAIL_VERIFIED));
 
-        Map<String, Object> userInfo = getUserInfo((String) claims.get("access_token"));
-        assertEquals(claims.get("iss"), userInfo.get("iss"));
-        assertEquals(claims.get("sub"), userInfo.get("sub"));
-        assertNotNull(userInfo.get("auth_time"));
-        assertNotNull(userInfo.get("name"));
-        assertNotNull(userInfo.get("given_name"));
-        assertNotNull(userInfo.get("family_name"));
-        //assertNotNull(userInfo.get("middle_name"));
-        assertNotNull(userInfo.get("preferred_username"));
-        assertNotNull(userInfo.get("gender"));
-        assertNotNull(userInfo.get("birthdate"));
-        assertNotNull(userInfo.get("updated_at"));
-        assertNotNull(userInfo.get("email"));
-        assertNotNull(userInfo.get("email_verified"));
+        Map<String, Object> userInfo = getUserInfo((String) claims.get(OAuth2ParameterNames.ACCESS_TOKEN));
+        assertEquals(claims.get(IdTokenClaimNames.ISS), userInfo.get(IdTokenClaimNames.ISS));
+        assertEquals(claims.get(IdTokenClaimNames.SUB), userInfo.get(IdTokenClaimNames.SUB));
+        assertNotNull(userInfo.get(IdTokenClaimNames.AUTH_TIME));
+        assertNotNull(userInfo.get(StandardClaimNames.NAME));
+        assertNotNull(userInfo.get(StandardClaimNames.GIVEN_NAME));
+        assertNotNull(userInfo.get(StandardClaimNames.FAMILY_NAME));
+        assertNotNull(userInfo.get(StandardClaimNames.MIDDLE_NAME));
+        assertNotNull(userInfo.get(StandardClaimNames.PREFERRED_USERNAME));
+        assertNotNull(userInfo.get(StandardClaimNames.GENDER));
+        assertNotNull(userInfo.get(StandardClaimNames.BIRTHDATE));
+        assertNotNull(userInfo.get(StandardClaimNames.UPDATED_AT));
+        assertNotNull(userInfo.get(StandardClaimNames.EMAIL));
+        assertNotNull(userInfo.get(StandardClaimNames.EMAIL_VERIFIED));
     }
     
     @Test
@@ -190,18 +191,18 @@ public class AuthenticationFlowTest {
                 s -> "uri://" + s, null);
 
         // check claims..
-        assertNotNull(claims.get("iss"));
-        assertNotNull(claims.get("sub"));
-        assertNotNull(claims.get("auth_time"));
-        assertNull(claims.get("name"));
-        assertNull(claims.get("email"));
+        assertNotNull(claims.get(IdTokenClaimNames.ISS));
+        assertNotNull(claims.get(IdTokenClaimNames.SUB));
+        assertNotNull(claims.get(IdTokenClaimNames.AUTH_TIME));
+        assertNull(claims.get(StandardClaimNames.NAME));
+        assertNull(claims.get(StandardClaimNames.EMAIL));
 
-        Map<String, Object> userInfo = getUserInfo((String) claims.get("access_token"));
-        assertEquals(claims.get("iss"), userInfo.get("iss"));
-        assertEquals(claims.get("sub"), userInfo.get("sub"));
-        assertNull(userInfo.get("auth_time"));
-        assertNotNull(userInfo.get("name"));
-        assertNotNull(userInfo.get("email"));
+        Map<String, Object> userInfo = getUserInfo((String) claims.get(OAuth2ParameterNames.ACCESS_TOKEN));
+        assertEquals(claims.get(IdTokenClaimNames.ISS), userInfo.get(IdTokenClaimNames.ISS));
+        assertEquals(claims.get(IdTokenClaimNames.SUB), userInfo.get(IdTokenClaimNames.SUB));
+        assertNull(userInfo.get(IdTokenClaimNames.AUTH_TIME));
+        assertNotNull(userInfo.get(StandardClaimNames.NAME));
+        assertNotNull(userInfo.get(StandardClaimNames.EMAIL));
     }
     
     @Test
@@ -212,14 +213,14 @@ public class AuthenticationFlowTest {
                     "/ssi/siop-callback&response_mode=post&nonce=" + rid, rid -> {
                         try {
                             Map<String, Object> params = new HashMap<>();
-                            params.put("iss", "https://self-issued.me/v2");
-                            params.put("sub", "NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs");
-                            params.put("aud", serverProps.getBaseUrl());
-                            params.put("nonce", rid);
-                            params.put("exp", Instant.now().plusSeconds(600).getEpochSecond());
-                            params.put("iat", Instant.now().getEpochSecond());
-                            params.put("auth_time", Instant.now().getEpochSecond());
-                            String rq = "id_token=" + mapper.writeValueAsString(params);
+                            params.put(IdTokenClaimNames.ISS, "https://self-issued.me/v2");
+                            params.put(IdTokenClaimNames.SUB, "NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs");
+                            params.put(IdTokenClaimNames.AUD, serverProps.getBaseUrl());
+                            params.put(IdTokenClaimNames.NONCE, rid);
+                            params.put(IdTokenClaimNames.EXP, Instant.now().plusSeconds(600).getEpochSecond());
+                            params.put(IdTokenClaimNames.IAT, Instant.now().getEpochSecond());
+                            params.put(IdTokenClaimNames.AUTH_TIME, Instant.now().getEpochSecond());
+                            String rq = OidcParameterNames.ID_TOKEN + "=" + mapper.writeValueAsString(params);
                             mockMvc.perform(post("/ssi/siop-callback")
                                     .contentType(APPLICATION_FORM_URLENCODED_VALUE)
                                     .content(rq))
@@ -231,19 +232,19 @@ public class AuthenticationFlowTest {
                 );
 
         // check claims..
-        assertNotNull(claims.get("iss"));
-        assertNotNull(claims.get("sub"));
-        assertNull(claims.get("auth_time"));
-        assertNull(claims.get("name"));
-        assertNull(claims.get("given_name"));
-        assertNull(claims.get("family_name"));
-        assertNull(claims.get("middle_name"));
-        assertNull(claims.get("preferred_username"));
-        assertNull(claims.get("gender"));
-        assertNull(claims.get("birthdate"));
-        assertNull(claims.get("updated_at"));
-        assertNull(claims.get("email"));
-        assertNull(claims.get("email_verified"));
+        assertNotNull(claims.get(IdTokenClaimNames.ISS));
+        assertNotNull(claims.get(IdTokenClaimNames.SUB));
+        assertNull(claims.get(IdTokenClaimNames.AUTH_TIME));
+        assertNull(claims.get(StandardClaimNames.NAME));
+        assertNull(claims.get(StandardClaimNames.GIVEN_NAME));
+        assertNull(claims.get(StandardClaimNames.FAMILY_NAME));
+        assertNull(claims.get(StandardClaimNames.MIDDLE_NAME));
+        assertNull(claims.get(StandardClaimNames.PREFERRED_USERNAME));
+        assertNull(claims.get(StandardClaimNames.GENDER));
+        assertNull(claims.get(StandardClaimNames.BIRTHDATE));
+        assertNull(claims.get(StandardClaimNames.UPDATED_AT));
+        assertNull(claims.get(StandardClaimNames.EMAIL));
+        assertNull(claims.get(StandardClaimNames.EMAIL_VERIFIED));
     }
 
     @Test
@@ -255,24 +256,24 @@ public class AuthenticationFlowTest {
                         try {
                             long stamp = System.currentTimeMillis();
                             Map<String, Object> params = new HashMap<>();
-                            params.put("iss", "https://self-issued.me/v2");
-                            params.put("sub", "NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs");
-                            params.put("aud", serverProps.getBaseUrl());
-                            params.put("nonce", rid);
-                            params.put("exp", Instant.now().plusSeconds(600).getEpochSecond());
-                            params.put("iat", Instant.now().getEpochSecond());
-                            params.put("auth_time", Instant.now().getEpochSecond());
-                            params.put("name", rid);
-                            params.put("given_name", rid + ": " + stamp);
-                            params.put("family_name", String.valueOf(stamp));
-                            params.put("middle_name", "");
-                            params.put("preferred_username", rid + " " + stamp);
-                            params.put("gender", stamp % 2 == 0 ? "F" : "M");
-                            params.put("birthdate", LocalDate.now().minusYears(21).toString());
-                            params.put("updated_at", Instant.now().minusSeconds(86400).getEpochSecond());
-                            params.put("email", rid + "@oidc.ssi");
-                            params.put("email_verified", Boolean.TRUE);
-                            String rq = "id_token=" + mapper.writeValueAsString(params);
+                            params.put(IdTokenClaimNames.ISS, "https://self-issued.me/v2");
+                            params.put(IdTokenClaimNames.SUB, "NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs");
+                            params.put(IdTokenClaimNames.AUD, serverProps.getBaseUrl());
+                            params.put(IdTokenClaimNames.NONCE, rid);
+                            params.put(IdTokenClaimNames.EXP, Instant.now().plusSeconds(600).getEpochSecond());
+                            params.put(IdTokenClaimNames.IAT, Instant.now().getEpochSecond());
+                            params.put(IdTokenClaimNames.AUTH_TIME, Instant.now().getEpochSecond());
+                            params.put(StandardClaimNames.NAME, rid);
+                            params.put(StandardClaimNames.GIVEN_NAME, rid + ": " + stamp);
+                            params.put(StandardClaimNames.FAMILY_NAME, String.valueOf(stamp));
+                            params.put(StandardClaimNames.MIDDLE_NAME, "");
+                            params.put(StandardClaimNames.PREFERRED_USERNAME, rid + " " + stamp);
+                            params.put(StandardClaimNames.GENDER, stamp % 2 == 0 ? "F" : "M");
+                            params.put(StandardClaimNames.BIRTHDATE, LocalDate.now().minusYears(21).toString());
+                            params.put(StandardClaimNames.UPDATED_AT, Instant.now().minusSeconds(86400).getEpochSecond());
+                            params.put(StandardClaimNames.EMAIL, rid + "@oidc.ssi");
+                            params.put(StandardClaimNames.EMAIL_VERIFIED, Boolean.TRUE);
+                            String rq = OidcParameterNames.ID_TOKEN + "=" + mapper.writeValueAsString(params);
                             mockMvc.perform(post("/ssi/siop-callback")
                                     .contentType(APPLICATION_FORM_URLENCODED_VALUE)
                                     .content(rq))
@@ -284,34 +285,34 @@ public class AuthenticationFlowTest {
                 );
 
         // check claims..
-        assertNotNull(claims.get("iss"));
-        assertNotNull(claims.get("sub"));
-        assertNull(claims.get("auth_time"));
-        assertNull(claims.get("name")); 
-        assertNull(claims.get("given_name"));
-        assertNull(claims.get("family_name"));
-        //assertNull(claims.get("middle_name"));
-        assertNull(claims.get("preferred_username"));
-        assertNull(claims.get("gender"));
-        assertNull(claims.get("birthdate"));
-        assertNull(claims.get("updated_at"));
-        assertNull(claims.get("email"));
-        assertNull(claims.get("email_verified"));
+        assertNotNull(claims.get(IdTokenClaimNames.ISS));
+        assertNotNull(claims.get(IdTokenClaimNames.SUB));
+        assertNull(claims.get(IdTokenClaimNames.AUTH_TIME));
+        assertNull(claims.get(StandardClaimNames.NAME)); 
+        assertNull(claims.get(StandardClaimNames.GIVEN_NAME));
+        assertNull(claims.get(StandardClaimNames.FAMILY_NAME));
+        assertNull(claims.get(StandardClaimNames.MIDDLE_NAME));
+        assertNull(claims.get(StandardClaimNames.PREFERRED_USERNAME));
+        assertNull(claims.get(StandardClaimNames.GENDER));
+        assertNull(claims.get(StandardClaimNames.BIRTHDATE));
+        assertNull(claims.get(StandardClaimNames.UPDATED_AT));
+        assertNull(claims.get(StandardClaimNames.EMAIL));
+        assertNull(claims.get(StandardClaimNames.EMAIL_VERIFIED));
 
-        Map<String, Object> userInfo = getUserInfo((String) claims.get("access_token"));
-        //assertEquals(claims.get("iss"), userInfo.get("iss"));
-        //assertEquals(claims.get("sub"), userInfo.get("sub"));
-        //assertNotNull(userInfo.get("auth_time"));
-        assertNotNull(userInfo.get("name"));
-        assertNotNull(userInfo.get("given_name"));
-        assertNotNull(userInfo.get("family_name"));
-        //assertNotNull(userInfo.get("middle_name"));
-        assertNotNull(userInfo.get("preferred_username"));
-        assertNotNull(userInfo.get("gender"));
-        assertNotNull(userInfo.get("birthdate"));
-        assertNotNull(userInfo.get("updated_at"));
-        assertNotNull(userInfo.get("email"));
-        assertNotNull(userInfo.get("email_verified"));
+        Map<String, Object> userInfo = getUserInfo((String) claims.get(OAuth2ParameterNames.ACCESS_TOKEN));
+        //assertEquals(claims.get(IdTokenClaimNames.ISS), userInfo.get(IdTokenClaimNames.ISS));
+        //assertEquals(claims.get(IdTokenClaimNames.SUB), userInfo.get(IdTokenClaimNames.SUB));
+        //assertNotNull(userInfo.get(IdTokenClaimNames.AUTH_TIME));
+        assertNotNull(userInfo.get(StandardClaimNames.NAME));
+        assertNotNull(userInfo.get(StandardClaimNames.GIVEN_NAME));
+        assertNotNull(userInfo.get(StandardClaimNames.FAMILY_NAME));
+        assertNotNull(userInfo.get(StandardClaimNames.MIDDLE_NAME));
+        assertNotNull(userInfo.get(StandardClaimNames.PREFERRED_USERNAME));
+        assertNotNull(userInfo.get(StandardClaimNames.GENDER));
+        assertNotNull(userInfo.get(StandardClaimNames.BIRTHDATE));
+        assertNotNull(userInfo.get(StandardClaimNames.UPDATED_AT));
+        assertNotNull(userInfo.get(StandardClaimNames.EMAIL));
+        assertNotNull(userInfo.get(StandardClaimNames.EMAIL_VERIFIED));
     }
 
     @Test
@@ -322,8 +323,8 @@ public class AuthenticationFlowTest {
         MvcResult authResult = getAuthResult("openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc", 
                 keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", null, s -> "uri://" + s, null, 
                 "/ssi/login?error=login_timed_out");
-        assertNotNull(authResult.getRequest().getParameter("username"));
-        assertNotNull(authResult.getRequest().getParameter("password"));
+        assertNotNull(authResult.getRequest().getParameter(OAuth2ParameterNames.USERNAME));
+        assertNotNull(authResult.getRequest().getParameter(OAuth2ParameterNames.PASSWORD));
     }
 
     @Test
@@ -334,8 +335,8 @@ public class AuthenticationFlowTest {
         MvcResult authResult = getAuthResult("openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc", 
                 keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", null, s -> "uri://" + s, null, 
                 "/ssi/login?error=login_rejected");
-        assertNotNull(authResult.getRequest().getParameter("username"));
-        assertNotNull(authResult.getRequest().getParameter("password"));
+        assertNotNull(authResult.getRequest().getParameter(OAuth2ParameterNames.USERNAME));
+        assertNotNull(authResult.getRequest().getParameter(OAuth2ParameterNames.PASSWORD));
     }
 
     @Test
@@ -365,7 +366,7 @@ public class AuthenticationFlowTest {
                 keycloakUri + "/realms/gaia-x/broker/ssi-siop/endpoint", "Q5h3noccV6Hwb4pVHps41A", "SIOP", null, rid -> 
                     "openid://?scope=openid&response_type=id_token&client_id=" + serverProps.getBaseUrl() + "&redirect_uri=" + serverProps.getBaseUrl() + 
                     "/ssi/siop-callback&response_mode=post&nonce=" + rid, null, "/ssi/login?error=server_error");
-        String requestId = authResult.getRequest().getParameter("username"); 
+        String requestId = authResult.getRequest().getParameter(OAuth2ParameterNames.USERNAME); 
         HttpSession session = authResult.getRequest().getSession(false);
         String reUrl = authResult.getResponse().getHeader("Location");
         
@@ -393,16 +394,16 @@ public class AuthenticationFlowTest {
         assertEquals(getMessage("invalid_request", authResult.getRequest().getLocale()), (String) authResult.getModelAndView().getModel().get("errorMessage"));
         
         Map<String, Object> params = new HashMap<>();
-        params.put("iss", "https://self-issued.me/v2");
-        params.put("sub", "NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs");
-        params.put("aud", serverProps.getBaseUrl());
-        params.put("nonce", requestId);
-        params.put("exp", Instant.now().plusSeconds(600).getEpochSecond());
-        params.put("iat", Instant.now().getEpochSecond());
+        params.put(IdTokenClaimNames.ISS, "https://self-issued.me/v2");
+        params.put(IdTokenClaimNames.SUB, "NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs");
+        params.put(IdTokenClaimNames.AUD, serverProps.getBaseUrl());
+        params.put(IdTokenClaimNames.NONCE, requestId);
+        params.put(IdTokenClaimNames.EXP, Instant.now().plusSeconds(600).getEpochSecond());
+        params.put(IdTokenClaimNames.IAT, Instant.now().getEpochSecond());
         mockMvc.perform(
                     post("/ssi/siop-callback")
                             .contentType(APPLICATION_FORM_URLENCODED_VALUE)
-                            .content("id_token=" + mapper.writeValueAsString(params)))
+                            .content(OidcParameterNames.ID_TOKEN + "=" + mapper.writeValueAsString(params)))
             .andExpect(status().isOk()) 
             //.andExpect(status().reason(containsString("invalid nonce"))) // no requestId any more
             .andReturn();
@@ -444,16 +445,16 @@ public class AuthenticationFlowTest {
         
         String accessToken = tokenFields.get(OAuth2ParameterNames.ACCESS_TOKEN).toString();
         JWT jwt = JWTParser.parse(accessToken);
-        Object o = jwt.getJWTClaimsSet().getClaim("auth_time");
+        Object o = jwt.getJWTClaimsSet().getClaim(IdTokenClaimNames.AUTH_TIME);
         assertNull(o);
         
         String idToken = tokenFields.get(OidcParameterNames.ID_TOKEN).toString();
         jwt = JWTParser.parse(idToken);
-        //o = jwt.getJWTClaimsSet().getClaim("auth_time");
+        //o = jwt.getJWTClaimsSet().getClaim(IdTokenClaimNames.AUTH_TIME);
         //assertNotNull(o);
         
         Map<String, Object> claims = new HashMap<>(jwt.getJWTClaimsSet().getClaims());
-        claims.put("access_token", accessToken);
+        claims.put(OAuth2ParameterNames.ACCESS_TOKEN, accessToken);
         return claims;
     }
     
@@ -477,7 +478,7 @@ public class AuthenticationFlowTest {
 
         String reUrl = authResult.getResponse().getRedirectedUrl();
         MultiValueMap<String, String> queryParams = UriComponentsBuilder.fromUriString(reUrl).build().getQueryParams();
-        return queryParams.getFirst("code"); // responseType);
+        return queryParams.getFirst(OAuth2ParameterNames.CODE); // responseType);
     }
 
     private MvcResult getAuthResult(String scope, String state, String responseType, String clientId, String redirectUri, String nonce, String protocol,
@@ -500,6 +501,10 @@ public class AuthenticationFlowTest {
                         .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
                         .cookie(new Cookie("JSESSIONID", session.getId())).session((MockHttpSession) session))
                 .andExpect(status().isOk()).andReturn();
+        
+        assertNotNull(result.getModelAndView().getModel().get("qrUrl"));
+        assertNotNull(result.getModelAndView().getModel().get("requestId"));
+        assertNotNull(result.getModelAndView().getModel().get("scope"));
 
         session = result.getRequest().getSession(false);
         String qrUrl = result.getModelAndView().getModel().get("qrUrl").toString();
@@ -523,7 +528,7 @@ public class AuthenticationFlowTest {
                         .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .cookie(new Cookie("JSESSIONID", session.getId())).session((MockHttpSession) session)
-                        .param("username", requestId).param("password", protocol))
+                        .param(OAuth2ParameterNames.USERNAME, requestId).param(OAuth2ParameterNames.PASSWORD, protocol))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(header().string("Location", containsString(loginRedirect))) //!!
                 .andReturn();
@@ -543,15 +548,15 @@ public class AuthenticationFlowTest {
     private Map<String, Object> getAuthRequestParams(String scope, String state, String responseType, String clientId, String redirectUri, String nonce, 
             Map<String, Object> optional) {
         Map<String, Object> params = new LinkedHashMap<>();
-        params.put("scope", scope);
+        params.put(OAuth2ParameterNames.SCOPE, scope);
         if (state != null) {
-            params.put("state", state);
+            params.put(OAuth2ParameterNames.STATE, state);
         }
-        params.put("response_type", responseType);
-        params.put("client_id", clientId);
-        params.put("redirect_uri", redirectUri);
+        params.put(OAuth2ParameterNames.RESPONSE_TYPE, responseType);
+        params.put(OAuth2ParameterNames.CLIENT_ID, clientId);
+        params.put(OAuth2ParameterNames.REDIRECT_URI, redirectUri);
         if (nonce != null) {
-            params.put("nonce", nonce);
+            params.put(OidcParameterNames.NONCE, nonce);
         }
         if (optional != null) {
             params.putAll(optional);

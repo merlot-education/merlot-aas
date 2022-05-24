@@ -5,12 +5,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.json.JacksonJsonParser;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
+import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.security.oauth2.server.authorization.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenCustomizer;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
@@ -48,17 +48,17 @@ public class SsiJwtCustomizer implements OAuth2TokenCustomizer<JwtEncodingContex
                 }
                 maxAge = additionalParams.get("max_age");
                 if (maxAge != null) {
-                    claims.put("auth_time", 1);
+                    claims.put(IdTokenClaimNames.AUTH_TIME, 1);
                 }
                 updated = ssiBrokerService.setAdditionalParameters(requestId, claims);
             }
             
-            Set<String> claims = idToken == null ? maxAge == null ? null : Set.of("auth_time") : 
-                maxAge == null ? idToken.keySet() : Stream.concat(idToken.keySet().stream(), Set.of("auth_time").stream()).collect(Collectors.toSet()); 
+            Set<String> claims = idToken == null ? maxAge == null ? null : Set.of(IdTokenClaimNames.AUTH_TIME) : 
+                maxAge == null ? idToken.keySet() : Stream.concat(idToken.keySet().stream(), Set.of(IdTokenClaimNames.AUTH_TIME).stream()).collect(Collectors.toSet()); 
 
             // the below is required in case when additional claims were requested via claims.id_token or max_age params
             if (claims != null) {
-                Map<String, Object> userDetails = ssiBrokerService.getUserClaims(requestId, false, claims); // required?
+                Map<String, Object> userDetails = ssiBrokerService.getUserClaims(requestId, false, null, claims); // required?
                 if (userDetails != null) {
                     for (Map.Entry<String, Object> e: userDetails.entrySet()) {
                         context.getClaims().claim(e.getKey(), e.getValue());
@@ -71,7 +71,7 @@ public class SsiJwtCustomizer implements OAuth2TokenCustomizer<JwtEncodingContex
 
     private String getRequestId(JwtEncodingContext context) {
         AtomicReference<String> requestId = new AtomicReference<>();
-        context.getClaims().claims(claims -> requestId.set((String) claims.get("sub")));
+        context.getClaims().claims(claims -> requestId.set((String) claims.get(IdTokenClaimNames.SUB)));
         return requestId.get();
     }
 
