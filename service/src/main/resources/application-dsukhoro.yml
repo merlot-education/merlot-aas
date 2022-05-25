@@ -7,15 +7,6 @@ aas:
     url: http://trustservice/api
   iam:
     base-uri: http://key-server:8080
-    client-iat: eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJmMGUzNzY0Mi0zYWIzLTQ2NWItODcyYi1kNmZkMTljOTcwOWQifQ.eyJleHAiOjAsImlhdCI6MTY1MjI3MTgwNiwianRpIjoiMGIyNWU0ZTYtMmMxNi00MTFlLTkyMDctY2UwNDcyYTNkMGUxIiwiaXNzIjoiaHR0cDovL2tleS1zZXJ2ZXI6ODA4MC9yZWFsbXMvZ2FpYS14IiwiYXVkIjoiaHR0cDovL2tleS1zZXJ2ZXI6ODA4MC9yZWFsbXMvZ2FpYS14IiwidHlwIjoiSW5pdGlhbEFjY2Vzc1Rva2VuIn0.V8X5dKASZPa4SlzfbPfAwxf7oIuqYp9px6Dvfg7EJDc
-    client-registration-uri: /realms/gaia-x/clients-registrations/openid-connect
-    ttl: 10m
-    clients:
-      oidc:
-        id: aas-app-oidc
-        secret: "{noop}secret"
-        redirect-uri: ${aas.iam.base-uri}/realms/gaia-x/broker/ssi-oidc/endpoint
-      siop:
-        id: aas-app-siop
-        secret: "{noop}secret2"
-        redirect-uri: ${aas.iam.base-uri}/realms/gaia-x/broker/ssi-siop/endpoint    
+    iat:
+      secret: eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJmMGUzNzY0Mi0zYWIzLTQ2NWItODcyYi1kNmZkMTljOTcwOWQifQ.eyJleHAiOjAsImlhdCI6MTY1MjI3MTgwNiwianRpIjoiMGIyNWU0ZTYtMmMxNi00MTFlLTkyMDctY2UwNDcyYTNkMGUxIiwiaXNzIjoiaHR0cDovL2tleS1zZXJ2ZXI6ODA4MC9yZWFsbXMvZ2FpYS14IiwiYXVkIjoiaHR0cDovL2tleS1zZXJ2ZXI6ODA4MC9yZWFsbXMvZ2FpYS14IiwidHlwIjoiSW5pdGlhbEFjY2Vzc1Rva2VuIn0.V8X5dKASZPa4SlzfbPfAwxf7oIuqYp9px6Dvfg7EJDc
+      dcr-uri: /realms/gaia-x/clients-registrations/openid-connect

@@ -22,10 +22,10 @@ public class IamClient {
     @Value("${aas.iam.base-uri}")
     private String baseUri;
 
-    @Value("${aas.iam.client-registration-uri}")
+    @Value("${aas.iam.iat.dcr-uri}")
     private String clientRegistrationUri;
 
-    @Value("${aas.iam.client-iat}")
+    @Value("${aas.iam.iat.secret}")
     private String clientIat;
 
     public IamClient() {

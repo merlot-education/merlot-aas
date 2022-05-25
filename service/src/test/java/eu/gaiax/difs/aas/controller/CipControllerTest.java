@@ -49,7 +49,7 @@ public class CipControllerTest {
 
         ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig(TrustServicePolicy.GET_IAT_PROOF_RESULT, ACCEPTED);
 
-        Map<String, Object> claims = getUserClaims("1234567890", "openid");
+        Map<String, Object> claims = getUserClaims("sub=1234567890&scope=openid");
         assertNotNull(claims.get(IdTokenClaimNames.ISS));
         assertEquals("1234567890", claims.get(IdTokenClaimNames.SUB));
         assertNotNull(claims.get(IdTokenClaimNames.AUTH_TIME));
@@ -64,7 +64,7 @@ public class CipControllerTest {
         assertNull(claims.get(StandardClaimNames.EMAIL));
         assertNull(claims.get(StandardClaimNames.EMAIL_VERIFIED));
         
-        claims = getUserClaims("1234567890", "openid profile email");
+        claims = getUserClaims("sub=1234567890&scope=openid profile email");
         assertNotNull(claims.get(IdTokenClaimNames.ISS));
         assertEquals("1234567890", claims.get(IdTokenClaimNames.SUB));
         assertNotNull(claims.get(IdTokenClaimNames.AUTH_TIME));
@@ -85,7 +85,7 @@ public class CipControllerTest {
 
         ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig(TrustServicePolicy.GET_LOGIN_PROOF_RESULT, REJECTED);
 
-        Map<String, Object> claims = getUserClaims("qwerty890", "openid");
+        Map<String, Object> claims = getUserClaims("sub=qwerty890&scope=openid");
         assertNotNull(claims.get("requestId"));
         String requestId = (String) claims.get("requestId");
         assertNotNull(claims.get("link"));
@@ -96,23 +96,39 @@ public class CipControllerTest {
         
         ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig(TrustServicePolicy.GET_LOGIN_PROOF_RESULT, ACCEPTED);
 
-        Map<String, Object> claims2 = getUserClaims(requestId, "openid");
+        Map<String, Object> claims2 = getUserClaims("sub=" + requestId + "&scope=openid");
         assertNotNull(claims2.get(IdTokenClaimNames.SUB));
         assertNotNull(claims2.get(IdTokenClaimNames.ISS));
         assertNotNull(claims2.get(IdTokenClaimNames.AUTH_TIME));
         assertNull(claims2.get("requestId"));
         assertNull(claims2.get("link"));
     }
+
+    @Test
+    public void testCipAccessClaims() throws Exception {
+
+        Map<String, Object> claims = getUserClaims("namespace=Access&sub=did:qwerty123&scope=openid&iss=did:example567");
+        assertNotNull(claims.get("requestId"));
+        String requestId = (String) claims.get("requestId");
+        assertNotNull(claims.get(IdTokenClaimNames.SUB));
+        assertNotNull(claims.get(IdTokenClaimNames.ISS));
+
+        ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig(TrustServicePolicy.GET_LOGIN_PROOF_RESULT, ACCEPTED);
+        
+        Map<String, Object> claims2 = getUserClaims("namespace=Access&sub=" + requestId + "&scope=openid");
+        assertNotNull(claims2.get(IdTokenClaimNames.SUB));
+        assertNotNull(claims2.get(IdTokenClaimNames.ISS));
+        assertNotNull(claims2.get(IdTokenClaimNames.AUTH_TIME));
+    }
     
-    private Map<String, Object> getUserClaims(String subject, String scope) throws Exception {
+    private Map<String, Object> getUserClaims(String query) throws Exception {
         MvcResult result = mockMvc.perform(
-                get("/cip/claims?scope=" + scope + "&sub=" + subject)
+                get("/cip/claims?" + query)
                     //.header("Authorization", "Bearer " + accessToken)
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andReturn();
         return mapper.readValue(result.getResponse().getContentAsString(), MAP_TYPE_REF);
     }
-    
     
 }

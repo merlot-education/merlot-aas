@@ -165,13 +165,20 @@ public class SsiBrokerService extends SsiClaimsService {
     public void processSiopLoginResponse(Map<String, Object> response) {
         log.debug("processSiopLoginResponse.enter; got response: {}", response);
         String requestId = (String) response.get(IdTokenClaimNames.NONCE);
-        if (requestId == null || !isValidRequest(requestId)) {
+        if (requestId == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_response: invalid nonce"); 
         } 
+        Boolean valid = isValidRequest(requestId);
+        if (valid == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_response: invalid nonce");
+        }
+        if (!valid) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_response: request expired");
+        }
         
         String error = (String) response.get(OAuth2ParameterNames.ERROR);
         if (error == null) {
-            Set<String> requestedScopes = (Set<String>) authCache.get(requestId).get(OAuth2ParameterNames.SCOPE);
+            Collection<String> requestedScopes = (Collection<String>) authCache.get(requestId).get(OAuth2ParameterNames.SCOPE);
             Set<String> requestedClaims = scopeProperties.getScopes().entrySet().stream()
                     .filter(e -> requestedScopes.contains(e.getKey())).flatMap(e -> e.getValue().stream()).collect(Collectors.toSet());
             // special handling for auth_time..
@@ -249,10 +256,15 @@ public class SsiBrokerService extends SsiClaimsService {
         return result;
     }
 
-    private boolean isValidRequest(String requestId) {
+    private Boolean isValidRequest(String requestId) {
         Map<String, Object> request = authCache.get(requestId);
-        return request != null && //(request.get("sub") != null || request.get("error") != null) &&
-                ((Instant) request.get("request_time")).isAfter(Instant.now().minus(clockSkew));
+        if (request == null) {
+            return null;
+        }
+        //(request.get("sub") != null || request.get("error") != null) &&
+        
+        Instant requestTime = (Instant) request.get("request_time");
+        return requestTime != null && requestTime.isBefore(Instant.now()) && requestTime.isAfter(Instant.now().minus(clockSkew));
     }
     
     public Map<String, Object> getSubjectClaims(String subjectId, Collection<String> requestedScopes) {

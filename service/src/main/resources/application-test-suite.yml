@@ -5,9 +5,9 @@ server:
 aas:
   iam:
     base-uri: https://localhost.emobix.co.uk:8443
-    client-registration-uri: /auth/realms/gaia-x/clients-registrations/openid-connect # should be changed, probably
-    client-iat: "{noop}iat"
-    ttl: 10m
+    iat:
+      dcr-uri: /realms/gaia-x/clients-registrations/openid-connect # should be changed, probably
+      secret: "{noop}iat"
     clients:
       oidc:
         id: aas-app-oidc

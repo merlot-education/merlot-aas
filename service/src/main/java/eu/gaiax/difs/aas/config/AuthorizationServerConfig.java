@@ -81,7 +81,7 @@ import eu.gaiax.difs.aas.service.SsiAuthManager;
 @Configuration
 public class AuthorizationServerConfig {
 
-    @Value("${aas.iam.ttl}")
+    @Value("${aas.id-token.ttl}")
     private Duration ttl;
     @Value("${aas.jwk.length}")
     private int jwkLength;
