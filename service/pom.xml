@@ -68,10 +68,6 @@
             <artifactId>springdoc-openapi-ui</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.openapitools</groupId>
-            <artifactId>jackson-databind-nullable</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
@@ -134,7 +130,7 @@
                     <outputDirectory>.</outputDirectory>
                     <thirdPartyFilename>THIRD-PARTY.md</thirdPartyFilename>
                     <fileTemplate>templates/third-party.ftl</fileTemplate>
-                    <excludedArtifacts>dgc-lib</excludedArtifacts>
+                    <!--excludedArtifacts>dgc-lib</excludedArtifacts-->
                 </configuration>
             </plugin>
             <plugin>
@@ -178,6 +174,7 @@
                                 <useTags>true</useTags>
                                 <delegatePattern>true</delegatePattern>
                                 <library>spring-boot</library>
+                                <openApiNullable>false</openApiNullable>
                             </configOptions>
                         </configuration>
                     </execution>
