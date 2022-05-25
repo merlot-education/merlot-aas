@@ -28,9 +28,9 @@ springdoc:
 aas:
   iam:
     base-uri: http://key-server:8080
-    client-registration-uri: /realms/gaia-x/clients-registrations/openid-connect
-    client-iat: "{noop}iat"
-    ttl: 10m
+    iat:
+      dcr-uri: /realms/gaia-x/clients-registrations/openid-connect
+      secret: "{noop}iat"
     clients:
       oidc:
         id: aas-app-oidc
@@ -43,6 +43,7 @@ aas:
   id-token:
     clock-skew: 5s 
     issuer: https://self-issued.me/v2
+    ttl: 10m
   jwk:
     length: 3072
     secret: 96ec048e-c640-4cfd-bc82-6571810a9d0f
