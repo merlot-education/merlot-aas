@@ -24,28 +24,47 @@ spec:
           image: registry.gitlab.com/gaia-x/data-infrastructure-federation-services/authenticationauthorization/auth-service-image
           imagePullPolicy: Always
           env:
-            - name: AAS_TSA_DURATION
-              value: "100000"
             - name: SPRING_PROFILES_ACTIVE
               value: test-suite
             - name: SERVER_HOST
               value: 78.138.66.89
+            - name: AAS_TSA_DURATION
+              value: "100000"
+            - name: AAS_IAM_IAT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: auth-server-keys-secret
+                  key: iat
+            - name: AAS_IAM_CLIENTS_OIDC_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: auth-server-oidc-secret
+                  key: password
+            - name: AAS_IAM_CLIENTS_SIOP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: auth-server-siop-secret
+                  key: password
+            - name: AAS_JWK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: auth-server-keys-secret
+                  key: jwk
+          
           ports:
             - name: "http"
               containerPort: 9000
             - name: "https"
               containerPort: 9443
+
+          readinessProbe:
+            httpGet:                 
+              path: "/actuator/health"
+              port: 9000
+
           resources: {}
-      restartPolicy: Always
-
-#          readinessProbe:
-#            httpGet:
-#              path: "/ssi/qr/test"
-#              port: 9000
-
-#        resources: {}
 #        terminationMessagePath: /dev/termination-log
 #        terminationMessagePolicy: File
 #      dnsPolicy: ClusterFirst
-#      restartPolicy: Always
+      restartPolicy: Always
 #      terminationGracePeriodSeconds: 30
