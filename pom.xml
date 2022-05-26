@@ -42,16 +42,14 @@
         <spring.auth-server.version>0.2.3</spring.auth-server.version>
         <springdoc.version>1.6.8</springdoc.version>
         <lombok.version>1.18.22</lombok.version>
-        <micrometer.version>1.8.1</micrometer.version>
-        <zxing.version>3.4.1</zxing.version>
-        <jackson.data-nullable.version>0.2.2</jackson.data-nullable.version>
+        <micrometer.version>1.9.0</micrometer.version>
+        <zxing.version>3.5.0</zxing.version>
         <!-- plugins -->
         <plugin.owasp.version>7.1.0</plugin.owasp.version>
         <plugin.maven-assembly.version>3.3.0</plugin.maven-assembly.version>
         <plugin.checkstyle.version>3.1.2</plugin.checkstyle.version>
         <plugin.sonar.version>3.9.1.2184</plugin.sonar.version>
         <plugin.jacoco.version>0.8.7</plugin.jacoco.version>
-        <plugin.os-maven.version>1.7.0</plugin.os-maven.version>
         <!-- license -->
         <license.projectName>GAIA-X Authentication and Authorization Service</license.projectName>
         <license.inceptionYear>2021</license.inceptionYear>
@@ -134,11 +132,6 @@
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-ui</artifactId>
                 <version>${springdoc.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.openapitools</groupId>
-                <artifactId>jackson-databind-nullable</artifactId>
-                <version>${jackson.data-nullable.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.projectlombok</groupId>
