@@ -36,7 +36,7 @@ import eu.gaiax.difs.aas.service.SsiJwtCustomizer;
 /**
  * The Spring Security config.
  */
-@EnableWebSecurity //(debug = true)
+@EnableWebSecurity(debug = true)
 public class SecurityConfig {
 
     private final String[] ANT_MATCHERS = {
