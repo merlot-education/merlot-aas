@@ -171,7 +171,7 @@ public class AuthenticationFlowTest {
         assertNotNull(userInfo.get(StandardClaimNames.NAME));
         assertNotNull(userInfo.get(StandardClaimNames.GIVEN_NAME));
         assertNotNull(userInfo.get(StandardClaimNames.FAMILY_NAME));
-        assertNotNull(userInfo.get(StandardClaimNames.MIDDLE_NAME));
+        assertNull(userInfo.get(StandardClaimNames.MIDDLE_NAME));
         assertNotNull(userInfo.get(StandardClaimNames.PREFERRED_USERNAME));
         assertNotNull(userInfo.get(StandardClaimNames.GENDER));
         assertNotNull(userInfo.get(StandardClaimNames.BIRTHDATE));
@@ -306,7 +306,7 @@ public class AuthenticationFlowTest {
         assertNotNull(userInfo.get(StandardClaimNames.NAME));
         assertNotNull(userInfo.get(StandardClaimNames.GIVEN_NAME));
         assertNotNull(userInfo.get(StandardClaimNames.FAMILY_NAME));
-        assertNotNull(userInfo.get(StandardClaimNames.MIDDLE_NAME));
+        assertNull(userInfo.get(StandardClaimNames.MIDDLE_NAME));
         assertNotNull(userInfo.get(StandardClaimNames.PREFERRED_USERNAME));
         assertNotNull(userInfo.get(StandardClaimNames.GENDER));
         assertNotNull(userInfo.get(StandardClaimNames.BIRTHDATE));
@@ -439,7 +439,7 @@ public class AuthenticationFlowTest {
         assertNotNull(tokenFields.get(OidcParameterNames.ID_TOKEN));
         assertNotNull(tokenFields.get(OAuth2ParameterNames.EXPIRES_IN));
         assertNotNull(tokenFields.get(OAuth2ParameterNames.TOKEN_TYPE));
-        assertTrue(((Integer) tokenFields.get(OAuth2ParameterNames.EXPIRES_IN)) > 500); // default is 300, we set it to 600
+        assertTrue(((Integer) tokenFields.get(OAuth2ParameterNames.EXPIRES_IN)) > 250); // default is 300, we set it to 600
         assertEquals("Bearer", tokenFields.get(OAuth2ParameterNames.TOKEN_TYPE));
         // check session.getMaxInactiveInterval() too?
         

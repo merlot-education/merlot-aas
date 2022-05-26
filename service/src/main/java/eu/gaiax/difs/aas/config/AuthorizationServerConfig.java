@@ -129,10 +129,6 @@ public class AuthorizationServerConfig {
                 ;
     }
 
-    //CsrfFilter
-    //LogoutFilter
-    //OAuth2AuthorizationEndpointFilter    
-    
     private ObjectPostProcessor<Object> ssiObjectPostProcessor() {
         return new ObjectPostProcessor<>() {
             @Override
