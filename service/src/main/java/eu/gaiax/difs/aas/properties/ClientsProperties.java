@@ -25,6 +25,16 @@ public class ClientsProperties {
 
         private String redirectUri;
 
+        @Override
+        public String toString() {
+            return "{id=" + id + ", secret=" + secret + ", redirectUri=" + redirectUri + "}";
+        }
+        
+    }
+
+    @Override
+    public String toString() {
+        return "ClientsProperties [oidc=" + oidc + ", siop=" + siop + "]";
     }
 
 }

@@ -41,6 +41,7 @@ public class SsiIatService extends SsiClaimsService {
         super(trustServiceClient);
         this.iamClient = iamClient;
         this.clientsProperties = clientsProperties;
+        log.debug("<init>. props: {}", clientsProperties);
     }
 
     public AccessResponseDto evaluateIatProofInvitation(AccessRequestDto accessRequestDto) {
