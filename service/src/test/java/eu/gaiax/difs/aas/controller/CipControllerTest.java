@@ -71,7 +71,7 @@ public class CipControllerTest {
         assertNotNull(claims.get(StandardClaimNames.NAME));
         assertNotNull(claims.get(StandardClaimNames.GIVEN_NAME));
         assertNotNull(claims.get(StandardClaimNames.FAMILY_NAME));
-        assertNotNull(claims.get(StandardClaimNames.MIDDLE_NAME));
+        assertNull(claims.get(StandardClaimNames.MIDDLE_NAME));
         assertNotNull(claims.get(StandardClaimNames.PREFERRED_USERNAME));
         assertNotNull(claims.get(StandardClaimNames.GENDER));
         assertNotNull(claims.get(StandardClaimNames.BIRTHDATE));

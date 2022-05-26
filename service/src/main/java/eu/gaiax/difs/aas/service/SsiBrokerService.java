@@ -304,7 +304,7 @@ public class SsiBrokerService extends SsiClaimsService {
             scopedClaims.addAll(requestedClaims);
         }
         return userClaims.entrySet().stream()
-                .filter(e -> e.getValue() != null && scopedClaims.contains(e.getKey()))
+                .filter(e -> e.getValue() != null && scopedClaims.contains(e.getKey()) && !e.getValue().toString().isEmpty())
                 .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
     }
     

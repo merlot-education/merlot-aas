@@ -171,7 +171,7 @@ public class AuthenticationFlowTest {
         assertNotNull(userInfo.get(StandardClaimNames.NAME));
         assertNotNull(userInfo.get(StandardClaimNames.GIVEN_NAME));
         assertNotNull(userInfo.get(StandardClaimNames.FAMILY_NAME));
-        assertNotNull(userInfo.get(StandardClaimNames.MIDDLE_NAME));
+        assertNull(userInfo.get(StandardClaimNames.MIDDLE_NAME));
         assertNotNull(userInfo.get(StandardClaimNames.PREFERRED_USERNAME));
         assertNotNull(userInfo.get(StandardClaimNames.GENDER));
         assertNotNull(userInfo.get(StandardClaimNames.BIRTHDATE));
@@ -306,7 +306,7 @@ public class AuthenticationFlowTest {
         assertNotNull(userInfo.get(StandardClaimNames.NAME));
         assertNotNull(userInfo.get(StandardClaimNames.GIVEN_NAME));
         assertNotNull(userInfo.get(StandardClaimNames.FAMILY_NAME));
-        assertNotNull(userInfo.get(StandardClaimNames.MIDDLE_NAME));
+        assertNull(userInfo.get(StandardClaimNames.MIDDLE_NAME));
         assertNotNull(userInfo.get(StandardClaimNames.PREFERRED_USERNAME));
         assertNotNull(userInfo.get(StandardClaimNames.GENDER));
         assertNotNull(userInfo.get(StandardClaimNames.BIRTHDATE));

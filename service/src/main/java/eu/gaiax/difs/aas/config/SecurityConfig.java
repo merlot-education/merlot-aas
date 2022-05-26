@@ -24,6 +24,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.server.authorization.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenCustomizer;
@@ -36,7 +38,7 @@ import eu.gaiax.difs.aas.service.SsiJwtCustomizer;
 /**
  * The Spring Security config.
  */
-@EnableWebSecurity(debug = true)
+@EnableWebSecurity //(debug = true)
 public class SecurityConfig {
 
     private final String[] ANT_MATCHERS = {
@@ -77,6 +79,11 @@ public class SecurityConfig {
     public OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer() {
         return new SsiJwtCustomizer();
     }
+    
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+    }    
 
     private AuthenticationFailureHandler ssiAuthenticationFailureHandler() {
         return (request, response, exception) -> {

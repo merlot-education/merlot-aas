@@ -61,6 +61,8 @@ spec:
             httpGet:                 
               path: "/actuator/health"
               port: 9000
+            initialDelaySeconds: 60
+            periodSeconds: 30
 
           resources: {}
 #        terminationMessagePath: /dev/termination-log

@@ -43,7 +43,7 @@ aas:
   id-token:
     clock-skew: 5s 
     issuer: https://self-issued.me/v2
-    ttl: 10m
+    ttl: 5m
   jwk:
     length: 3072
     secret: 96ec048e-c640-4cfd-bc82-6571810a9d0f
