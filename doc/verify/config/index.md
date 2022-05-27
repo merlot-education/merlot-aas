@@ -4,5 +4,5 @@
 
 Test Name:oidcc-discovery-endpoint-verification
 Variant:server_metadata=discovery, client_registration=static_client
-<a href="reports/test-log-oidcc-discovery-endpoint-verification-lJzzwCW8t1xfDI9.html" target=_blank>Report from run</a>
+<a href="reports/test-log-oidcc-discovery-endpoint-verification-lJzzwCW8t1xfDI9.html" download>Report from run</a>
 [report](reports/test-log-oidcc-discovery-endpoint-verification-lJzzwCW8t1xfDI9.html)
