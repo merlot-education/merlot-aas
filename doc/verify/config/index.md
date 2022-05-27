@@ -4,3 +4,4 @@
 
 Test Name:oidcc-discovery-endpoint-verification
 Variant:server_metadata=discovery, client_registration=static_client
+[report](reports/test-log-oidcc-discovery-endpoint-verification-lJzzwCW8t1xfDI9.html)
