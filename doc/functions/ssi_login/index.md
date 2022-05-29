@@ -10,3 +10,7 @@ The SSI Backchannel login flow. Participants are:
 - IAM Platform: Identity and Access Management solution like keycloak, Gluu, WSO2, etc. 
 
 ![SSI Backhannel login](./images/ssi_ciba_login.png "SSI Backchannel login")
+
+Data Flow Diagram for SSI Backchannel login is:
+
+![Backchannel Login DFD](./images/oidc_login_dfd.png "Backchannel Login DFD")
