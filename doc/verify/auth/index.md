@@ -9,4 +9,4 @@
  -  5 Tests had review<br>
  -  1 Test had unknown<br>
 
-<strong>For detailed report see:</strong>   <a href="https://gitlab.com/gaia-x/data-infrastructure-federation-services/authenticationauthorization/-/raw/main/doc/verify/auth/Reports_30_05_2022/index.html?inline=false">REPORT</a>
+<strong>For detailed report download and unzip:</strong>   <a href="https://gitlab.com/gaia-x/data-infrastructure-federation-services/authenticationauthorization/-/raw/main/doc/verify/auth/Reports_30_05_2022/30_05_2022.zip?inline=false">REPORT</a>
