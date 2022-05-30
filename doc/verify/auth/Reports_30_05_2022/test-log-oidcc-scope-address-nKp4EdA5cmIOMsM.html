@@ -1,0 +1,2841 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Test detail</title>
+    <meta http-equiv="Cache-control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
+    <style>
+        html{
+            box-sizing: border-box;
+        }
+        body{
+            font-family:sans-serif;
+            line-height:1.5em;
+            padding-left:30px;
+            padding-right:30px;
+            padding-top:2em;
+            min-width:700px;
+        }
+        pre{
+            margin-top:0px;
+            margin-bottom:0px;
+            margin-left:0px;
+            font-family: sans-serif;
+        }
+        #header{
+        }
+        #header th{
+            text-align:left;
+        }
+        #results{
+            overflow-x:auto;
+        }
+        table{
+            width:100%;
+        }
+        .log-item{
+            width:100%;
+            margin-bottom:0;
+            padding-bottom:1em;
+            padding-top:1em;
+            border-top:1px solid #ccc;
+            line-height:1.7em;
+        }
+        .log-item:hover{
+            background-color: #ebf6fa;
+        }
+        .row{
+            padding-top:0.2em;
+            padding-left:0.2em;
+            padding-bottom:0.2em;
+            padding-right:0.2em;
+        }
+         .col-1{
+            width:10%;
+            min-width:100px;
+            vertical-align: top;
+            font-size:0.90em;
+         }
+         .col-2{
+            width:10%;
+            min-width:100px;
+            vertical-align: top;
+            padding-left:20px;
+         }
+         .col-3{
+             vertical-align: top;
+         }
+         .labelCollection{
+
+         }
+         .labelCollection span{
+            border:1px;
+         }
+
+        .wrapLongStrings{
+            white-space:pre-wrap;
+        }
+        .collapse{
+            display:none;
+        }
+        .label{
+            border-bottom-left-radius: 3px;
+            border-bottom-right-radius: 3px;
+            border-top-left-radius: 3px;
+            border-top-right-radius: 3px;
+            box-sizing: border-box;
+            color: rgb(255, 255, 255);
+            display: inline;
+            font-size: 0.8em;
+            font-weight: 700;
+            line-height: 1.2em;
+            padding-bottom: 3.6px;
+            padding-left: 7.2px;
+            padding-right: 7.2px;
+            padding-top: 2.4px;
+            text-align: center;
+            vertical-align: baseline;
+            white-space: no-wrap;
+        }
+        .label-info{
+            background-color: #5bc0de;
+        }
+        .testStatus-created {
+            background-color: #fcd9f6;
+            color: black;
+        }
+
+        .testStatus-configured {
+            background-color: #d3fffe;
+            color: black;
+        }
+
+        .testStatus-running {
+            background-color: #6d09e8;
+            color: white;
+        }
+
+        .testStatus-waiting {
+            background-color: #6ac4c2;
+            color: black;
+        }
+
+        .testStatus-interrupted {
+            background-color: #b70018;
+            color: white;
+        }
+
+        .testStatus-finished {
+            background-color: #383647;
+            color: white;
+        }
+
+        .testStatus-unknown {
+            background-color: #dedada;
+            color: #6d6a6a;
+        }
+
+        .testResult-passed {
+            background-color: #40e809;
+            color: black;
+        }
+
+        .testResult-warning {
+            background-color: #d88602;
+            color: white;
+        }
+
+        .testResult-failed {
+            background-color: red;
+            color: white;
+        }
+
+        .testResult-review {
+            background-color: #6ac4c2;
+            color: black;
+        }
+
+        .testResult-skipped {
+            background-color: #d88602;
+            color: white;
+        }
+
+        .testResult-unknown {
+            background-color: #dedada;
+            color: #6d6a6a;
+        }
+        .result-success {
+            background-color: #00cc00;
+        }
+
+        .result-failure {
+            background-color: #cc0000;
+        }
+
+        .result-warning {
+            background-color: #d88602;
+        }
+
+        .result-review {
+            background-color: #00ccff;
+        }
+
+        .result-interrupted {
+            background-color: #ddbb88;
+        }
+
+        .result-finished {
+            background-color: #383647;
+        }
+
+        .result-info {
+            background-color: #e2bfce;
+        }
+
+        .result-skipped {
+            background-color: #d88602;
+        }
+
+        .result-default {
+            background-color: #00cc00;
+        }
+        .badge{
+            background-color: rgba(0.5, 0.5, 0.5, 0.5);
+            border-top-left-radius: 0.25em;
+            border-top-right-radius: 0.25em;
+            border-bottom-right-radius: 0.25em;
+            border-bottom-left-radius: 0.25em;
+            padding-left:0.4em;
+            padding-right:0.4em;
+            padding-top:0.1em;
+            padding-bottom:0.1em;
+            font-size:0.85em;
+        }
+        .requirement{
+            border:1px solid #ccc;
+            padding-left:0.3em;
+            padding-right:0.3em;
+            padding-top:0.2em;
+            padding-bottom:0.2em;
+            display:inline-block;
+            background-color: rgb(119, 119, 119);
+            color:#fff;
+            font-size:0.7em;
+            font-weight:normal;
+            text-decoration:none;
+        }
+        .log-http{
+        }
+        .more{
+            background-color:#fff;
+        }
+        .more-btn{
+        }
+        a.more-btn{
+            font-size:0.85em;
+            background-image: linear-gradient(rgb(255, 255, 255) 0px, rgb(224, 224, 224) 100%);
+            border:1px solid rgb(204, 204, 204);
+            padding-left: 0.4em;
+            padding-right: 0.4em;
+            padding-top:0.3em;
+            padding-bottom:0.3em;
+            color:rgb(51, 51, 51);
+            text-decoration: none;
+        }
+        .more-row{
+            border:1px solid #eee;
+            width:100%;
+        }
+        .more-key{
+            text-align:right;
+            vertical-align: top;
+            background-color: #edf2f4;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            word-break: break-all;
+            padding-right:3px;
+        }
+        td.more-key{
+            width:15%;
+        }
+        .more-value{
+            vertical-align: top;
+            background-color: #f1f1f1;
+            padding-left:3px;
+            font-size:0.9em;
+        }
+        .more-text{
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            word-break: break-all;
+        }
+        .more-jwt{
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            word-break: break-all;
+        }
+        .more-json{
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            word-break: break-all;
+        }
+        .log-msg{
+        }
+        .log-src{
+            font-family: monospace;
+        }
+        .prettyprint{
+         }
+         .lang-javascript{
+         }
+         .block-title{
+            font-size:1.15em;
+            color:#fff;
+            padding-left:0.25em;
+            padding-right:0.25em;
+            padding-bottom:0.25em;
+            padding-top:0.25em;
+         }
+        .log-entry-title{
+        }
+        ul.stacktrace{
+            margin-top:3px;
+            margin-left:3px;
+        }
+        .stacktrace li{
+            list-style-type:none;
+            margin-top:2px;
+            margin-bottom:2px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            word-break: break-all;
+        }
+        .p-1{
+            padding:0.1em 0.1em 0.1em 0.1em;
+        }
+        .test-summary{
+            background-color: rgb(217, 237, 247);
+            border: 1px solid rgb(221, 221, 221);
+            padding-top:0.3em;
+            padding-left:0.3em;
+            padding-right:0.3em;
+            padding-bottom:0.3em;
+        }
+        #fixedtoplink{
+            position:fixed;
+            bottom:30px;
+            right:30px;
+            background-color:#999;
+            color:#fff;
+            opacity: 0.8;
+            padding-top:0.3em;
+            padding-left:0.3em;
+            padding-right:0.3em;
+            padding-bottom:0.3em;
+            font-size:0.85em;
+            text-decoration:none;
+        }
+
+        .review-img{
+            max-height: 50vh;
+            display: block;
+            margin-right: auto;
+            margin-left: auto;
+        }
+
+    </style>
+    <script>
+        function moreClicked(itemid){
+            var moreelem = document.getElementById('more_' + itemid);
+            if(moreelem.className.includes('collapse')){
+                moreelem.className='more';
+            }
+            else{
+                moreelem.className='more collapse';
+            }
+        }
+
+        function expandMores() {
+            var mores = document.querySelectorAll('.more');
+            for(var i in mores){
+                var moreelem = mores[i];
+                if(moreelem.className){
+                    moreelem.className='more';
+                }
+            }
+        }
+
+        function collapseMores(){
+            var mores = document.querySelectorAll('.more');
+            for(var i in mores){
+                var moreelem = mores[i];
+                if(moreelem.className){
+                    moreelem.className='more collapse';
+                }
+            }
+        }
+
+    </script>
+</head>
+<body>
+<h1>
+Test Summary
+</h1>
+<div  id="header">
+    <table style="width:auto;">
+        <tr>
+            <th>Test Name</th>
+            <td>oidcc-scope-address</td>
+        </tr>
+        <tr>
+            <th>Variant</th>
+            <td>client_auth_type=client_secret_basic, server_metadata=discovery, response_type=code, response_mode=default, client_registration=static_client</td>
+        </tr>
+        <tr>
+            <th>Test ID</th>
+            <td>
+                <span>nKp4EdA5cmIOMsM</span>
+                <a target="_blank" href="https://localhost.emobix.co.uk:8443/log-detail.html?public=true&amp;log=nKp4EdA5cmIOMsM">https://localhost.emobix.co.uk:8443/log-detail.html?public=true&amp;log=nKp4EdA5cmIOMsM</a>
+            </td>
+        </tr>
+        <tr>
+            <th>Created</th>
+            <td>2022-05-30T08:37:39.701341Z</td>
+        </tr>
+        <tr>
+            <th>Description</th>
+            <td>GAIA-X AAS</td>
+        </tr>
+        <tr>
+            <th>Test Version</th>
+            <td>4.1.43</td>
+        </tr>
+        <tr>
+            <th>Test Owner</th>
+            <td>developer https://developer.com</td>
+        </tr>
+        <tr>
+            <th>Plan ID</th>
+            <td>
+                <span>aLu4PYnnVNznM</span>
+                <a target="_blank" href="https://localhost.emobix.co.uk:8443/plan-detail.html?public=true&amp;plan=aLu4PYnnVNznM">https://localhost.emobix.co.uk:8443/plan-detail.html?public=true&amp;plan=aLu4PYnnVNznM</a>
+            </td>
+        </tr>
+        <tr>
+            <th>Exported From</th>
+            <td>https://localhost.emobix.co.uk:8443</td>
+        </tr>
+        <tr>
+            <th>Exported By</th>
+            <td>developer https://developer.com</td>
+        </tr>
+        <tr>
+            <th>Suite Version</th>
+            <td>4.1.43</td>
+        </tr>
+        <tr>
+            <th>Exported</th>
+            <td>2022-05-30 08:46:39 (UTC)</td>
+        </tr>
+    </table>
+    <div class="test-summary">This test requests authorization with address scope.</div>
+    <hr>
+    <table>
+        <tr>
+            <td align="center">
+                Status:
+                <span class="label testStatus-finished">FINISHED</span>
+
+                Result:
+                <span class="label testResult-skipped">SKIPPED</span>
+            </td>
+        </tr>
+        <tr>
+            <td align="center">
+                <span class="label result-success">SUCCESS <span class="badge">12</span></span>
+
+                <span class="label result-failure">FAILURE <span class="badge">0</span></span>
+
+                <span class="label result-warning">WARNING <span class="badge">0</span></span>
+
+                <span class="label result-review">REVIEW <span class="badge">0</span></span>
+
+                <span class="label result-info">INFO <span class="badge">5</span></span>
+            </td>
+        </tr>
+        
+    </table>
+    <hr>
+</div>
+
+<h1 id="testresultsheader">Test Results</h1>
+<a href="javascript:expandMores()">Expand All</a>
+<a href="javascript:collapseMores()">Collapse All</a>
+<div>All times are UTC</div>
+<div id="results">
+    <div class="log-item">
+<table cellpadding="0" cellspacing="0" id="nKp4EdA5cmIOMsM-pmIEkrRyM14poTl0UrMXJGlEhswxgFYP">
+    
+    <tbody>
+        <tr class="log-entry-title">
+
+            <td class="col-1">
+                <span>2022-05-30 08:37:39</span>
+                <div>
+                    <a class="more-btn" href="javascript:moreClicked(&#39;nKp4EdA5cmIOMsM-pmIEkrRyM14poTl0UrMXJGlEhswxgFYP&#39;)">(7) More</a>
+                </div>
+            </td>
+
+            <td class="col-2 labelCollection">
+                <span class="label result-info">INFO</span>
+
+                
+
+                
+                <div>
+                    
+                </div>
+            </td>
+
+            <td class="col-3">
+                <div class="log-src">TEST-RUNNER</div>
+                <div class="log-msg">Test instance nKp4EdA5cmIOMsM created</div>
+            </td>
+        </tr>
+        
+        <tr>
+            <td colspan="3">
+                <div class="more" id="more_nKp4EdA5cmIOMsM-pmIEkrRyM14poTl0UrMXJGlEhswxgFYP">
+                    
+
+                    <table>
+                        <tr class="more-row">
+                            <td class="more-key">baseUrl</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">https://localhost.emobix.co.uk:8443/test/a/aas-test</pre>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">variant</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    <pre class="more-json prettyprint lang-javascript">{
+  &quot;client_auth_type&quot;: &quot;client_secret_basic&quot;,
+  &quot;response_type&quot;: &quot;code&quot;,
+  &quot;server_metadata&quot;: &quot;discovery&quot;,
+  &quot;response_mode&quot;: &quot;default&quot;,
+  &quot;client_registration&quot;: &quot;static_client&quot;
+}</pre>
+                                    
+                                    
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">alias</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">aas-test</pre>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">description</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">GAIA-X AAS</pre>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">planId</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">aLu4PYnnVNznM</pre>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">config</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    <pre class="more-json prettyprint lang-javascript">{
+  &quot;alias&quot;: &quot;aas-test&quot;,
+  &quot;description&quot;: &quot;GAIA-X AAS&quot;,
+  &quot;publish&quot;: &quot;everything&quot;,
+  &quot;server&quot;: {
+    &quot;discoveryUrl&quot;: &quot;http://78.138.66.128:9009/.well-known/openid-configuration&quot;
+  },
+  &quot;client&quot;: {
+    &quot;client_id&quot;: &quot;aas-app-oidc&quot;,
+    &quot;client_secret&quot;: &quot;secret&quot;
+  },
+  &quot;client2&quot;: {
+    &quot;client_id&quot;: &quot;aas-app-siop&quot;,
+    &quot;client_secret&quot;: &quot;secret2&quot;
+  }
+}</pre>
+                                    
+                                    
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">testName</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">oidcc-scope-address</pre>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+    <div class="log-item">
+<table cellpadding="0" cellspacing="0" id="nKp4EdA5cmIOMsM-gs8WwRQiuT2K61YmvKNqPEFbrSvmuHfx">
+    
+    <tbody>
+        <tr class="log-entry-title">
+
+            <td class="col-1">
+                <span>2022-05-30 08:37:39</span>
+                <div>
+                    <a class="more-btn" href="javascript:moreClicked(&#39;nKp4EdA5cmIOMsM-gs8WwRQiuT2K61YmvKNqPEFbrSvmuHfx&#39;)">(1) More</a>
+                </div>
+            </td>
+
+            <td class="col-2 labelCollection">
+                <span class="label result-success">SUCCESS</span>
+
+                
+
+                
+                <div>
+                    
+                </div>
+            </td>
+
+            <td class="col-3">
+                <div class="log-src">CreateRedirectUri</div>
+                <div class="log-msg">Created redirect URI</div>
+            </td>
+        </tr>
+        
+        <tr>
+            <td colspan="3">
+                <div class="more" id="more_nKp4EdA5cmIOMsM-gs8WwRQiuT2K61YmvKNqPEFbrSvmuHfx">
+                    
+
+                    <table>
+                        <tr class="more-row">
+                            <td class="more-key">redirect_uri</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">https://localhost.emobix.co.uk:8443/test/a/aas-test/callback</pre>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+    <div class="log-item">
+<table cellpadding="0" cellspacing="0" id="nKp4EdA5cmIOMsM-RWYoLm3bpGkzY9UvhTS8WJcFrn2YwCrV">
+    
+    <tbody>
+        <tr class="log-entry-title">
+
+            <td class="col-1">
+                <span>2022-05-30 08:37:39</span>
+                <div>
+                    <a class="more-btn" href="javascript:moreClicked(&#39;nKp4EdA5cmIOMsM-RWYoLm3bpGkzY9UvhTS8WJcFrn2YwCrV&#39;)">(4) More</a>
+                </div>
+            </td>
+
+            <td class="col-2 labelCollection">
+                
+
+                <span class="log-http">
+                        
+                        
+                        
+                        
+                        
+                        
+                </span>
+
+                
+                <div>
+                    
+                </div>
+            </td>
+
+            <td class="col-3">
+                <div class="log-src">GetDynamicServerConfiguration</div>
+                <div class="log-msg">HTTP request</div>
+            </td>
+        </tr>
+        
+        <tr>
+            <td colspan="3">
+                <div class="more" id="more_nKp4EdA5cmIOMsM-RWYoLm3bpGkzY9UvhTS8WJcFrn2YwCrV">
+                    
+
+                    <table>
+                        <tr class="more-row">
+                            <td class="more-key">request_uri</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">http://78.138.66.128:9009/.well-known/openid-configuration</pre>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">request_method</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">GET</pre>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">request_headers</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    <pre class="more-json prettyprint lang-javascript">{
+  &quot;accept&quot;: &quot;text/plain, application/json, application/*+json, */*&quot;,
+  &quot;content-length&quot;: &quot;0&quot;
+}</pre>
+                                    
+                                    
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">request_body</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text"></pre>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+    <div class="log-item">
+<table cellpadding="0" cellspacing="0" id="nKp4EdA5cmIOMsM-okThwA9BJ0yejoMYD5pOcZu2JIQzJD3R">
+    
+    <tbody>
+        <tr class="log-entry-title">
+
+            <td class="col-1">
+                <span>2022-05-30 08:37:40</span>
+                <div>
+                    <a class="more-btn" href="javascript:moreClicked(&#39;nKp4EdA5cmIOMsM-okThwA9BJ0yejoMYD5pOcZu2JIQzJD3R&#39;)">(4) More</a>
+                </div>
+            </td>
+
+            <td class="col-2 labelCollection">
+                
+
+                <span class="log-http">
+                        
+                        <span class="label label-info">RESPONSE</span>
+                        
+                        
+                        
+                        
+                </span>
+
+                
+                <div>
+                    
+                </div>
+            </td>
+
+            <td class="col-3">
+                <div class="log-src">GetDynamicServerConfiguration</div>
+                <div class="log-msg">HTTP response</div>
+            </td>
+        </tr>
+        
+        <tr>
+            <td colspan="3">
+                <div class="more" id="more_nKp4EdA5cmIOMsM-okThwA9BJ0yejoMYD5pOcZu2JIQzJD3R">
+                    
+
+                    <table>
+                        <tr class="more-row">
+                            <td class="more-key">response_status_code</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">200 OK</pre>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">response_status_text</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text"></pre>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">response_headers</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    <pre class="more-json prettyprint lang-javascript">{
+  &quot;x-content-type-options&quot;: &quot;nosniff&quot;,
+  &quot;x-xss-protection&quot;: &quot;1; mode\u003dblock&quot;,
+  &quot;cache-control&quot;: &quot;no-cache, no-store, max-age\u003d0, must-revalidate&quot;,
+  &quot;pragma&quot;: &quot;no-cache&quot;,
+  &quot;expires&quot;: &quot;0&quot;,
+  &quot;x-frame-options&quot;: &quot;DENY&quot;,
+  &quot;content-type&quot;: &quot;application/json&quot;,
+  &quot;transfer-encoding&quot;: &quot;chunked&quot;,
+  &quot;date&quot;: &quot;Mon, 30 May 2022 08:37:40 GMT&quot;,
+  &quot;keep-alive&quot;: &quot;timeout\u003d60&quot;,
+  &quot;connection&quot;: &quot;keep-alive&quot;
+}</pre>
+                                    
+                                    
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">response_body</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">{&quot;issuer&quot;:&quot;http://78.138.66.128:9009&quot;,&quot;authorization_endpoint&quot;:&quot;http://78.138.66.128:9009/oauth2/authorize&quot;,&quot;token_endpoint&quot;:&quot;http://78.138.66.128:9009/oauth2/token&quot;,&quot;jwks_uri&quot;:&quot;http://78.138.66.128:9009/oauth2/jwks&quot;,&quot;userinfo_endpoint&quot;:&quot;http://78.138.66.128:9009/userinfo&quot;,&quot;token_endpoint_auth_methods_supported&quot;:[&quot;client_secret_basic&quot;],&quot;response_types_supported&quot;:[&quot;code&quot;],&quot;grant_types_supported&quot;:[&quot;authorization_code&quot;],&quot;subject_types_supported&quot;:[&quot;public&quot;],&quot;id_token_signing_alg_values_supported&quot;:[&quot;RS256&quot;],&quot;scopes_supported&quot;:[&quot;openid&quot;,&quot;profile&quot;,&quot;email&quot;,&quot;protected&quot;],&quot;userinfo_signing_alg_values_supported&quot;:[&quot;RS256&quot;],&quot;display_values_supported&quot;:[&quot;page&quot;],&quot;claims_supported&quot;:[&quot;auth_time&quot;,&quot;birthdate&quot;,&quot;email&quot;,&quot;email_verified&quot;,&quot;family_name&quot;,&quot;gender&quot;,&quot;given_name&quot;,&quot;iss&quot;,&quot;middle_name&quot;,&quot;name&quot;,&quot;preferred_username&quot;,&quot;read_access&quot;,&quot;sub&quot;,&quot;updated_at&quot;,&quot;write_access&quot;],&quot;claims_locales_supported&quot;:[&quot;en&quot;],&quot;ui_locales_supported&quot;:[&quot;en&quot;,&quot;de&quot;,&quot;fr&quot;,&quot;ru&quot;,&quot;sk&quot;]}</pre>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+    <div class="log-item">
+<table cellpadding="0" cellspacing="0" id="nKp4EdA5cmIOMsM-jDwYQ4r1BdkI6YnsEfUzQKoZ6noW4l1I">
+    
+    <tbody>
+        <tr class="log-entry-title">
+
+            <td class="col-1">
+                <span>2022-05-30 08:37:40</span>
+                <div>
+                    <a class="more-btn" href="javascript:moreClicked(&#39;nKp4EdA5cmIOMsM-jDwYQ4r1BdkI6YnsEfUzQKoZ6noW4l1I&#39;)">(16) More</a>
+                </div>
+            </td>
+
+            <td class="col-2 labelCollection">
+                <span class="label result-success">SUCCESS</span>
+
+                
+
+                
+                <div>
+                    
+                </div>
+            </td>
+
+            <td class="col-3">
+                <div class="log-src">GetDynamicServerConfiguration</div>
+                <div class="log-msg">Successfully parsed server configuration</div>
+            </td>
+        </tr>
+        
+        <tr>
+            <td colspan="3">
+                <div class="more" id="more_nKp4EdA5cmIOMsM-jDwYQ4r1BdkI6YnsEfUzQKoZ6noW4l1I">
+                    
+
+                    <table>
+                        <tr class="more-row">
+                            <td class="more-key">issuer</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">http://78.138.66.128:9009</pre>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">authorization_endpoint</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">http://78.138.66.128:9009/oauth2/authorize</pre>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">token_endpoint</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">http://78.138.66.128:9009/oauth2/token</pre>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">jwks_uri</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">http://78.138.66.128:9009/oauth2/jwks</pre>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">userinfo_endpoint</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">http://78.138.66.128:9009/userinfo</pre>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">token_endpoint_auth_methods_supported</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    <pre class="more-json prettyprint lang-javascript">[
+  &quot;client_secret_basic&quot;
+]</pre>
+                                    
+                                    
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">response_types_supported</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    <pre class="more-json prettyprint lang-javascript">[
+  &quot;code&quot;
+]</pre>
+                                    
+                                    
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">grant_types_supported</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    <pre class="more-json prettyprint lang-javascript">[
+  &quot;authorization_code&quot;
+]</pre>
+                                    
+                                    
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">subject_types_supported</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    <pre class="more-json prettyprint lang-javascript">[
+  &quot;public&quot;
+]</pre>
+                                    
+                                    
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">id_token_signing_alg_values_supported</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    <pre class="more-json prettyprint lang-javascript">[
+  &quot;RS256&quot;
+]</pre>
+                                    
+                                    
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">scopes_supported</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    <pre class="more-json prettyprint lang-javascript">[
+  &quot;openid&quot;,
+  &quot;profile&quot;,
+  &quot;email&quot;,
+  &quot;protected&quot;
+]</pre>
+                                    
+                                    
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">userinfo_signing_alg_values_supported</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    <pre class="more-json prettyprint lang-javascript">[
+  &quot;RS256&quot;
+]</pre>
+                                    
+                                    
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">display_values_supported</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    <pre class="more-json prettyprint lang-javascript">[
+  &quot;page&quot;
+]</pre>
+                                    
+                                    
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">claims_supported</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    <pre class="more-json prettyprint lang-javascript">[
+  &quot;auth_time&quot;,
+  &quot;birthdate&quot;,
+  &quot;email&quot;,
+  &quot;email_verified&quot;,
+  &quot;family_name&quot;,
+  &quot;gender&quot;,
+  &quot;given_name&quot;,
+  &quot;iss&quot;,
+  &quot;middle_name&quot;,
+  &quot;name&quot;,
+  &quot;preferred_username&quot;,
+  &quot;read_access&quot;,
+  &quot;sub&quot;,
+  &quot;updated_at&quot;,
+  &quot;write_access&quot;
+]</pre>
+                                    
+                                    
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">claims_locales_supported</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    <pre class="more-json prettyprint lang-javascript">[
+  &quot;en&quot;
+]</pre>
+                                    
+                                    
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">ui_locales_supported</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    <pre class="more-json prettyprint lang-javascript">[
+  &quot;en&quot;,
+  &quot;de&quot;,
+  &quot;fr&quot;,
+  &quot;ru&quot;,
+  &quot;sk&quot;
+]</pre>
+                                    
+                                    
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+    <div class="log-item">
+<table cellpadding="0" cellspacing="0" id="nKp4EdA5cmIOMsM-FxX385ydFiIsyrziUtuFUv78CVC4rCVj">
+    
+    <tbody>
+        <tr class="log-entry-title">
+
+            <td class="col-1">
+                <span>2022-05-30 08:37:40</span>
+                <div>
+                    <a class="more-btn" href="javascript:moreClicked(&#39;nKp4EdA5cmIOMsM-FxX385ydFiIsyrziUtuFUv78CVC4rCVj&#39;)">(1) More</a>
+                </div>
+            </td>
+
+            <td class="col-2 labelCollection">
+                <span class="label result-success">SUCCESS</span>
+
+                
+
+                
+                <div>
+                    
+                </div>
+            </td>
+
+            <td class="col-3">
+                <div class="log-src">CheckServerConfiguration</div>
+                <div class="log-msg">Found required server configuration keys</div>
+            </td>
+        </tr>
+        
+        <tr>
+            <td colspan="3">
+                <div class="more" id="more_nKp4EdA5cmIOMsM-FxX385ydFiIsyrziUtuFUv78CVC4rCVj">
+                    
+
+                    <table>
+                        <tr class="more-row">
+                            <td class="more-key">required</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    <pre class="more-json prettyprint lang-javascript">[
+  &quot;authorization_endpoint&quot;,
+  &quot;token_endpoint&quot;,
+  &quot;issuer&quot;
+]</pre>
+                                    
+                                    
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+    <div class="log-item">
+<table cellpadding="0" cellspacing="0" id="nKp4EdA5cmIOMsM-BM2e5Di69h3Ir8n1VpsftngTVvlHnQmd">
+    
+    <tbody>
+        <tr class="log-entry-title">
+
+            <td class="col-1">
+                <span>2022-05-30 08:37:40</span>
+                <div>
+                    <a class="more-btn" href="javascript:moreClicked(&#39;nKp4EdA5cmIOMsM-BM2e5Di69h3Ir8n1VpsftngTVvlHnQmd&#39;)">(4) More</a>
+                </div>
+            </td>
+
+            <td class="col-2 labelCollection">
+                <span class="label result-success">SUCCESS</span>
+
+                
+
+                
+                <div>
+                    
+                </div>
+            </td>
+
+            <td class="col-3">
+                <div class="log-src">ExtractTLSTestValuesFromServerConfiguration</div>
+                <div class="log-msg">Extracted TLS information from authorization server configuration</div>
+            </td>
+        </tr>
+        
+        <tr>
+            <td colspan="3">
+                <div class="more" id="more_nKp4EdA5cmIOMsM-BM2e5Di69h3Ir8n1VpsftngTVvlHnQmd">
+                    
+
+                    <table>
+                        <tr class="more-row">
+                            <td class="more-key">registration_endpoint</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">authorization_endpoint</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    <pre class="more-json prettyprint lang-javascript">{
+  &quot;testHost&quot;: &quot;78.138.66.128&quot;,
+  &quot;testPort&quot;: 9009
+}</pre>
+                                    
+                                    
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">token_endpoint</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    <pre class="more-json prettyprint lang-javascript">{
+  &quot;testHost&quot;: &quot;78.138.66.128&quot;,
+  &quot;testPort&quot;: 9009
+}</pre>
+                                    
+                                    
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">userinfo_endpoint</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    <pre class="more-json prettyprint lang-javascript">{
+  &quot;testHost&quot;: &quot;78.138.66.128&quot;,
+  &quot;testPort&quot;: 9009
+}</pre>
+                                    
+                                    
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+    <div class="log-item">
+<table cellpadding="0" cellspacing="0" id="nKp4EdA5cmIOMsM-9nP2mO81nmUAChXEYOfV7MTr7jydWKsE">
+    
+    <tbody>
+        <tr class="log-entry-title">
+
+            <td class="col-1">
+                <span>2022-05-30 08:37:40</span>
+                <div>
+                    <a class="more-btn" href="javascript:moreClicked(&#39;nKp4EdA5cmIOMsM-9nP2mO81nmUAChXEYOfV7MTr7jydWKsE&#39;)">(1) More</a>
+                </div>
+            </td>
+
+            <td class="col-2 labelCollection">
+                
+
+                
+
+                
+                <div>
+                    
+                </div>
+            </td>
+
+            <td class="col-3">
+                <div class="log-src">FetchServerKeys</div>
+                <div class="log-msg">Fetching server key</div>
+            </td>
+        </tr>
+        
+        <tr>
+            <td colspan="3">
+                <div class="more" id="more_nKp4EdA5cmIOMsM-9nP2mO81nmUAChXEYOfV7MTr7jydWKsE">
+                    
+
+                    <table>
+                        <tr class="more-row">
+                            <td class="more-key">jwks_uri</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">http://78.138.66.128:9009/oauth2/jwks</pre>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+    <div class="log-item">
+<table cellpadding="0" cellspacing="0" id="nKp4EdA5cmIOMsM-ybznullRfBEfX4ejYD3wgN16EUqAAJGp">
+    
+    <tbody>
+        <tr class="log-entry-title">
+
+            <td class="col-1">
+                <span>2022-05-30 08:37:40</span>
+                <div>
+                    <a class="more-btn" href="javascript:moreClicked(&#39;nKp4EdA5cmIOMsM-ybznullRfBEfX4ejYD3wgN16EUqAAJGp&#39;)">(4) More</a>
+                </div>
+            </td>
+
+            <td class="col-2 labelCollection">
+                
+
+                <span class="log-http">
+                        
+                        
+                        
+                        
+                        
+                        
+                </span>
+
+                
+                <div>
+                    
+                </div>
+            </td>
+
+            <td class="col-3">
+                <div class="log-src">FetchServerKeys</div>
+                <div class="log-msg">HTTP request</div>
+            </td>
+        </tr>
+        
+        <tr>
+            <td colspan="3">
+                <div class="more" id="more_nKp4EdA5cmIOMsM-ybznullRfBEfX4ejYD3wgN16EUqAAJGp">
+                    
+
+                    <table>
+                        <tr class="more-row">
+                            <td class="more-key">request_uri</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">http://78.138.66.128:9009/oauth2/jwks</pre>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">request_method</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">GET</pre>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">request_headers</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    <pre class="more-json prettyprint lang-javascript">{
+  &quot;accept&quot;: &quot;text/plain, application/json, application/*+json, */*&quot;,
+  &quot;content-length&quot;: &quot;0&quot;
+}</pre>
+                                    
+                                    
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">request_body</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text"></pre>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+    <div class="log-item">
+<table cellpadding="0" cellspacing="0" id="nKp4EdA5cmIOMsM-gTbZ1avOQ5ACukyRUD1TcnIHmvbp94PQ">
+    
+    <tbody>
+        <tr class="log-entry-title">
+
+            <td class="col-1">
+                <span>2022-05-30 08:37:40</span>
+                <div>
+                    <a class="more-btn" href="javascript:moreClicked(&#39;nKp4EdA5cmIOMsM-gTbZ1avOQ5ACukyRUD1TcnIHmvbp94PQ&#39;)">(4) More</a>
+                </div>
+            </td>
+
+            <td class="col-2 labelCollection">
+                
+
+                <span class="log-http">
+                        
+                        <span class="label label-info">RESPONSE</span>
+                        
+                        
+                        
+                        
+                </span>
+
+                
+                <div>
+                    
+                </div>
+            </td>
+
+            <td class="col-3">
+                <div class="log-src">FetchServerKeys</div>
+                <div class="log-msg">HTTP response</div>
+            </td>
+        </tr>
+        
+        <tr>
+            <td colspan="3">
+                <div class="more" id="more_nKp4EdA5cmIOMsM-gTbZ1avOQ5ACukyRUD1TcnIHmvbp94PQ">
+                    
+
+                    <table>
+                        <tr class="more-row">
+                            <td class="more-key">response_status_code</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">200 OK</pre>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">response_status_text</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text"></pre>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">response_headers</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    <pre class="more-json prettyprint lang-javascript">{
+  &quot;x-content-type-options&quot;: &quot;nosniff&quot;,
+  &quot;x-xss-protection&quot;: &quot;1; mode\u003dblock&quot;,
+  &quot;cache-control&quot;: &quot;no-cache, no-store, max-age\u003d0, must-revalidate&quot;,
+  &quot;pragma&quot;: &quot;no-cache&quot;,
+  &quot;expires&quot;: &quot;0&quot;,
+  &quot;x-frame-options&quot;: &quot;DENY&quot;,
+  &quot;content-type&quot;: &quot;application/json;charset\u003dISO-8859-1&quot;,
+  &quot;content-length&quot;: &quot;599&quot;,
+  &quot;date&quot;: &quot;Mon, 30 May 2022 08:37:40 GMT&quot;,
+  &quot;keep-alive&quot;: &quot;timeout\u003d60&quot;,
+  &quot;connection&quot;: &quot;keep-alive&quot;
+}</pre>
+                                    
+                                    
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">response_body</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">{&quot;keys&quot;:[{&quot;kty&quot;:&quot;RSA&quot;,&quot;e&quot;:&quot;AQAB&quot;,&quot;kid&quot;:&quot;96ec048e-c640-4cfd-bc82-6571810a9d0f&quot;,&quot;n&quot;:&quot;3qjCXN3z7n50cLaSM23T6Cq98X0jdn7Xzwki-FPkJ760vPuSLZCRMl8K9HfKS5SZIJzgrrQy6JlQ3ZSXmDJEgp7MeBpPGaa87559fWh2hapXzRNV-1SzUtMjXPa_UrNvnP_o_XuaJEKP53DroA20V9DTcPOHz5-xjfvUDFuoD2iNgqGSKtJPhg2D0uAuIJCt3h794IA2vWtiaovdqUZrfWFz1Yvt2-jRmjfzO7I4aKk3yyovEa9frxdk56ePT0EQE4bXyzg3IZDdpiCE0_1_jiPHuXkpY0K9jiYPqH3jSj_fat1AtEw-j8t_oy1PmOF4Hm6iIljYNTMGphwFekDzbTNYq8jYrSM1RWwcsvR_wvq_CIX6RfniHLD4QrG1V1euNlK2NktuBaEF3CuaOoJsujsrjDQphsrp63gLp7wMZMJrISm6T5abQsvBiDPmUDfXlREeJ2g1DH1ajKDrzP4ieu9nIAGjxZkMoocx3ng7wkXAJW05j-l3ehNpyqnHRtCb&quot;}]}</pre>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+    <div class="log-item">
+<table cellpadding="0" cellspacing="0" id="nKp4EdA5cmIOMsM-68gp3ZsCh9m0AQbajPMlJNNeMJ89hqHb">
+    
+    <tbody>
+        <tr class="log-entry-title">
+
+            <td class="col-1">
+                <span>2022-05-30 08:37:40</span>
+                <div>
+                    <a class="more-btn" href="javascript:moreClicked(&#39;nKp4EdA5cmIOMsM-68gp3ZsCh9m0AQbajPMlJNNeMJ89hqHb&#39;)">(1) More</a>
+                </div>
+            </td>
+
+            <td class="col-2 labelCollection">
+                
+
+                
+
+                
+                <div>
+                    
+                </div>
+            </td>
+
+            <td class="col-3">
+                <div class="log-src">FetchServerKeys</div>
+                <div class="log-msg">Found JWK set string</div>
+            </td>
+        </tr>
+        
+        <tr>
+            <td colspan="3">
+                <div class="more" id="more_nKp4EdA5cmIOMsM-68gp3ZsCh9m0AQbajPMlJNNeMJ89hqHb">
+                    
+
+                    <table>
+                        <tr class="more-row">
+                            <td class="more-key">jwk_string</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">{&quot;keys&quot;:[{&quot;kty&quot;:&quot;RSA&quot;,&quot;e&quot;:&quot;AQAB&quot;,&quot;kid&quot;:&quot;96ec048e-c640-4cfd-bc82-6571810a9d0f&quot;,&quot;n&quot;:&quot;3qjCXN3z7n50cLaSM23T6Cq98X0jdn7Xzwki-FPkJ760vPuSLZCRMl8K9HfKS5SZIJzgrrQy6JlQ3ZSXmDJEgp7MeBpPGaa87559fWh2hapXzRNV-1SzUtMjXPa_UrNvnP_o_XuaJEKP53DroA20V9DTcPOHz5-xjfvUDFuoD2iNgqGSKtJPhg2D0uAuIJCt3h794IA2vWtiaovdqUZrfWFz1Yvt2-jRmjfzO7I4aKk3yyovEa9frxdk56ePT0EQE4bXyzg3IZDdpiCE0_1_jiPHuXkpY0K9jiYPqH3jSj_fat1AtEw-j8t_oy1PmOF4Hm6iIljYNTMGphwFekDzbTNYq8jYrSM1RWwcsvR_wvq_CIX6RfniHLD4QrG1V1euNlK2NktuBaEF3CuaOoJsujsrjDQphsrp63gLp7wMZMJrISm6T5abQsvBiDPmUDfXlREeJ2g1DH1ajKDrzP4ieu9nIAGjxZkMoocx3ng7wkXAJW05j-l3ehNpyqnHRtCb&quot;}]}</pre>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+    <div class="log-item">
+<table cellpadding="0" cellspacing="0" id="nKp4EdA5cmIOMsM-kZvb7ERqA8WPXRkn0EkDvT8WdjLPGskw">
+    
+    <tbody>
+        <tr class="log-entry-title">
+
+            <td class="col-1">
+                <span>2022-05-30 08:37:40</span>
+                <div>
+                    <a class="more-btn" href="javascript:moreClicked(&#39;nKp4EdA5cmIOMsM-kZvb7ERqA8WPXRkn0EkDvT8WdjLPGskw&#39;)">(1) More</a>
+                </div>
+            </td>
+
+            <td class="col-2 labelCollection">
+                <span class="label result-success">SUCCESS</span>
+
+                
+
+                
+                <div>
+                    
+                </div>
+            </td>
+
+            <td class="col-3">
+                <div class="log-src">FetchServerKeys</div>
+                <div class="log-msg">Found server JWK set</div>
+            </td>
+        </tr>
+        
+        <tr>
+            <td colspan="3">
+                <div class="more" id="more_nKp4EdA5cmIOMsM-kZvb7ERqA8WPXRkn0EkDvT8WdjLPGskw">
+                    
+
+                    <table>
+                        <tr class="more-row">
+                            <td class="more-key">server_jwks</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    <pre class="more-json prettyprint lang-javascript">{
+  &quot;keys&quot;: [
+    {
+      &quot;kty&quot;: &quot;RSA&quot;,
+      &quot;e&quot;: &quot;AQAB&quot;,
+      &quot;kid&quot;: &quot;96ec048e-c640-4cfd-bc82-6571810a9d0f&quot;,
+      &quot;n&quot;: &quot;3qjCXN3z7n50cLaSM23T6Cq98X0jdn7Xzwki-FPkJ760vPuSLZCRMl8K9HfKS5SZIJzgrrQy6JlQ3ZSXmDJEgp7MeBpPGaa87559fWh2hapXzRNV-1SzUtMjXPa_UrNvnP_o_XuaJEKP53DroA20V9DTcPOHz5-xjfvUDFuoD2iNgqGSKtJPhg2D0uAuIJCt3h794IA2vWtiaovdqUZrfWFz1Yvt2-jRmjfzO7I4aKk3yyovEa9frxdk56ePT0EQE4bXyzg3IZDdpiCE0_1_jiPHuXkpY0K9jiYPqH3jSj_fat1AtEw-j8t_oy1PmOF4Hm6iIljYNTMGphwFekDzbTNYq8jYrSM1RWwcsvR_wvq_CIX6RfniHLD4QrG1V1euNlK2NktuBaEF3CuaOoJsujsrjDQphsrp63gLp7wMZMJrISm6T5abQsvBiDPmUDfXlREeJ2g1DH1ajKDrzP4ieu9nIAGjxZkMoocx3ng7wkXAJW05j-l3ehNpyqnHRtCb&quot;
+    }
+  ]
+}</pre>
+                                    
+                                    
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+    <div class="log-item">
+<table cellpadding="0" cellspacing="0" id="nKp4EdA5cmIOMsM-e6YafjyW395wO18Oc9c1ZVZpZMAXtJ6t">
+    
+    <tbody>
+        <tr class="log-entry-title">
+
+            <td class="col-1">
+                <span>2022-05-30 08:37:40</span>
+                <div>
+                    <a class="more-btn" href="javascript:moreClicked(&#39;nKp4EdA5cmIOMsM-e6YafjyW395wO18Oc9c1ZVZpZMAXtJ6t&#39;)">(1) More</a>
+                </div>
+            </td>
+
+            <td class="col-2 labelCollection">
+                <span class="label result-success">SUCCESS</span>
+
+                
+
+                
+                <div>
+                    
+                </div>
+            </td>
+
+            <td class="col-3">
+                <div class="log-src">CheckServerKeysIsValid</div>
+                <div class="log-msg">Server JWKs is valid</div>
+            </td>
+        </tr>
+        
+        <tr>
+            <td colspan="3">
+                <div class="more" id="more_nKp4EdA5cmIOMsM-e6YafjyW395wO18Oc9c1ZVZpZMAXtJ6t">
+                    
+
+                    <table>
+                        <tr class="more-row">
+                            <td class="more-key">server_jwks</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    <pre class="more-json prettyprint lang-javascript">{
+  &quot;keys&quot;: [
+    {
+      &quot;kty&quot;: &quot;RSA&quot;,
+      &quot;e&quot;: &quot;AQAB&quot;,
+      &quot;kid&quot;: &quot;96ec048e-c640-4cfd-bc82-6571810a9d0f&quot;,
+      &quot;n&quot;: &quot;3qjCXN3z7n50cLaSM23T6Cq98X0jdn7Xzwki-FPkJ760vPuSLZCRMl8K9HfKS5SZIJzgrrQy6JlQ3ZSXmDJEgp7MeBpPGaa87559fWh2hapXzRNV-1SzUtMjXPa_UrNvnP_o_XuaJEKP53DroA20V9DTcPOHz5-xjfvUDFuoD2iNgqGSKtJPhg2D0uAuIJCt3h794IA2vWtiaovdqUZrfWFz1Yvt2-jRmjfzO7I4aKk3yyovEa9frxdk56ePT0EQE4bXyzg3IZDdpiCE0_1_jiPHuXkpY0K9jiYPqH3jSj_fat1AtEw-j8t_oy1PmOF4Hm6iIljYNTMGphwFekDzbTNYq8jYrSM1RWwcsvR_wvq_CIX6RfniHLD4QrG1V1euNlK2NktuBaEF3CuaOoJsujsrjDQphsrp63gLp7wMZMJrISm6T5abQsvBiDPmUDfXlREeJ2g1DH1ajKDrzP4ieu9nIAGjxZkMoocx3ng7wkXAJW05j-l3ehNpyqnHRtCb&quot;
+    }
+  ]
+}</pre>
+                                    
+                                    
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+    <div class="log-item">
+<table cellpadding="0" cellspacing="0" id="nKp4EdA5cmIOMsM-kj2dXSR3ctFU0FRqUnUJpTudNE5Krd6p">
+    
+    <tbody>
+        <tr class="log-entry-title">
+
+            <td class="col-1">
+                <span>2022-05-30 08:37:40</span>
+                
+            </td>
+
+            <td class="col-2 labelCollection">
+                <span class="label result-success">SUCCESS</span>
+
+                
+
+                
+                <div>
+                    <a class="label requirement" target="_blank" href="https://tools.ietf.org/html/rfc7517#section-1.1">RFC7517-1.1</a>
+                </div>
+            </td>
+
+            <td class="col-3">
+                <div class="log-src">ValidateServerJWKs</div>
+                <div class="log-msg">Valid server JWKs: keys are valid JSON, contain the required fields and are correctly encoded using unpadded base64url</div>
+            </td>
+        </tr>
+        
+        <tr>
+            <td colspan="3">
+                <div class="more" id="more_nKp4EdA5cmIOMsM-kj2dXSR3ctFU0FRqUnUJpTudNE5Krd6p">
+                    
+
+                    
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+    <div class="log-item">
+<table cellpadding="0" cellspacing="0" id="nKp4EdA5cmIOMsM-7eeEEqXJXSBq2XfZfzu6qyYSuQglhwfj">
+    
+    <tbody>
+        <tr class="log-entry-title">
+
+            <td class="col-1">
+                <span>2022-05-30 08:37:40</span>
+                
+            </td>
+
+            <td class="col-2 labelCollection">
+                <span class="label result-success">SUCCESS</span>
+
+                
+
+                
+                <div>
+                    <a class="label requirement" target="_blank" href="https://openid.net/specs/openid-connect-core-1_0.html#rfc.section.10.1">OIDCC-10.1</a>
+                </div>
+            </td>
+
+            <td class="col-3">
+                <div class="log-src">CheckForKeyIdInServerJWKs</div>
+                <div class="log-msg">All keys contain kids</div>
+            </td>
+        </tr>
+        
+        <tr>
+            <td colspan="3">
+                <div class="more" id="more_nKp4EdA5cmIOMsM-7eeEEqXJXSBq2XfZfzu6qyYSuQglhwfj">
+                    
+
+                    
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+    <div class="log-item">
+<table cellpadding="0" cellspacing="0" id="nKp4EdA5cmIOMsM-jC7QVilv4AgAOYszU8sXppQMMOUL2MJC">
+    
+    <tbody>
+        <tr class="log-entry-title">
+
+            <td class="col-1">
+                <span>2022-05-30 08:37:40</span>
+                <div>
+                    <a class="more-btn" href="javascript:moreClicked(&#39;nKp4EdA5cmIOMsM-jC7QVilv4AgAOYszU8sXppQMMOUL2MJC&#39;)">(1) More</a>
+                </div>
+            </td>
+
+            <td class="col-2 labelCollection">
+                <span class="label result-success">SUCCESS</span>
+
+                
+
+                
+                <div>
+                    <a class="label requirement" target="_blank" href="https://tools.ietf.org/html/rfc7517#section-4.5">RFC7517-4.5</a>
+                </div>
+            </td>
+
+            <td class="col-3">
+                <div class="log-src">CheckDistinctKeyIdValueInServerJWKs</div>
+                <div class="log-msg">Distinct &#39;kid&#39; value in all keys of server_jwks</div>
+            </td>
+        </tr>
+        
+        <tr>
+            <td colspan="3">
+                <div class="more" id="more_nKp4EdA5cmIOMsM-jC7QVilv4AgAOYszU8sXppQMMOUL2MJC">
+                    
+
+                    <table>
+                        <tr class="more-row">
+                            <td class="more-key">see</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">https://bitbucket.org/openid/connect/issues/1127</pre>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+    <div class="log-item">
+<table cellpadding="0" cellspacing="0" id="nKp4EdA5cmIOMsM-QeBkw8lIq6tRgaPkYRzHTilEySSjynQM">
+    
+    <tbody>
+        <tr class="log-entry-title">
+
+            <td class="col-1">
+                <span>2022-05-30 08:37:40</span>
+                
+            </td>
+
+            <td class="col-2 labelCollection">
+                <span class="label result-success">SUCCESS</span>
+
+                
+
+                
+                <div>
+                    <a class="label requirement" target="_blank">RFC7518-6.3.2.1</a>
+                </div>
+            </td>
+
+            <td class="col-3">
+                <div class="log-src">EnsureServerJwksDoesNotContainPrivateOrSymmetricKeys</div>
+                <div class="log-msg">Jwks does not contain any private or symmetric keys</div>
+            </td>
+        </tr>
+        
+        <tr>
+            <td colspan="3">
+                <div class="more" id="more_nKp4EdA5cmIOMsM-QeBkw8lIq6tRgaPkYRzHTilEySSjynQM">
+                    
+
+                    
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+    <div class="log-item">
+<table cellpadding="0" cellspacing="0" id="nKp4EdA5cmIOMsM-urJeFMBcoUjjEyj1vAoJkUmRzY0n8ZlO">
+    
+    <tbody>
+        <tr class="log-entry-title">
+
+            <td class="col-1">
+                <span>2022-05-30 08:37:40</span>
+                <div>
+                    <a class="more-btn" href="javascript:moreClicked(&#39;nKp4EdA5cmIOMsM-urJeFMBcoUjjEyj1vAoJkUmRzY0n8ZlO&#39;)">(2) More</a>
+                </div>
+            </td>
+
+            <td class="col-2 labelCollection">
+                <span class="label result-success">SUCCESS</span>
+
+                
+
+                
+                <div>
+                    
+                </div>
+            </td>
+
+            <td class="col-3">
+                <div class="log-src">GetStaticClientConfiguration</div>
+                <div class="log-msg">Found a static client object</div>
+            </td>
+        </tr>
+        
+        <tr>
+            <td colspan="3">
+                <div class="more" id="more_nKp4EdA5cmIOMsM-urJeFMBcoUjjEyj1vAoJkUmRzY0n8ZlO">
+                    
+
+                    <table>
+                        <tr class="more-row">
+                            <td class="more-key">client_id</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">aas-app-oidc</pre>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">client_secret</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">secret</pre>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+    <div class="log-item">
+<table cellpadding="0" cellspacing="0" id="nKp4EdA5cmIOMsM-xBjxLW7kxXXRBlWKF6KPVzb05OmGDTXw">
+    
+    <tbody>
+        <tr class="log-entry-title">
+
+            <td class="col-1">
+                <span>2022-05-30 08:37:40</span>
+                <div>
+                    <a class="more-btn" href="javascript:moreClicked(&#39;nKp4EdA5cmIOMsM-xBjxLW7kxXXRBlWKF6KPVzb05OmGDTXw&#39;)">(3) More</a>
+                </div>
+            </td>
+
+            <td class="col-2 labelCollection">
+                <span class="label result-info">INFO</span>
+
+                
+
+                
+                <div>
+                    <a class="label requirement" target="_blank" href="https://tools.ietf.org/html/rfc7517#section-1.1">RFC7517-1.1</a>
+                </div>
+            </td>
+
+            <td class="col-3">
+                <div class="log-src">ValidateClientJWKsPrivatePart</div>
+                <div class="log-msg">Skipped evaluation due to missing required element: client jwks</div>
+            </td>
+        </tr>
+        
+        <tr>
+            <td colspan="3">
+                <div class="more" id="more_nKp4EdA5cmIOMsM-xBjxLW7kxXXRBlWKF6KPVzb05OmGDTXw">
+                    
+
+                    <table>
+                        <tr class="more-row">
+                            <td class="more-key">path</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">jwks</pre>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">mapped</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">object</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">client</pre>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+    <div class="log-item">
+<table cellpadding="0" cellspacing="0" id="nKp4EdA5cmIOMsM-oPWgk9I9bvANFIe3v8PkK9jxEdxrQDtn">
+    
+    <tbody>
+        <tr class="log-entry-title">
+
+            <td class="col-1">
+                <span>2022-05-30 08:37:40</span>
+                <div>
+                    <a class="more-btn" href="javascript:moreClicked(&#39;nKp4EdA5cmIOMsM-oPWgk9I9bvANFIe3v8PkK9jxEdxrQDtn&#39;)">(3) More</a>
+                </div>
+            </td>
+
+            <td class="col-2 labelCollection">
+                <span class="label result-info">INFO</span>
+
+                
+
+                
+                <div>
+                    
+                </div>
+            </td>
+
+            <td class="col-3">
+                <div class="log-src">ExtractJWKsFromStaticClientConfiguration</div>
+                <div class="log-msg">Skipped evaluation due to missing required element: client jwks</div>
+            </td>
+        </tr>
+        
+        <tr>
+            <td colspan="3">
+                <div class="more" id="more_nKp4EdA5cmIOMsM-oPWgk9I9bvANFIe3v8PkK9jxEdxrQDtn">
+                    
+
+                    <table>
+                        <tr class="more-row">
+                            <td class="more-key">path</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">jwks</pre>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">mapped</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">object</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">client</pre>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+    <div class="log-item">
+<table cellpadding="0" cellspacing="0" id="nKp4EdA5cmIOMsM-fU4gKVNHuALtpxJt5ul4iDiBRKh0ZIDW">
+    
+    <tbody>
+        <tr class="log-entry-title">
+
+            <td class="col-1">
+                <span>2022-05-30 08:37:40</span>
+                <div>
+                    <a class="more-btn" href="javascript:moreClicked(&#39;nKp4EdA5cmIOMsM-fU4gKVNHuALtpxJt5ul4iDiBRKh0ZIDW&#39;)">(3) More</a>
+                </div>
+            </td>
+
+            <td class="col-2 labelCollection">
+                <span class="label result-info">INFO</span>
+
+                
+
+                
+                <div>
+                    <a class="label requirement" target="_blank" href="https://tools.ietf.org/html/rfc7517#section-4.5">RFC7517-4.5</a>
+                </div>
+            </td>
+
+            <td class="col-3">
+                <div class="log-src">CheckDistinctKeyIdValueInClientJWKs</div>
+                <div class="log-msg">Skipped evaluation due to missing required element: client jwks</div>
+            </td>
+        </tr>
+        
+        <tr>
+            <td colspan="3">
+                <div class="more" id="more_nKp4EdA5cmIOMsM-fU4gKVNHuALtpxJt5ul4iDiBRKh0ZIDW">
+                    
+
+                    <table>
+                        <tr class="more-row">
+                            <td class="more-key">path</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">jwks</pre>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">mapped</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">object</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">client</pre>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+    <div class="log-item">
+<table cellpadding="0" cellspacing="0" id="nKp4EdA5cmIOMsM-aSTtGO3ThCiCfI6SomICQGOPWNQ45Djv">
+    
+    <tbody>
+        <tr class="log-entry-title">
+
+            <td class="col-1">
+                <span>2022-05-30 08:37:40</span>
+                <div>
+                    <a class="more-btn" href="javascript:moreClicked(&#39;nKp4EdA5cmIOMsM-aSTtGO3ThCiCfI6SomICQGOPWNQ45Djv&#39;)">(1) More</a>
+                </div>
+            </td>
+
+            <td class="col-2 labelCollection">
+                
+
+                
+
+                
+                <div>
+                    
+                </div>
+            </td>
+
+            <td class="col-3">
+                <div class="log-src">SetScopeInClientConfigurationToOpenId</div>
+                <div class="log-msg">Set scope in client configuration to &quot;openid&quot;</div>
+            </td>
+        </tr>
+        
+        <tr>
+            <td colspan="3">
+                <div class="more" id="more_nKp4EdA5cmIOMsM-aSTtGO3ThCiCfI6SomICQGOPWNQ45Djv">
+                    
+
+                    <table>
+                        <tr class="more-row">
+                            <td class="more-key">scope</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">openid</pre>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+    <div class="log-item">
+<table cellpadding="0" cellspacing="0" id="nKp4EdA5cmIOMsM-Oy2U88sTRA7Nvb92mrBYlYx6ZgI6QYSN">
+    
+    <tbody>
+        <tr class="log-entry-title">
+
+            <td class="col-1">
+                <span>2022-05-30 08:37:40</span>
+                <div>
+                    <a class="more-btn" href="javascript:moreClicked(&#39;nKp4EdA5cmIOMsM-Oy2U88sTRA7Nvb92mrBYlYx6ZgI6QYSN&#39;)">(3) More</a>
+                </div>
+            </td>
+
+            <td class="col-2 labelCollection">
+                <span class="label result-success">SUCCESS</span>
+
+                
+
+                
+                <div>
+                    
+                </div>
+            </td>
+
+            <td class="col-3">
+                <div class="log-src">EnsureServerConfigurationSupportsClientSecretBasic</div>
+                <div class="log-msg">Contents of &#39;token_endpoint_auth_methods_supported&#39; in discovery document matches expectations.</div>
+            </td>
+        </tr>
+        
+        <tr>
+            <td colspan="3">
+                <div class="more" id="more_nKp4EdA5cmIOMsM-Oy2U88sTRA7Nvb92mrBYlYx6ZgI6QYSN">
+                    
+
+                    <table>
+                        <tr class="more-row">
+                            <td class="more-key">actual</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    <pre class="more-json prettyprint lang-javascript">[
+  &quot;client_secret_basic&quot;
+]</pre>
+                                    
+                                    
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">expected</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    <pre class="more-json prettyprint lang-javascript">[
+  &quot;client_secret_basic&quot;
+]</pre>
+                                    
+                                    
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">minimum_matches_required</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">1</pre>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+    <div class="log-item">
+<table cellpadding="0" cellspacing="0" id="nKp4EdA5cmIOMsM-5ZTJdZM0tOCART3J4nXKZNxdwirBhUTC">
+    
+    <tbody>
+        <tr class="log-entry-title">
+
+            <td class="col-1">
+                <span>2022-05-30 08:37:40</span>
+                <div>
+                    <a class="more-btn" href="javascript:moreClicked(&#39;nKp4EdA5cmIOMsM-5ZTJdZM0tOCART3J4nXKZNxdwirBhUTC&#39;)">(1) More</a>
+                </div>
+            </td>
+
+            <td class="col-2 labelCollection">
+                
+
+                
+
+                
+                <div>
+                    
+                </div>
+            </td>
+
+            <td class="col-3">
+                <div class="log-src">SetScopeInClientConfigurationToOpenIdAddress</div>
+                <div class="log-msg">Set scope in client configuration to &quot;openid address&quot;</div>
+            </td>
+        </tr>
+        
+        <tr>
+            <td colspan="3">
+                <div class="more" id="more_nKp4EdA5cmIOMsM-5ZTJdZM0tOCART3J4nXKZNxdwirBhUTC">
+                    
+
+                    <table>
+                        <tr class="more-row">
+                            <td class="more-key">scope</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">openid address</pre>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+    <div class="log-item">
+<table cellpadding="0" cellspacing="0" id="nKp4EdA5cmIOMsM-jBULg8qveNdkAQEW5i71LrGZtEIZEyE0">
+    
+    <tbody>
+        <tr class="log-entry-title">
+
+            <td class="col-1">
+                <span>2022-05-30 08:37:40</span>
+                <div>
+                    <a class="more-btn" href="javascript:moreClicked(&#39;nKp4EdA5cmIOMsM-jBULg8qveNdkAQEW5i71LrGZtEIZEyE0&#39;)">(2) More</a>
+                </div>
+            </td>
+
+            <td class="col-2 labelCollection">
+                <span class="label result-info">INFO</span>
+
+                
+
+                
+                <div>
+                    
+                </div>
+            </td>
+
+            <td class="col-3">
+                <div class="log-src">OIDCCCheckScopesSupportedContainScopeTest</div>
+                <div class="log-msg">&#39;scopes_support&#39; in discovery document doesn&#39;t contain expected scopes</div>
+            </td>
+        </tr>
+        
+        <tr>
+            <td colspan="3">
+                <div class="more" id="more_nKp4EdA5cmIOMsM-jBULg8qveNdkAQEW5i71LrGZtEIZEyE0">
+                    
+
+                    <table>
+                        <tr class="more-row">
+                            <td class="more-key">actual</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    <pre class="more-json prettyprint lang-javascript">[
+  &quot;openid&quot;,
+  &quot;profile&quot;,
+  &quot;email&quot;,
+  &quot;protected&quot;
+]</pre>
+                                    
+                                    
+                                    
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">expected</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">openid address</pre>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+    <div class="log-item">
+<table cellpadding="0" cellspacing="0" id="nKp4EdA5cmIOMsM-L5MAAAs4ZoBIRalJE2Xdkr8A2vWkJ7op">
+    
+    <tbody>
+        <tr class="log-entry-title">
+
+            <td class="col-1">
+                <span>2022-05-30 08:37:40</span>
+                <div>
+                    <a class="more-btn" href="javascript:moreClicked(&#39;nKp4EdA5cmIOMsM-L5MAAAs4ZoBIRalJE2Xdkr8A2vWkJ7op&#39;)">(1) More</a>
+                </div>
+            </td>
+
+            <td class="col-2 labelCollection">
+                <span class="label result-finished">FINISHED</span>
+
+                
+
+                
+                <div>
+                    
+                </div>
+            </td>
+
+            <td class="col-3">
+                <div class="log-src">oidcc-scope-address</div>
+                <div class="log-msg">Test has run to completion</div>
+            </td>
+        </tr>
+        
+        <tr>
+            <td colspan="3">
+                <div class="more" id="more_nKp4EdA5cmIOMsM-L5MAAAs4ZoBIRalJE2Xdkr8A2vWkJ7op">
+                    
+
+                    <table>
+                        <tr class="more-row">
+                            <td class="more-key">testmodule_result</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">SKIPPED</pre>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+    <div class="log-item">
+<table cellpadding="0" cellspacing="0" id="nKp4EdA5cmIOMsM-AjrDP426aK8DWfnGlnOZL3qbbEgy3Oix">
+    <tbody>
+        <tr>
+            <td colspan="3" class="block-title" style="background-color:#9a031e">Unregister dynamically registered client</td>
+        </tr>
+    </tbody>
+    
+</table>
+</div>
+    <div class="log-item">
+<table cellpadding="0" cellspacing="0" id="nKp4EdA5cmIOMsM-ZxdGf97O3nPD1zuf8FnlMMnJfye2pDGX">
+    
+    <tbody>
+        <tr class="log-entry-title">
+
+            <td class="col-1">
+                <span>2022-05-30 08:37:40</span>
+                
+            </td>
+
+            <td class="col-2 labelCollection">
+                
+
+                
+
+                
+                <div>
+                    
+                </div>
+            </td>
+
+            <td class="col-3">
+                <div class="log-src">UnregisterDynamicallyRegisteredClient</div>
+                <div class="log-msg">Couldn&#39;t find registration_access_token.</div>
+            </td>
+        </tr>
+        
+        <tr>
+            <td colspan="3">
+                <div class="more" id="more_nKp4EdA5cmIOMsM-ZxdGf97O3nPD1zuf8FnlMMnJfye2pDGX">
+                    
+
+                    
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+    <div class="log-item">
+<table cellpadding="0" cellspacing="0" id="nKp4EdA5cmIOMsM-UQI9srWvtZ2Cb3VXEkXcvEFPTVYp9zBp">
+    
+    <tbody>
+        <tr class="log-entry-title">
+
+            <td class="col-1">
+                <span>2022-05-30 08:37:43</span>
+                <div>
+                    <a class="more-btn" href="javascript:moreClicked(&#39;nKp4EdA5cmIOMsM-UQI9srWvtZ2Cb3VXEkXcvEFPTVYp9zBp&#39;)">(2) More</a>
+                </div>
+            </td>
+
+            <td class="col-2 labelCollection">
+                
+
+                
+
+                
+                <div>
+                    
+                </div>
+            </td>
+
+            <td class="col-3">
+                <div class="log-src">TEST-RUNNER</div>
+                <div class="log-msg">Alias has now been claimed by another test</div>
+            </td>
+        </tr>
+        
+        <tr>
+            <td colspan="3">
+                <div class="more" id="more_nKp4EdA5cmIOMsM-UQI9srWvtZ2Cb3VXEkXcvEFPTVYp9zBp">
+                    
+
+                    <table>
+                        <tr class="more-row">
+                            <td class="more-key">alias</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">aas-test</pre>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="more-row">
+                            <td class="more-key">new_test_id</td>
+                            <td class="more-value">
+                                <div>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <pre class="more-text">il7J45XayNZ2vVe</pre>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+</div>
+</div>
+<a href="#testresultsheader" id="fixedtoplink">Test Results</a>
+</body>
+</html>
