@@ -1,3 +1,3 @@
 FROM openjdk:11
-COPY /target/auth-app-0.0.1-SNAPSHOT.jar auth-app-0.0.1-SNAPSHOT.jar
-ENTRYPOINT ["java", "-jar", "/auth-app-0.0.1-SNAPSHOT.jar"]
+COPY /target/auth-app-1.0.0-SNAPSHOT.jar auth-app-1.0.0-SNAPSHOT.jar
+ENTRYPOINT ["java", "-jar", "/auth-app-1.0.0-SNAPSHOT.jar"]
