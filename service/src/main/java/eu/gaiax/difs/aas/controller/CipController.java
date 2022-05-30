@@ -32,6 +32,9 @@ public class CipController {
     public Map<String, Object> getClaims(@RequestParam Map<String, Object> params) { 
         String subject = (String) params.get(IdTokenClaimNames.SUB);
         String scope = (String) params.get(OAuth2ParameterNames.SCOPE);
+        if (scope == null) {
+            scope = "openid";
+        }
         String namespace = (String) params.get(TrustServiceClient.PN_NAMESPACE);
         if (TrustServiceClient.NS_ACCESS.equals(namespace)) {
             return ssiIatService.getIatProofClaims(subject, scope, params);
