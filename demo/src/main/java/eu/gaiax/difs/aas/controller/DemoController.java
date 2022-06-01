@@ -1,8 +1,11 @@
 package eu.gaiax.difs.aas.controller;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
 import org.keycloak.KeycloakSecurityContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -11,46 +14,38 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping()
 public class DemoController {
 
+    private static final Logger log = LoggerFactory.getLogger(DemoController.class);
+    
     @GetMapping
     public String root(HttpServletRequest request) {
-        return "Hi from app root: " + getIdName(request);
+        return "Hi from app root: " + getIdentity(request);
     }    
     
     @GetMapping("/demo")
     public String demonstrate(HttpServletRequest request) {
-        return "Hi from demo app: " + getIdName(request);
+        return "Hi from demo app: " + getIdentity(request);
     }    
 
     @GetMapping("/demo/read")
     public String getBooks(HttpServletRequest request) {
-        return "Hi from demo app with read grants: " + getIdName(request);
+        return "Hi from demo app with read grants: " + getIdentity(request);
     }
 
     @GetMapping("/demo/write")
     public String getManager(HttpServletRequest request) {
-        return "Hi from demo app with write grants: " + getIdName(request);
-    }
-/*
-    @GetMapping(value = "/logout")
-    public String logout() throws ServletException {
-        request.logout();
-        return "redirect:/";
-    }
-*/
-    private String getIdName(HttpServletRequest request) {
-        KeycloakSecurityContext ctx = getKeycloakSecurityContext(request);
-        if (ctx == null) {
-            return null;
-        }
-        return ctx.getIdToken().getGivenName();
+        return "Hi from demo app with write grants: " + getIdentity(request);
     }
 
-    /**
-     * The KeycloakSecurityContext provides access to several pieces of information
-     * contained in the security token, such as user profile information.
-     */
-    private KeycloakSecurityContext getKeycloakSecurityContext(HttpServletRequest request) {
-        return (KeycloakSecurityContext) request.getAttribute(KeycloakSecurityContext.class.getName());
+    @GetMapping("/logout")
+    public String logout(HttpServletRequest request) throws ServletException {
+        log.debug("got logout request: {}", request);
+        // do logout manually..
+        request.logout();
+        return "redirect:/demo";
+    }
+
+    private String getIdentity(HttpServletRequest request) {
+        return request.getUserPrincipal() == null ? null : request.getUserPrincipal().toString();
     }
 
 }

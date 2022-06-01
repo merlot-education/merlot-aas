@@ -13,7 +13,7 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 
-@EnableWebSecurity(debug=true)
+@EnableWebSecurity //(debug=true)
 public class SecurityConfig { 
     
     @Autowired

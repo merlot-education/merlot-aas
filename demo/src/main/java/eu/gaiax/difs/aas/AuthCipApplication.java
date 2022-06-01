@@ -27,7 +27,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * The Application class.
  */
 @SpringBootApplication
-public class AuthKeycloakApplication { 
+public class AuthCipApplication { 
 
     /**
      * The main Method.
@@ -35,7 +35,7 @@ public class AuthKeycloakApplication {
      * @param args the args for the main method
      */
     public static void main(String[] args) {
-        SpringApplication.run(AuthKeycloakApplication.class, args);
+        SpringApplication.run(AuthCipApplication.class, args);
     }
     
 }

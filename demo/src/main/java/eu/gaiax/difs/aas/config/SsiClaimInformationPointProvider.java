@@ -24,9 +24,7 @@ public class SsiClaimInformationPointProvider implements ClaimInformationPointPr
     public Map<String, List<String>> resolve(HttpFacade httpFacade) {
         log.debug("resolve.enter; facade: {}", httpFacade);
         Map<String, List<String>> claims = new HashMap<>();
-
         // put whatever claim you want into the map
-
         return claims;
     }
 }
