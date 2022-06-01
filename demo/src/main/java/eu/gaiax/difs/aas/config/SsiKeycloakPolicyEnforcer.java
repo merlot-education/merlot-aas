@@ -1,12 +1,9 @@
 package eu.gaiax.difs.aas.config;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.keycloak.AuthorizationContext;
 import org.keycloak.KeycloakSecurityContext;
@@ -69,7 +66,6 @@ public class SsiKeycloakPolicyEnforcer extends KeycloakAdapterPolicyEnforcer {
         
         log.debug("authorize; security context:accessToken {}", decodeToken(securityContext.getTokenString()));
         log.debug("authorize; security context:idToken {}", decodeToken(securityContext.getIdTokenString()));
-        //HttpServletRequest req; req.getSession().getSessionContext().
         
         AccessToken accessToken = securityContext.getToken();
 

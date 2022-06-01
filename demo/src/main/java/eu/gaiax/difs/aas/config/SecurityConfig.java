@@ -1,16 +1,14 @@
 package eu.gaiax.difs.aas.config;
 
-import org.keycloak.adapters.springsecurity.KeycloakConfiguration;
-import org.keycloak.adapters.springsecurity.authentication.KeycloakAuthenticationEntryPoint;
 import org.keycloak.adapters.springsecurity.authentication.KeycloakAuthenticationProvider;
 import org.keycloak.adapters.springsecurity.config.KeycloakWebSecurityConfigurerAdapter;
-import org.keycloak.adapters.springsecurity.filter.AdapterStateCookieRequestMatcher;
 import org.keycloak.adapters.springsecurity.filter.KeycloakAuthenticatedActionsFilter;
 import org.keycloak.adapters.springsecurity.filter.KeycloakAuthenticationProcessingFilter;
 import org.keycloak.adapters.springsecurity.filter.KeycloakPreAuthActionsFilter;
 import org.keycloak.adapters.springsecurity.filter.KeycloakSecurityContextRequestFilter;
-import org.keycloak.adapters.springsecurity.filter.QueryParamPresenceRequestMatcher;
 import org.keycloak.adapters.springsecurity.management.HttpSessionManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -23,16 +21,12 @@ import org.springframework.security.core.authority.mapping.SimpleAuthorityMapper
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.web.authentication.session.RegisterSessionAuthenticationStrategy;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
-import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.security.web.util.matcher.OrRequestMatcher;
-import org.springframework.security.web.util.matcher.RequestHeaderRequestMatcher;
-import org.springframework.security.web.util.matcher.RequestMatcher;
 
-//@KeycloakConfiguration
 @Configuration
 @EnableWebSecurity(debug = true)
 public class SecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
+
+    private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
     @Bean
     public FilterRegistrationBean keycloakAuthenticationProcessingFilter(KeycloakAuthenticationProcessingFilter filter) {
@@ -109,42 +103,18 @@ public class SecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
         return new HttpSessionManager();
     }
 
-//    @Bean
-//    @Override
-//    protected KeycloakAuthenticationProcessingFilter keycloakAuthenticationProcessingFilter() throws Exception {
-//        RequestMatcher requestMatcher =
-//                new OrRequestMatcher(
-//                        new AntPathRequestMatcher("http://key-server:8080/realms/gaia-x"),
-//                        new RequestHeaderRequestMatcher("Authorization"),
-//                        new QueryParamPresenceRequestMatcher("access_token"),
-//                        new AdapterStateCookieRequestMatcher());
-
-//        return new KeycloakAuthenticationProcessingFilter(authenticationManagerBean(), requestMatcher);
-//    }
-    
-    
     /**
      * Define security constraints for the application resources.
      */
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-//        KeycloakAuthenticationEntryPoint entryPoint = (KeycloakAuthenticationEntryPoint) authenticationEntryPoint();
-//        entryPoint.setLoginUri("http://key-server:8080/realms/gaia-x");
 
         super.configure(http);
         http
-            //.addFilterBefore(keycloakSecurityContextRequestFilter(), KeycloakPreAuthActionsFilter.class)
             .authorizeRequests()
             .antMatchers("/demo").authenticated()
             .antMatchers("/demo/**").authenticated()
-//            //.antMatchers("/demo/read").hasAuthority("read")
-//            //.antMatchers("/demo/write").hasAuthority("write")
             .anyRequest().permitAll();
-//            .and()
-//            .exceptionHandling()
-//            .authenticationEntryPoint(entryPoint)
-//            .and()
-//            .csrf().disable();    
     }
     
 }

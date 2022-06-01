@@ -25,6 +25,7 @@
     <modules>
         <module>app</module>
         <!--module>keycloak</module-->
+        <module>demo</module>
         <module>service</module>
     </modules>
 

@@ -21,7 +21,6 @@ public class SsiClaimInformationPointProviderFactory implements ClaimInformation
     @Override
     public void init(PolicyEnforcer policyEnforcer) {
         log.debug("init.enter; got enforcer: {}", policyEnforcer);
-        //policyEnforcer.
     }
 
     @Override
