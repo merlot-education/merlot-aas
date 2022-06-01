@@ -6,23 +6,37 @@ Some project functions were tested with [OpenID Conformance Suite](https://openi
 - [OpenID Connect Authorization](./auth) endpoint /authorize, Authorization Code Flow
 - [OpenID Connect Token](./token) endpoint /token
 
-
+<br><br>
 <strong>Following requirements were tested manually, Jira Xray used as a Test repository</strong>
 
 https://seu30.gdc-leinf01.t-systems.com/jira/secure/XrayTestRepositoryAction!default.jspa?entityKey=GAIAXAUTH&path=%5Craven_all_tests
+<br><br>
 
-DM.AA.00020 SSI Login Page - SSI SIOP Broker
+<strong>Tests:</strong>
 
-IDM.AA.00026 Standard IAM Compatibility
+- PIP Integration functionality
 
-IDM.AA.00025 Policy based authorization
+- Credential Based Access Control (CrBac) functionality
 
-IDM.AA.00024 Offer SSI Client Registration Auth API
+<strong>Results in test execution:</strong> https://seu30.gdc-leinf01.t-systems.com/jira/browse/GAIAXAUTH-120
 
-M.AA.00021 QR Code Generation - SSI OIDC Broker
+<br><br>
+- Different TSA statuses
 
-DM.AA.00020 SSI Login Page - SSI OIDC Broker
+- DM.AA.00020 SSI Login Page - SSI SIOP Broker
 
-IDM.AA.00015 External PIP Integration
+- IDM.AA.00026 Standard IAM Compatibility
 
-IDM.AA.00014 Credential Based Access Control (CrBac)
+- IDM.AA.00025 Policy based authorization
+
+- IDM.AA.00024 Offer SSI Client Registration Auth API
+
+- M.AA.00021 QR Code Generation - SSI OIDC Broker
+
+- DM.AA.00020 SSI Login Page - SSI OIDC Broker
+
+- IDM.AA.00015 External PIP Integration
+
+- IDM.AA.00014 Credential Based Access Control (CrBac)
+
+<strong>Results in test execution:</strong> https://seu30.gdc-leinf01.t-systems.com/jira/browse/GAIAXAUTH-102
