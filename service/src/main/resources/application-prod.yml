@@ -1,0 +1,23 @@
+server:
+  host: auth-server
+  port: 9000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+aas:
+  tsa:
+    url: http://trustservice/api
+  iam:
+    base-uri: http://key-server:8080
+      
+logging:
+  level:
+    root: INFO
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    org.springframework.web.client.RestTemplate: INFO
+    eu.gaiax.difs.aas: INFO
+      

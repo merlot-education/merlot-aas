@@ -64,9 +64,6 @@ aas:
     email:
       - email
       - email_verified
-    protected:
-      - read_access
-      - write_access
   tsa:
     url: http://trustservice/api
     repo: aisbl

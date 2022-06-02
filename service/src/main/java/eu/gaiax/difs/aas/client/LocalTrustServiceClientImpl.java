@@ -82,8 +82,6 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
                     map.put(StandardClaimNames.UPDATED_AT, Instant.now().minusSeconds(86400).getEpochSecond());
                     map.put(StandardClaimNames.EMAIL, requestId + "@oidc.ssi");
                     map.put(StandardClaimNames.EMAIL_VERIFIED, Boolean.TRUE);
-                    map.put("read_access", Boolean.TRUE);
-                    map.put("write_access", stamp % 2 == 0 ? Boolean.FALSE : Boolean.TRUE);
                 }
                 if (status == ACCEPTED) {
                     map.put(IdTokenClaimNames.AUTH_TIME, Instant.now().getEpochSecond());
