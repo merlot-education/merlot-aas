@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,6 +17,9 @@ import eu.gaiax.difs.aas.config.CustomAuthorizationRequestResolver;
 @RestController
 @RequestMapping()
 public class DemoController {
+    
+    @Value("${spring.security.oauth2.client.provider.keycloak.issuer-uri}")
+    private String config;
     
     @Autowired
     private CustomAuthorizationRequestResolver authorizationRequestResolver; 
@@ -54,7 +58,7 @@ public class DemoController {
             scopes.add("email");
         }
         authorizationRequestResolver.setScopes(scopes);
-        response.sendRedirect("http://key-server:8080/realms/gaia-x/protocol/openid-connect/logout?post_logout_redirect_uri=" + redirectUrl);
+        response.sendRedirect(config +  "/protocol/openid-connect/logout?post_logout_redirect_uri=" + redirectUrl);
     }
     
     private String getIdentity(HttpServletRequest request) {
