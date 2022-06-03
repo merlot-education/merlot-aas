@@ -14,12 +14,9 @@ spring:
             client-id: demo-app
             client-secret: secret
             scope: openid
-#            authorization-grant-type: authorization_code
-#            redirect-uri: "http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint" 
-#            client-name: demo-app-oidc
         provider:
           keycloak:
-            issuer-uri: http://key-server:8080/realms/gaia-x
+            issuer-uri: http://78.138.66.168:8080/realms/gaia-x
 
 logging:
   level:

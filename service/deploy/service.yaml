@@ -13,3 +13,5 @@ spec:
   selector: 
     app: auth-server
   type: LoadBalancer
+#status:
+#  loadBalancer: {}

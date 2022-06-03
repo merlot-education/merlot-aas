@@ -25,11 +25,13 @@ spec:
           imagePullPolicy: Always
           env:
             - name: SPRING_PROFILES_ACTIVE
-              value: test-suite
+              value: dsukhoro
             - name: SERVER_HOST
               value: 78.138.66.89
             - name: AAS_TSA_DURATION
               value: "100000"
+            - name: AAS_IAM_BASE_URI
+              value: http://78.138.66.168:8080
             - name: AAS_IAM_IAT_SECRET
               valueFrom:
                 secretKeyRef:
