@@ -25,7 +25,7 @@ spec:
           imagePullPolicy: Always
           env:
             - name: SPRING_PROFILES_ACTIVE
-              value: dsukhoro
+              value: test
             - name: SERVER_HOST
               value: 78.138.66.89
             - name: AAS_TSA_DURATION

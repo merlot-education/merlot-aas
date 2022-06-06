@@ -50,6 +50,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
@@ -74,6 +75,7 @@ import com.nimbusds.jose.proc.SecurityContext;
 import eu.gaiax.difs.aas.properties.ScopeProperties;
 import eu.gaiax.difs.aas.properties.ServerProperties;
 import eu.gaiax.difs.aas.service.SsiAuthManager;
+import eu.gaiax.difs.aas.service.SsiAuthorizationService;
 
 /**
  * The Spring Security config.
@@ -224,4 +226,10 @@ public class AuthorizationServerConfig {
         }
     }
 
+    @Bean
+    public OAuth2AuthorizationService authorizationService() {
+        // get cache size from props
+        return new SsiAuthorizationService(256);
+    }
+    
 }
