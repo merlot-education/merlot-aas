@@ -6,7 +6,7 @@ aas:
   iam:
     base-uri: https://localhost.emobix.co.uk:8443
     iat:
-      dcr-uri: /realms/gaia-x/clients-registrations/openid-connect # should be changed, probably
+      dcr-uri: /realms/gaia-x/clients-registrations/openid-connect 
       secret: "{noop}iat"
     clients:
       oidc:
@@ -16,4 +16,4 @@ aas:
       siop:
         id: aas-app-siop
         secret: "{noop}secret2"
-        redirect-uri: ${aas.iam.base-uri}/test/a/aas-test/callback #requires another path, probably..    
+        redirect-uri: ${aas.iam.base-uri}/test/a/aas-test/callback    
