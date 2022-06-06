@@ -17,8 +17,9 @@
     <property name="LOG_FILE" value="aas" />
     <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${catalina.base:-.}/logs/${LOG_FILE}.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${catalina.base:-.}/logs/${LOG_FILE}-%d{yyyy-MM-dd}.log</fileNamePattern>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${catalina.base:-.}/logs/${LOG_FILE}-%d{yyyy-MM-dd}.%i.log.zip</fileNamePattern>
+            <maxFileSize>64MB</maxFileSize>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <append>true</append>
@@ -32,8 +33,9 @@
     <property name="LOG_FILE_TS" value="tsclaims" />
     <appender name="tsclaims" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${catalina.base:-.}/logs/${LOG_FILE_TS}.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${catalina.base:-.}/logs/${LOG_FILE_TS}-%d{yyyy-MM-dd}.log</fileNamePattern>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${catalina.base:-.}/logs/${LOG_FILE_TS}-%d{yyyy-MM-dd}.%i.log.zip</fileNamePattern>
+            <maxFileSize>64MB</maxFileSize>
             <maxHistory>2</maxHistory>
         </rollingPolicy>
         <append>true</append>
