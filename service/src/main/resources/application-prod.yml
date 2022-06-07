@@ -16,8 +16,8 @@ aas:
 logging:
   level:
     root: INFO
+    tsclaims: INFO
     org.springframework.web: INFO
     org.springframework.security: INFO
     org.springframework.web.client.RestTemplate: INFO
     eu.gaiax.difs.aas: INFO
-      

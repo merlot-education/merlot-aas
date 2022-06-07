@@ -23,7 +23,7 @@
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <append>true</append>
-        <immediateFlush>true</immediateFlush>
+        <immediateFlush>false</immediateFlush>
         <encoder>
             <pattern>${FILE_LOG_PATTERN}</pattern>
             <charset>utf8</charset>
@@ -39,7 +39,7 @@
             <maxHistory>2</maxHistory>
         </rollingPolicy>
         <append>true</append>
-        <immediateFlush>true</immediateFlush>
+        <immediateFlush>false</immediateFlush>
         <encoder>
             <pattern>${FILE_LOG_PATTERN}</pattern>
             <charset>utf8</charset>
@@ -57,15 +57,4 @@
         </root>
     <!--/springProfile-->
 
-    <!--springProfile name="docker">
-        <root level="INFO">
-            <appender-ref ref="console"/>
-        </root>
-    </springProfile>
-
-    <springProfile name="!dev">
-        <root level="INFO">
-            <appender-ref ref="file"/>
-        </root>
-    </springProfile-->
 </configuration>
