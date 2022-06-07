@@ -80,6 +80,7 @@ aas:
 logging:
   level:
     root: INFO
+    tsclaims: DEBUG
     org.springframework.web: DEBUG
     org.springframework.security: DEBUG
     org.springframework.web.client.RestTemplate: DEBUG

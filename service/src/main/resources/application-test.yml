@@ -10,3 +10,12 @@ aas:
     iat:
       secret: eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJkMDc0OWE1MS04YTJmLTRkOWQtYTk2YS1jNzhjYTQyZmNlMTUifQ.eyJleHAiOjAsImlhdCI6MTY1Mjc4NTk2MCwianRpIjoiMjRjYjI2N2ItMmUwZi00YzQ5LTg0MGItYWUyNjQyNDg1OTU4IiwiaXNzIjoiaHR0cDovL2tleS1zZXJ2ZXI6ODA4MC9yZWFsbXMvZ2FpYS14IiwiYXVkIjoiaHR0cDovL2tleS1zZXJ2ZXI6ODA4MC9yZWFsbXMvZ2FpYS14IiwidHlwIjoiSW5pdGlhbEFjY2Vzc1Rva2VuIn0.IWu2-nP4ojXMxLn9B9lz7c-YQ-LDGhI9XUKdoa0f2tA
       dcr-uri: /realms/gaia-x/clients-registrations/openid-connect
+
+logging:
+  level:
+    root: INFO
+    tsclaims: INFO
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    org.springframework.web.client.RestTemplate: INFO
+    eu.gaiax.difs.aas: INFO
