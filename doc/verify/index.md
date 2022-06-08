@@ -3,8 +3,9 @@
 Some project functions were tested with [OpenID Conformance Suite](https://openid.net/certification/about-conformance-suite/), below you can find the official test suite results:
 
 - [OpenID Connect Discovery](./config) endpoint /.well-known/openid-configuration
-- [OpenID Connect Authorization](./auth) endpoint /authorize, Authorization Code Flow
-- [OpenID Connect Token](./token) endpoint /token
+- [OpenID Connect Authorization](./auth) endpoints /authorize, /token, /userinfo; Authorization Code Flow
+
+A number of pen-tests were applied to the service, see [Penetration test results](./pentest) 
 
 <br><br>
 <strong>Following requirements were tested manually, Jira Xray used as a Test repository</strong>
