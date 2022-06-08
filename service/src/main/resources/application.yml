@@ -1,4 +1,6 @@
 server:
+  connection:
+    timeout: 60s
   host: auth-server
   port: 8090
   schema: http
