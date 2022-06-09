@@ -6,4 +6,6 @@ Tests were applied on service deployed in public test environment, accessible at
 
 Test results are:
 
+1. Login test - <a href="graphs_login_tests.xlsx" target=_blank>Excel sheet with results and graphs</a><br><br>
+2. IAT test - <a href="graphs_IAT_tests.xlsx" target=_blank>Excel sheet with results and graphs</a>
 
