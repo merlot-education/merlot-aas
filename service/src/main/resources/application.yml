@@ -1,4 +1,5 @@
 server:
+  connection-timeout: 60s
   connection:
     timeout: 60s
   host: auth-server
@@ -9,6 +10,9 @@ server:
       timeout: 10m
   ssl:
     enabled: false
+  tomcat:
+    mbeanregistry:
+      enabled: true
 
 spring:
   application:
