@@ -12,18 +12,12 @@ JMetter [Load tests and results](./load)
 <br><br>
 <strong>Following requirements were tested manually, Jira Xray used as a Test repository</strong>
 
-https://seu30.gdc-leinf01.t-systems.com/jira/secure/XrayTestRepositoryAction!default.jspa?entityKey=GAIAXAUTH&path=%5Craven_all_tests
-<br><br>
-
 <strong>Tests:</strong>
 
 - PIP Integration functionality
 
 - Credential Based Access Control (CrBac) functionality
 
-<strong>Results in test execution:</strong> https://seu30.gdc-leinf01.t-systems.com/jira/browse/GAIAXAUTH-120
-
-<br><br>
 - Different TSA statuses
 
 - DM.AA.00020 SSI Login Page - SSI SIOP Broker
@@ -42,4 +36,4 @@ https://seu30.gdc-leinf01.t-systems.com/jira/secure/XrayTestRepositoryAction!def
 
 - IDM.AA.00014 Credential Based Access Control (CrBac)
 
-<strong>Results in test execution:</strong> https://seu30.gdc-leinf01.t-systems.com/jira/browse/GAIAXAUTH-102
+<strong>Results for test execution:</strong> <a href="test_execution_results.PNG">Manual tests RESULTS</a>
