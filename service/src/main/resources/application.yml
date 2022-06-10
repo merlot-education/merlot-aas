@@ -1,7 +1,4 @@
 server:
-  connection-timeout: 60s
-  connection:
-    timeout: 60s
   host: auth-server
   port: 8090
   schema: http
@@ -11,6 +8,10 @@ server:
   ssl:
     enabled: false
   tomcat:
+    accesslog:
+      directory: /logs
+      enabled: true
+    connection-timeout: 60s
     mbeanregistry:
       enabled: true
 
