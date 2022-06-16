@@ -1,6 +1,6 @@
 ## AAS Installation & Configuration
 
-Deployment scripts were provided to deploy services in Kubernetes environment, see /service/deploy folder. AAS Server installation can be started with Service:
+Deployment scripts were provided to deploy services in Kubernetes environment, see `/service/deploy` folder. AAS Server installation can be started with Service:
 
 ```
 >kubectl apply -f service.yaml
@@ -14,7 +14,7 @@ Then install secrets:
 ```
 You can change secret values to what is required, just make sure the same values are used in Keycloak deployment for OIDC and SIOP identity providers. Also note 
 Keycloak will generate new values for all secrets after realm import procedure, so it'll be required to set proper values in IdP secrets and generate new Initial 
-Access Token for Client Registration and copy its value to secret-keys stringData.iat value.
+Access Token for Client Registration and copy its value to `secret-keys.yaml` `stringData.iat` value.
 
 AAS and keycloak hosts must be set in environment variables specified in `deployment.yaml`. To get AAS external IP address run:
 

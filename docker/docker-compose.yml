@@ -46,8 +46,8 @@ services:
     restart: unless-stopped
 
     volumes:
-      - "../keycloak/src/main/resources/providers:/opt/keycloak/providers"
-      - "../keycloak/src/main/resources/realms/import:/tmp/import"
+      - "../keycloak/providers:/opt/keycloak/providers"
+      - "../keycloak/realms:/tmp/import"
 
     command:
       [
