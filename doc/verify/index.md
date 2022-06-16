@@ -4,17 +4,17 @@ See [AAS Test Plan](./Test_Plan.docx) for all details regarding projects testing
 
 Some project functions were tested with [OpenID Conformance Suite](https://openid.net/certification/about-conformance-suite/), below you can find the official test suite results:
 
-- [OpenID Connect Discovery](./config) endpoint: /.well-known/openid-configuration
-- [OpenID Connect Authorization](./auth) endpoints: /oauth2/authorize, /oauth2/jwks, /oauth2/token, /userinfo
+- [OpenID Connect Discovery](./config) endpoint: `/.well-known/openid-configuration`
+- [OpenID Connect Core](./auth) endpoints: `/oauth2/authorize`, `/oauth2/jwks`, `/oauth2/token`, `/userinfo`
 
 A number of pen-tests were applied to the service, see [Penetration test results](./pentest) 
 
-JMetter [Load tests and results](./load)
+JMetter [Load tests and results](./load) are also provided.
 
-<br><br>
-<strong>Following requirements were tested manually, Jira Xray used as a Test repository</strong>
+<br>
 
-<strong>Tests:</strong>
+**The following requirements were tested manually, Jira Xray used as a Test repository:**
+<br>
 
 | Test case name                                       | Description                                  | 
 |------------------------------------------------------|:-----------------------------------------------|
@@ -28,5 +28,5 @@ JMetter [Load tests and results](./load)
 | IDM.AA.00014 Credential Based Access Control (CrBac) |The SSI adoption SHOULD be able to dynamically reload credentials for access decisions, for instance the current identity wants a “sales” action and is currently just logged in with a “visitor” permission. The CrBac SHOULD be able to resolve this by requesting new credentials.This might be achieved either by a renewed authentication and authorization flow triggered by the application (via SSI OIDC Provider), or via an asynchronous process, which SHOULD be done over standard IAM outgoing PIP interface towards Trust Services or the It MAY be realized over additional components within the architecture, but the Standard IAM MUST NOT be modified (excepting configuration, plugins or supported extensions).| 
 
 
-
-<strong>Results for test execution:</strong> <a href="test_execution_results.PNG">Manual tests RESULTS</a>
+**Manual test execution results:**
+![Manual test results](./images/test_execution_results.png "Manual test results")
