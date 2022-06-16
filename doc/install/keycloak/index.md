@@ -1,4 +1,4 @@
-## Keycloak Installation & Configuration
+## Keycloak Setup
 
 Keycloaak deployment scripts for Kubernetes are in `/keycloak/deploy` folder. Install them in the following order:
 
