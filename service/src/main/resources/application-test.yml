@@ -3,16 +3,16 @@ server:
   port: 9000
 
 aas:
+  cache:
+    size: 512
   iam:
-    base-uri: http://key-server:8080
     iat:
       secret: eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJkMDc0OWE1MS04YTJmLTRkOWQtYTk2YS1jNzhjYTQyZmNlMTUifQ.eyJleHAiOjAsImlhdCI6MTY1Mjc4NTk2MCwianRpIjoiMjRjYjI2N2ItMmUwZi00YzQ5LTg0MGItYWUyNjQyNDg1OTU4IiwiaXNzIjoiaHR0cDovL2tleS1zZXJ2ZXI6ODA4MC9yZWFsbXMvZ2FpYS14IiwiYXVkIjoiaHR0cDovL2tleS1zZXJ2ZXI6ODA4MC9yZWFsbXMvZ2FpYS14IiwidHlwIjoiSW5pdGlhbEFjY2Vzc1Rva2VuIn0.IWu2-nP4ojXMxLn9B9lz7c-YQ-LDGhI9XUKdoa0f2tA
-      dcr-uri: /realms/gaia-x/clients-registrations/openid-connect
   tsa:
-    url: http://trustservice/api
-    delay: 100 # in milliseconds
-    duration: 1000 # in milliseconds
-    request.count: 1
+    delay: 100
+    duration: 1000
+    request:
+      count: 1
 
 logging:
   level:

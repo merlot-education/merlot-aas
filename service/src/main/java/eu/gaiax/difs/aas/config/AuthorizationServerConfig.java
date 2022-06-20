@@ -83,6 +83,8 @@ import eu.gaiax.difs.aas.service.SsiAuthorizationService;
 @Configuration
 public class AuthorizationServerConfig {
 
+    @Value("${aas.cache.size}")
+    private int cacheSize;
     @Value("${aas.id-token.ttl}")
     private Duration ttl;
     @Value("${aas.jwk.length}")
@@ -228,8 +230,7 @@ public class AuthorizationServerConfig {
 
     @Bean
     public OAuth2AuthorizationService authorizationService() {
-        // get cache size from props
-        return new SsiAuthorizationService(256);
+        return new SsiAuthorizationService(cacheSize);
     }
     
 }

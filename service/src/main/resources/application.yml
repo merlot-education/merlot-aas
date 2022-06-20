@@ -33,6 +33,8 @@ springdoc:
     enabled: true
 
 aas:
+  cache:
+    size: 256
   iam:
     base-uri: http://key-server:8080
     iat:
@@ -79,7 +81,8 @@ aas:
     action: evaluate
     delay: 500 # in milliseconds
     duration: 5000 # in milliseconds
-    request.count: 2
+    request:
+      count: 2
     statuses:
       GetLoginProofResult: ACCEPTED
       GetIatProofResult: ACCEPTED
