@@ -1,7 +1,7 @@
 package eu.gaiax.difs.aas.service;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,27 +19,26 @@ import org.springframework.util.Assert;
 
 public class SsiAuthorizationService implements OAuth2AuthorizationService {
     
-    private int maxInitializedAuthorizations = 100;
+    private static final int maxInitializedAuthorizations = 100;
 
     /*
      * Stores "initialized" (uncompleted) authorizations, where an access token has not yet been granted.
      * This state occurs with the authorization_code grant flow during the user consent step OR
      * when the code is returned in the authorization response but the access token request is not yet initiated.
      */
-    private Map<String, OAuth2Authorization> initializedAuthorizations =
-            Collections.synchronizedMap(new MaxSizeHashMap<>(this.maxInitializedAuthorizations));
+    private final Map<String, OAuth2Authorization> initializedAuthorizations;
 
     /*
      * Stores "completed" authorizations, where an access token has been granted.
      */
-    private final Map<String, OAuth2Authorization> authorizations = new ConcurrentHashMap<>();
+    private final Map<String, OAuth2Authorization> authorizations;
 
     /**
      * Constructs an {@code SsiAuthorizationService}.
      */
-    public SsiAuthorizationService(int maxInitializedAuthorizations) {
-        this.maxInitializedAuthorizations = maxInitializedAuthorizations;
-        this.initializedAuthorizations = Collections.synchronizedMap(new MaxSizeHashMap<>(this.maxInitializedAuthorizations));
+    public SsiAuthorizationService(int maxSize) {
+        this.initializedAuthorizations = new ConcurrentHashMap<>(); //Collections.synchronizedMap(new MaxSizeHashMap<>(maxSize));
+        this.authorizations = new ConcurrentHashMap<>();
     }
 
     /**
@@ -48,6 +47,7 @@ public class SsiAuthorizationService implements OAuth2AuthorizationService {
      * @param authorizations the authorization(s)
      */
     public SsiAuthorizationService(List<OAuth2Authorization> authorizations) {
+        this(maxInitializedAuthorizations);
         Assert.notNull(authorizations, "authorizations cannot be null");
         authorizations.forEach(authorization -> {
             Assert.notNull(authorization, "authorization cannot be null");
@@ -96,7 +96,8 @@ public class SsiAuthorizationService implements OAuth2AuthorizationService {
                 return authorization;
             }
         }
-        List<OAuth2Authorization> values = new ArrayList<>(this.initializedAuthorizations.values());
+        //List<OAuth2Authorization> values = new ArrayList<>(this.initializedAuthorizations.values());
+        Collection<OAuth2Authorization> values = this.initializedAuthorizations.values();
         for (OAuth2Authorization authorization : values) {
             if (hasToken(authorization, token, tokenType)) {
                 return authorization;
