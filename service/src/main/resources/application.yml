@@ -8,9 +8,9 @@ server:
   ssl:
     enabled: false
   tomcat:
-    accesslog:
-      directory: /logs
-      enabled: true
+#    accesslog:
+#      directory: /logs
+#      enabled: true
     connection-timeout: 60s
     mbeanregistry:
       enabled: true
