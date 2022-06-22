@@ -1,75 +1,52 @@
 package eu.gaiax.difs.aas.service;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.annotation.PostConstruct;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.lang.Nullable;
-import org.springframework.security.oauth2.core.OAuth2AccessToken;
+//import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.OAuth2AuthorizationCode;
-import org.springframework.security.oauth2.core.OAuth2RefreshToken;
+//import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 import org.springframework.security.oauth2.core.OAuth2TokenType;
-import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
+//import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 import org.springframework.util.Assert;
 
-//import com.hazelcast.config.IndexType;
-//import com.hazelcast.core.Hazelcast;
-//import com.hazelcast.core.HazelcastInstance;
-//import com.hazelcast.map.IMap;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.RemovalCause;
+import com.github.benmanes.caffeine.cache.RemovalListener;
 
-public class SsiAuthorizationService implements OAuth2AuthorizationService {
+
+public class SsiAuthorizationService implements OAuth2AuthorizationService, RemovalListener<String, OAuth2Authorization> {
     
     private static final Logger log = LoggerFactory.getLogger(SsiAuthorizationService.class);
     
-    private static final int maxInitializedAuthorizations = 100;
-
-    /*
-     * Stores "initialized" (uncompleted) authorizations, where an access token has not yet been granted.
-     * This state occurs with the authorization_code grant flow during the user consent step OR
-     * when the code is returned in the authorization response but the access token request is not yet initiated.
-     */
-    private final Map<String, OAuth2Authorization> initializedAuthorizations;
-
-    /*
-     * Stores "completed" authorizations, where an access token has been granted.
-     */
-    private final Map<String, OAuth2Authorization> authorizations;
+    private final int cacheSize;
+    private final Duration ttl;
     
+    private Cache<String, OAuth2Authorization> authorizations;
+
     private final Map<String, String> codes;
 
-    /**
-     * Constructs an {@code SsiAuthorizationService}.
-     */
-    public SsiAuthorizationService(int maxSize) {
-        //HazelcastInstance hzi = Hazelcast.getOrCreateHazelcastInstance();
-        //IMap<String, OAuth2Authorization> initialized = hzi.getMap("initialized");
-        //initialized.addIndex(IndexType.HASH, null);
-        this.initializedAuthorizations = new ConcurrentHashMap<>(); //Collections.synchronizedMap(new MaxSizeHashMap<>(maxSize)); initialized; 
-        this.authorizations = new ConcurrentHashMap<>();
+    public SsiAuthorizationService(int cacheSize, Duration ttl) {
+        this.cacheSize = cacheSize;
+        this.ttl = ttl;
         this.codes = new ConcurrentHashMap<>();
     }
-
-    /**
-     * Constructs an {@code InMemoryOAuth2AuthorizationService} using the provided parameters.
-     *
-     * @param authorizations the authorization(s)
-     */
-    public SsiAuthorizationService(List<OAuth2Authorization> authorizations) {
-        this(maxInitializedAuthorizations);
-        Assert.notNull(authorizations, "authorizations cannot be null");
-        authorizations.forEach(authorization -> {
-            Assert.notNull(authorization, "authorization cannot be null");
-            Assert.isTrue(!this.authorizations.containsKey(authorization.getId()),
-                    "The authorization must be unique. Found duplicate identifier: " + authorization.getId());
-            this.authorizations.put(authorization.getId(), authorization);
-        });
+    
+    @PostConstruct
+    public void init() {
+        Caffeine<Object, Object> cache = Caffeine.newBuilder().expireAfterAccess(ttl); 
+        if (cacheSize > 0) {
+            cache = cache.maximumSize(cacheSize);
+        } 
+        authorizations = cache.removalListener(this).build(); 
     }
 
     @Override
@@ -80,53 +57,29 @@ public class SsiAuthorizationService implements OAuth2AuthorizationService {
         if (authorizationCode != null) {
             codes.put(authorizationCode.getToken().getTokenValue(), authorization.getId());
         }
-        if (isComplete(authorization)) {
-            this.authorizations.put(authorization.getId(), authorization);
-        } else {
-            this.initializedAuthorizations.put(authorization.getId(), authorization);
-        }
+        this.authorizations.put(authorization.getId(), authorization);
     }
 
     @Override
     public void remove(OAuth2Authorization authorization) {
         Assert.notNull(authorization, "authorization cannot be null");
         log.debug("remove.enter; got authorization: {}", authorization);
-        boolean removed;
-        if (isComplete(authorization)) {
-            removed = this.authorizations.remove(authorization.getId(), authorization);
-        } else {
-            removed = this.initializedAuthorizations.remove(authorization.getId(), authorization);
-        }
-        if (removed) {
-            OAuth2Authorization.Token<OAuth2AuthorizationCode> authorizationCode =
-                    authorization.getToken(OAuth2AuthorizationCode.class);
-            if (authorizationCode != null) {
-                codes.remove(authorizationCode.getToken().getTokenValue());
-            }
-        }
-        log.debug("remove.exit; removed: {}", removed);
+        this.authorizations.invalidate(authorization.getId());
     }
 
     @Nullable
     @Override
     public OAuth2Authorization findById(String id) {
         Assert.hasText(id, "id cannot be empty");
-        OAuth2Authorization authorization = this.authorizations.get(id);
-        return authorization != null ?
-                authorization :
-                this.initializedAuthorizations.get(id);
+        return this.authorizations.getIfPresent(id);
     }
 
     @Nullable
     @Override
     public OAuth2Authorization findByToken(String token, @Nullable OAuth2TokenType tokenType) {
         Assert.hasText(token, "token cannot be empty");
-        log.debug("findByToken.enter; got token: {}, type: {}", token, tokenType == null ? null : tokenType.getValue());
-        //try {
-        //    throw new Exception("debug");
-        //} catch (Exception ex) {
-        //    ex.printStackTrace();
-        //}
+        String tkType = tokenType == null ? null : tokenType.getValue();
+        log.debug("findByToken.enter; got token: {}, type: {}", token, tkType);
         if ("code".equals(tokenType.getValue())) {
             String id = codes.get(token);
             if (id != null) {
@@ -136,25 +89,38 @@ public class SsiAuthorizationService implements OAuth2AuthorizationService {
             }
         }
         
-        for (OAuth2Authorization authorization : this.authorizations.values()) {
-            if (hasToken(authorization, token, tokenType)) {
-                log.debug("findByToken.exit; returning authorized: {}", authorization);
-                return authorization;
-            }
-        }
+        //for (OAuth2Authorization authorization : this.authorizations.values()) {
+        //    if (hasToken(authorization, token, tokenType)) {
+        //        log.debug("findByToken.exit; returning authorized: {}", authorization);
+        //        return authorization;
+        //    }
+        //}
         //List<OAuth2Authorization> values = new ArrayList<>(this.initializedAuthorizations.values());
-        Collection<OAuth2Authorization> values = this.initializedAuthorizations.values();
-        for (OAuth2Authorization authorization : values) {
-            if (hasToken(authorization, token, tokenType)) {
-                log.debug("findByToken.exit; returning initialized: {}", authorization);
-                return authorization;
-            }
-        }
-        log.info("findByToken.exit; no authorization found for token: {}, type: {}; authorized size: {}, initialized size: {}, ", 
-                token, tokenType == null ? null : tokenType.getValue(), authorizations.size(), initializedAuthorizations.size());
+        
+        //Collection<OAuth2Authorization> values = this.initializedAuthorizations.values();
+        //for (OAuth2Authorization authorization : values) {
+        //    if (hasToken(authorization, token, tokenType)) {
+        //        log.debug("findByToken.exit; returning initialized: {}", authorization);
+        //        return authorization;
+        //    }
+        //}
+        log.info("findByToken.exit; no authorization found for token: {}, type: {}; authorizations size: {}, codes size: {}", 
+                token, tkType, authorizations.estimatedSize(), codes.size());
         return null;
     }
 
+    @Override
+    public void onRemoval(@org.checkerframework.checker.nullness.qual.Nullable String key,
+            @org.checkerframework.checker.nullness.qual.Nullable OAuth2Authorization value, RemovalCause cause) {
+        boolean removed = false;
+        log.debug("onRemoval.enter; got key: {}, authorization: {}, cause: {}", key, value, cause);
+        OAuth2Authorization.Token<OAuth2AuthorizationCode> authorizationCode = value.getToken(OAuth2AuthorizationCode.class);
+        if (authorizationCode != null) {
+            removed = codes.remove(authorizationCode.getToken().getTokenValue()) != null;
+        }
+        log.debug("onRemoval.exit; removed: {}", removed);
+    }
+/*    
     private static boolean isComplete(OAuth2Authorization authorization) {
         return authorization.getAccessToken() != null;
     }
@@ -198,19 +164,5 @@ public class SsiAuthorizationService implements OAuth2AuthorizationService {
                 authorization.getToken(OAuth2RefreshToken.class);
         return refreshToken != null && refreshToken.getToken().getTokenValue().equals(token);
     }
-
-    private static final class MaxSizeHashMap<K, V> extends LinkedHashMap<K, V> {
-        private final int maxSize;
-
-        private MaxSizeHashMap(int maxSize) {
-            this.maxSize = maxSize;
-        }
-
-        @Override
-        protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
-            return size() > this.maxSize;
-        }
-
-    }
-
+*/
 }

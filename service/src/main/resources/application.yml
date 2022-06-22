@@ -34,7 +34,7 @@ springdoc:
 
 aas:
   cache:
-    size: 256
+    size: 0
   iam:
     base-uri: http://key-server:8080
     iat:

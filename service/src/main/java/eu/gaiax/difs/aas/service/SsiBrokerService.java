@@ -11,9 +11,9 @@ import java.text.ParseException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import javax.annotation.PostConstruct;
 import javax.imageio.ImageIO;
 
 import com.nimbusds.jwt.JWTClaimsSet;
@@ -35,6 +35,8 @@ import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
@@ -50,20 +52,30 @@ public class SsiBrokerService extends SsiClaimsService {
 
     @Value("${aas.id-token.clock-skew}")
     private Duration clockSkew;
-
     @Value("${aas.id-token.issuer}")
-    private String idTokenIssuer;
+    private String issuer;
 
     private final ScopeProperties scopeProperties;
     private final ServerProperties serverProperties;
 
-    private final Map<String, Map<String, Object>> authCache = new ConcurrentHashMap<>();
+    //private Cache<String, Map<String, Object>> claimsCache;
     
     public SsiBrokerService(TrustServiceClient trustServiceClient, ScopeProperties scopeProperties, ServerProperties serverProperties) {
         super(trustServiceClient);
         this.scopeProperties = scopeProperties;
         this.serverProperties = serverProperties;
     }
+    
+    //@PostConstruct
+    //public void init() {
+    //    Caffeine<Object, Object> cache = Caffeine.newBuilder().expireAfterWrite(ttl); 
+    //    if (cacheSize > 0) {
+    //        cache = cache.maximumSize(cacheSize);
+    //    } 
+    //    claimsCache = cache.build(); 
+    //}
+    
+    
 
     public void oidcAuthorize(Map<String, Object> model) {
         log.debug("oidcAuthorize.enter; got model: {}", model);
@@ -178,20 +190,20 @@ public class SsiBrokerService extends SsiClaimsService {
         
         String error = (String) response.get(OAuth2ParameterNames.ERROR);
         if (error == null) {
-            Collection<String> requestedScopes = (Collection<String>) authCache.get(requestId).get(OAuth2ParameterNames.SCOPE);
+            Collection<String> requestedScopes = (Collection<String>) claimsCache.getIfPresent(requestId).get(OAuth2ParameterNames.SCOPE);
             Set<String> requestedClaims = scopeProperties.getScopes().entrySet().stream()
                     .filter(e -> requestedScopes.contains(e.getKey())).flatMap(e -> e.getValue().stream()).collect(Collectors.toSet());
             // special handling for auth_time..
             requestedClaims.remove(IdTokenClaimNames.AUTH_TIME);
             
             DefaultJWTClaimsVerifier<?> verifier = new DefaultJWTClaimsVerifier<>(new JWTClaimsSet.Builder()
-                .issuer(idTokenIssuer)
+                .issuer(issuer)
                 .audience(serverProperties.getBaseUrl())
                 .build(), requestedClaims);
             try {
                 verifier.verify(JWTClaimsSet.parse(response), null);
             } catch(ParseException | BadJWTException ex) {
-                authCache.remove(requestId);
+                claimsCache.invalidate(requestId);
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_response: " + ex.getMessage()); 
             }
                 
@@ -218,23 +230,24 @@ public class SsiBrokerService extends SsiClaimsService {
         data.put("request_time", Instant.now());
         data.put(OAuth2ParameterNames.SCOPE, scopes);
         data.put("auth_type", authType);
-        Map<String, Object> existing = authCache.put(requestId, data);
-        if (existing != null) {
-            log.warn("addAuthRequest; data for request {} alreday stored: {}", requestId, existing);
-        }
+        claimsCache.put(requestId, data);
+        //Map<String, Object> existing = claimsCache.put(requestId, data);
+        //if (existing != null) {
+        //    log.warn("addAuthRequest; data for request {} alreday stored: {}", requestId, existing);
+        //}
         return data;
     }
     
     public boolean setAdditionalParameters(String requestId, Map<String, Object> additionalParams) {
         log.debug("setAdditionalParameters.enter; got request: {} params: {}", requestId, additionalParams);
         boolean result = true;
-        Map<String, Object> request = authCache.get(requestId);
+        Map<String, Object> request = claimsCache.getIfPresent(requestId);
         if (request == null) {
             // throw error?
             result = false;
         } else {
             request.put("additional_parameters", additionalParams);
-            authCache.put(requestId, request);
+            claimsCache.put(requestId, request);
         }
         log.debug("addAuthData.exit; updated: {}", result);
         return result;
@@ -244,20 +257,20 @@ public class SsiBrokerService extends SsiClaimsService {
     private boolean addAuthData(String requestId, Map<String, Object> data) {
         log.debug("addAuthData.enter; got request: {} claims size: {}", requestId, data.size());
         boolean result = true;
-        Map<String, Object> request = authCache.get(requestId);
+        Map<String, Object> request = claimsCache.getIfPresent(requestId);
         if (request == null) {
             // throw error?
             result = false;
         } else {
             data.putAll(request);
         }
-        authCache.put(requestId, data);
+        claimsCache.put(requestId, data);
         log.debug("addAuthData.exit; returning: {}, stored claims: {}", result, data.size());
         return result;
     }
 
     private Boolean isValidRequest(String requestId) {
-        Map<String, Object> request = authCache.get(requestId);
+        Map<String, Object> request = claimsCache.getIfPresent(requestId);
         if (request == null) {
             return null;
         }
@@ -309,7 +322,7 @@ public class SsiBrokerService extends SsiClaimsService {
     }
     
     public Map<String, Object> getUserClaims(String requestId, boolean required) {
-        Map<String, Object> userClaims = authCache.get(requestId); 
+        Map<String, Object> userClaims = claimsCache.getIfPresent(requestId); 
         if (userClaims == null) {
             log.warn("getUserClaims; no claims found for request: {}, required: {}", requestId, required);
             if (required) {
@@ -328,7 +341,7 @@ public class SsiBrokerService extends SsiClaimsService {
     }
 
     public Set<String> getUserScopes(String requestId) {
-        Map<String, Object> userClaims = authCache.get(requestId);
+        Map<String, Object> userClaims = claimsCache.getIfPresent(requestId);
         if (userClaims == null) {
             log.warn("getUserScopes; no claims found for request: {}", requestId);
             throw new OAuth2AuthenticationException(INVALID_REQUEST);
@@ -345,7 +358,7 @@ public class SsiBrokerService extends SsiClaimsService {
     }
     
     public Map<String, Object> getAdditionalParameters(String requestId) {
-        Map<String, Object> userClaims = authCache.get(requestId);
+        Map<String, Object> userClaims = claimsCache.getIfPresent(requestId);
         if (userClaims == null) {
             // log it..
             return null;

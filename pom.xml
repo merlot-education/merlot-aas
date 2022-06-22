@@ -39,12 +39,13 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <!-- dependencies -->
         <spring-boot.version>2.7.0</spring-boot.version>
-        <spring.security.version>5.7.1</spring.security.version>
-        <spring.auth-server.version>0.3.0</spring.auth-server.version>
+        <spring.security.version>5.7.2</spring.security.version>
+        <spring.auth-server.version>0.3.1</spring.auth-server.version>
         <springdoc.version>1.6.8</springdoc.version>
         <lombok.version>1.18.22</lombok.version>
         <micrometer.version>1.9.0</micrometer.version>
         <zxing.version>3.5.0</zxing.version>
+        <caffeine.version>3.1.1</caffeine.version>
         <!-- plugins -->
         <plugin.owasp.version>7.1.0</plugin.owasp.version>
         <plugin.maven-assembly.version>3.3.0</plugin.maven-assembly.version>
@@ -154,6 +155,11 @@
                 <groupId>com.google.zxing</groupId>
                 <artifactId>javase</artifactId>
                 <version>${zxing.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.ben-manes.caffeine</groupId>
+                <artifactId>caffeine</artifactId>
+                <version>${caffeine.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

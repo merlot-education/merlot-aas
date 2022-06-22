@@ -78,7 +78,7 @@ import eu.gaiax.difs.aas.service.SsiAuthManager;
 import eu.gaiax.difs.aas.service.SsiAuthorizationService;
 
 /**
- * The Spring Security config.
+ * The Spring Authorization Server config.
  */
 @Configuration
 public class AuthorizationServerConfig {
@@ -193,7 +193,6 @@ public class AuthorizationServerConfig {
     @Bean
     public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) throws JOSEException {
         JWK jwk = jwkSource.get(new JWKSelector(new JWKMatcher.Builder().build()), null).get(0);
-        //OAuth2TokenValidator<Jwt> jwtValidator = JwtValidators.createDefault(); 
         OAuth2TokenValidator<Jwt> jwtValidator = JwtValidators.createDefaultWithIssuer(serverProperties.getBaseUrl());
         RSAPublicKey publicKey = jwk.toRSAKey().toRSAPublicKey();
         NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withPublicKey(publicKey).build();
@@ -230,7 +229,7 @@ public class AuthorizationServerConfig {
 
     @Bean
     public OAuth2AuthorizationService authorizationService() {
-        return new SsiAuthorizationService(cacheSize);
+        return new SsiAuthorizationService(cacheSize, ttl);
     }
     
 }
