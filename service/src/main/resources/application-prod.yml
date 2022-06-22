@@ -12,6 +12,8 @@ aas:
     url: http://trustservice/api
   iam:
     base-uri: http://key-server:8080
+  id-token:
+    ttl: 5m
       
 logging:
   level:
