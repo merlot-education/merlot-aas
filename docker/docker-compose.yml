@@ -8,8 +8,8 @@ services:
       dockerfile: Dockerfile
     environment:
       - "SPRING_PROFILES_ACTIVE=${PROFILES_AAS}"
-    expose:
-      - "9000"
+    ports:
+      - "9000:9000"
     networks:
       - "gaia-x"
 #    depends_on:
