@@ -13,7 +13,6 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import javax.annotation.PostConstruct;
 import javax.imageio.ImageIO;
 
 import com.nimbusds.jwt.JWTClaimsSet;
@@ -35,8 +34,6 @@ import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
@@ -58,25 +55,12 @@ public class SsiBrokerService extends SsiClaimsService {
     private final ScopeProperties scopeProperties;
     private final ServerProperties serverProperties;
 
-    //private Cache<String, Map<String, Object>> claimsCache;
-    
     public SsiBrokerService(TrustServiceClient trustServiceClient, ScopeProperties scopeProperties, ServerProperties serverProperties) {
         super(trustServiceClient);
         this.scopeProperties = scopeProperties;
         this.serverProperties = serverProperties;
     }
     
-    //@PostConstruct
-    //public void init() {
-    //    Caffeine<Object, Object> cache = Caffeine.newBuilder().expireAfterWrite(ttl); 
-    //    if (cacheSize > 0) {
-    //        cache = cache.maximumSize(cacheSize);
-    //    } 
-    //    claimsCache = cache.build(); 
-    //}
-    
-    
-
     public void oidcAuthorize(Map<String, Object> model) {
         log.debug("oidcAuthorize.enter; got model: {}", model);
 
