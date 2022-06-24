@@ -13,9 +13,8 @@ import javax.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-
+import eu.gaiax.difs.aas.cache.DataCache;
+import eu.gaiax.difs.aas.cache.caffeine.CaffeineDataCache;
 import eu.gaiax.difs.aas.client.TrustServiceClient;
 import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
 
@@ -32,7 +31,7 @@ public abstract class SsiClaimsService {
 
     protected final TrustServiceClient trustServiceClient;
     
-    protected Cache<String, Map<String, Object>> claimsCache;
+    protected DataCache<String, Map<String, Object>> claimsCache;
     
     public SsiClaimsService(TrustServiceClient trustServiceClient) {
         this.trustServiceClient = trustServiceClient;
@@ -40,11 +39,7 @@ public abstract class SsiClaimsService {
     
     @PostConstruct
     public void init() {
-        Caffeine<Object, Object> cache = Caffeine.newBuilder().expireAfterAccess(ttl); 
-        if (cacheSize > 0) {
-            cache = cache.maximumSize(cacheSize);
-        } 
-        claimsCache = cache.build(); 
+        claimsCache = new CaffeineDataCache<>(cacheSize, ttl, null); 
     }
     
     protected Map<String, Object> loadTrustedClaims(String policy, String requestId) {
