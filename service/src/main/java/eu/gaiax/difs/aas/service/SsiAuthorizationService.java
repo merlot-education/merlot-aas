@@ -3,7 +3,6 @@ package eu.gaiax.difs.aas.service;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import javax.annotation.PostConstruct;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,61 +16,62 @@ import org.springframework.security.oauth2.server.authorization.OAuth2Authorizat
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 import org.springframework.util.Assert;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.RemovalCause;
-import com.github.benmanes.caffeine.cache.RemovalListener;
+import eu.gaiax.difs.aas.cache.DataCache;
+import eu.gaiax.difs.aas.cache.caffeine.CaffeineDataCache;
 
 
-public class SsiAuthorizationService implements OAuth2AuthorizationService, RemovalListener<String, OAuth2Authorization> {
+public class SsiAuthorizationService implements OAuth2AuthorizationService {
     
     private static final Logger log = LoggerFactory.getLogger(SsiAuthorizationService.class);
     
-    private final int cacheSize;
-    private final Duration ttl;
-    
-    private Cache<String, OAuth2Authorization> authorizations;
-
+    private final DataCache<String, OAuth2Authorization> authorizations;
     private final Map<String, String> codes;
 
     public SsiAuthorizationService(int cacheSize, Duration ttl) {
-        this.cacheSize = cacheSize;
-        this.ttl = ttl;
+        this.authorizations = new CaffeineDataCache<>(cacheSize, ttl, this::synchronize);
         this.codes = new ConcurrentHashMap<>();
     }
     
-    @PostConstruct
-    public void init() {
-        Caffeine<Object, Object> cache = Caffeine.newBuilder().expireAfterAccess(ttl); 
-        if (cacheSize > 0) {
-            cache = cache.maximumSize(cacheSize);
-        } 
-        authorizations = cache.removalListener(this).build(); 
+    public void synchronize(String key, OAuth2Authorization value, boolean replaced) {
+        boolean removed = false;
+        log.debug("synchronize; got key: {}, authorization: {}, replaced: {}", key, printAuth(value), replaced);
+        if (replaced) {
+            //
+        } else {
+            OAuth2Authorization.Token<OAuth2AuthorizationCode> authorizationCode = value.getToken(OAuth2AuthorizationCode.class);
+            if (authorizationCode != null) {
+                removed = codes.remove(authorizationCode.getToken().getTokenValue()) != null;
+            }
+        }
+        log.debug("synchronize.exit; removed: {}", removed);
     }
-
+    
     @Override
     public void save(OAuth2Authorization authorization) {
         Assert.notNull(authorization, "authorization cannot be null");
+        log.debug("save.enter; got authorization: {}", printAuth(authorization));
         OAuth2Authorization.Token<OAuth2AuthorizationCode> authorizationCode =
                 authorization.getToken(OAuth2AuthorizationCode.class);
         if (authorizationCode != null) {
             codes.put(authorizationCode.getToken().getTokenValue(), authorization.getId());
         }
         this.authorizations.put(authorization.getId(), authorization);
+        log.debug("save.exit; authorizations: {}, codes: {}", authorizations.estimatedSize(), codes.size());
     }
 
     @Override
     public void remove(OAuth2Authorization authorization) {
         Assert.notNull(authorization, "authorization cannot be null");
-        log.debug("remove.enter; got authorization: {}", authorization);
-        this.authorizations.invalidate(authorization.getId());
+        log.debug("remove.enter; got authorization: {}", printAuth(authorization));
+        this.authorizations.remove(authorization.getId());
+        log.debug("remove.exit; authorizations: {}, codes: {}", authorizations.estimatedSize(), codes.size());
     }
 
     @Nullable
     @Override
     public OAuth2Authorization findById(String id) {
         Assert.hasText(id, "id cannot be empty");
-        return this.authorizations.getIfPresent(id);
+        return this.authorizations.get(id);
     }
 
     @Nullable
@@ -84,7 +84,7 @@ public class SsiAuthorizationService implements OAuth2AuthorizationService, Remo
             String id = codes.get(token);
             if (id != null) {
                 OAuth2Authorization authorization = findById(id);
-                log.debug("findByToken.exit; returning codes: {}", authorization);
+                log.debug("findByToken.exit; returning auth from codes: {}", printAuth(authorization));
                 return authorization;
             }
         }
@@ -106,20 +106,25 @@ public class SsiAuthorizationService implements OAuth2AuthorizationService, Remo
         //}
         log.info("findByToken.exit; no authorization found for token: {}, type: {}; authorizations size: {}, codes size: {}", 
                 token, tkType, authorizations.estimatedSize(), codes.size());
+        if (token.startsWith("${")) {
+            try {
+                throw new Exception("debug");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
         return null;
     }
-
-    @Override
-    public void onRemoval(@org.checkerframework.checker.nullness.qual.Nullable String key,
-            @org.checkerframework.checker.nullness.qual.Nullable OAuth2Authorization value, RemovalCause cause) {
-        boolean removed = false;
-        log.debug("onRemoval.enter; got key: {}, authorization: {}, cause: {}", key, value, cause);
-        OAuth2Authorization.Token<OAuth2AuthorizationCode> authorizationCode = value.getToken(OAuth2AuthorizationCode.class);
-        if (authorizationCode != null) {
-            removed = codes.remove(authorizationCode.getToken().getTokenValue()) != null;
-        }
-        log.debug("onRemoval.exit; removed: {}", removed);
+    
+    private String printAuth(OAuth2Authorization authorization) {
+        return "[id: " + authorization.getId() + ", principalName: " + authorization.getPrincipalName() +
+            ", registeredClientId: " + authorization.getRegisteredClientId() + ", accessToken: " + (authorization.getAccessToken() == null ? 
+                    null : authorization.getAccessToken().getToken().getTokenType().getValue() + ":" + authorization.getAccessToken().getToken().getTokenValue()) +
+            ", attributes: " + authorization.getAttributes() + ", authorizationGrantType: " + (authorization.getAuthorizationGrantType() == null ? 
+                    null : authorization.getAuthorizationGrantType().getValue()) +
+            ", refreshToken: " + authorization.getRefreshToken() + "]";
     }
+
 /*    
     private static boolean isComplete(OAuth2Authorization authorization) {
         return authorization.getAccessToken() != null;

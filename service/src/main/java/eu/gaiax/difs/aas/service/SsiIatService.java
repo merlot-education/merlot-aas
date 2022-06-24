@@ -89,7 +89,7 @@ public class SsiIatService extends SsiClaimsService {
     public AccessResponseDto getIatProofResult(String requestId) {
         log.debug("getIatProofResult.enter; got request: {}", requestId);
         AccessResponseDto accessResponseDto;
-        Map<String, Object> iatClaims = claimsCache.getIfPresent(requestId); 
+        Map<String, Object> iatClaims = claimsCache.get(requestId); 
         if (iatClaims == null) {
             iatClaims = loadTrustedClaims(GET_IAT_PROOF_RESULT, requestId);
             //addAuthData(requestId, iatClaims);
@@ -106,7 +106,7 @@ public class SsiIatService extends SsiClaimsService {
 
     public Map<String, Object> getIatProofClaims(String subjectId, String scope, Map<String, Object> params) {
         log.debug("getIatProofClaims.enter; got params: {}", params);
-        Map<String, Object> iatClaims = claimsCache.getIfPresent(subjectId);
+        Map<String, Object> iatClaims = claimsCache.get(subjectId);
         if (iatClaims == null) {
             List<String> scopes = Arrays.asList(scope.split(" "));
             params.put(OAuth2ParameterNames.SCOPE, scopes);
@@ -130,7 +130,7 @@ public class SsiIatService extends SsiClaimsService {
         String entity = null;
         String subject = null;
         Collection<String> scopes = null;
-        Map<String, Object> iatRequest = claimsCache.getIfPresent(requestId);
+        Map<String, Object> iatRequest = claimsCache.get(requestId);
         if (iatRequest == null) {
             log.info("mapToIatAccessResponse; no data found for requestId: {}", requestId);
         } else {
