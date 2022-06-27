@@ -78,7 +78,7 @@ aas:
     repo: aisbl
     group: aisbl
     version: 1.0
-    action: evaluate
+    action: evaluation
     delay: 500 # in milliseconds
     duration: 5000 # in milliseconds
     request:
@@ -93,6 +93,4 @@ logging:
     tsclaims: DEBUG
     org.springframework.web: DEBUG
     org.springframework.security: DEBUG
-    org.springframework.web.client.RestTemplate: DEBUG
     eu.gaiax.difs.aas: DEBUG
-    eu.gaiax.difs.aas.client: INFO

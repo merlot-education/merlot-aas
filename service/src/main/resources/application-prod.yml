@@ -9,7 +9,7 @@ management:
         include: health, info, metrics, prometheus
 aas:
   tsa:
-    url: http://trustservice/api
+    url: https://gaiax.vereign.com/tsa/policy
   iam:
     base-uri: http://key-server:8080
   id-token:
@@ -21,5 +21,4 @@ logging:
     tsclaims: INFO
     org.springframework.web: INFO
     org.springframework.security: INFO
-    org.springframework.web.client.RestTemplate: INFO
     eu.gaiax.difs.aas: INFO
