@@ -20,7 +20,6 @@ import com.nimbusds.jwt.proc.BadJWTException;
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 
 import eu.gaiax.difs.aas.properties.ScopeProperties;
-import eu.gaiax.difs.aas.properties.ServerProperties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,18 +46,18 @@ public class SsiBrokerService extends SsiClaimsService {
 
     private final static Logger log = LoggerFactory.getLogger(SsiBrokerService.class);
 
-    @Value("${aas.id-token.clock-skew}")
+    @Value("${aas.oidc.issuer}")
+    private String oidcIssuer;
+    @Value("${aas.siop.clock-skew}")
     private Duration clockSkew;
-    @Value("${aas.id-token.issuer}")
-    private String issuer;
+    @Value("${aas.siop.issuer}")
+    private String siopIssuer;
 
     private final ScopeProperties scopeProperties;
-    private final ServerProperties serverProperties;
 
-    public SsiBrokerService(TrustServiceClient trustServiceClient, ScopeProperties scopeProperties, ServerProperties serverProperties) {
+    public SsiBrokerService(TrustServiceClient trustServiceClient, ScopeProperties scopeProperties) {
         super(trustServiceClient);
         this.scopeProperties = scopeProperties;
-        this.serverProperties = serverProperties;
     }
     
     public void oidcAuthorize(Map<String, Object> model) {
@@ -130,8 +129,8 @@ public class SsiBrokerService extends SsiClaimsService {
         List<String> params = new ArrayList<>();
         params.add(OAuth2ParameterNames.SCOPE + "=" + String.join(" ", scopes));
         params.add(OAuth2ParameterNames.RESPONSE_TYPE + "=" + OidcParameterNames.ID_TOKEN);
-        params.add(OAuth2ParameterNames.CLIENT_ID +  "=" + serverProperties.getBaseUrl());
-        params.add(OAuth2ParameterNames.REDIRECT_URI + "=" + serverProperties.getBaseUrl() + "/ssi/siop-callback");
+        params.add(OAuth2ParameterNames.CLIENT_ID +  "=" + oidcIssuer);
+        params.add(OAuth2ParameterNames.REDIRECT_URI + "=" + oidcIssuer + "/ssi/siop-callback");
         params.add("response_mode=post");
         params.add(OidcParameterNames.NONCE + "=" + requestId);
         return "openid://?" + String.join("&", params);
@@ -181,8 +180,8 @@ public class SsiBrokerService extends SsiClaimsService {
             requestedClaims.remove(IdTokenClaimNames.AUTH_TIME);
             
             DefaultJWTClaimsVerifier<?> verifier = new DefaultJWTClaimsVerifier<>(new JWTClaimsSet.Builder()
-                .issuer(issuer)
-                .audience(serverProperties.getBaseUrl())
+                .issuer(siopIssuer)
+                .audience(oidcIssuer)
                 .build(), requestedClaims);
             try {
                 verifier.verify(JWTClaimsSet.parse(response), null);

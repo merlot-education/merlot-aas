@@ -1,5 +1,4 @@
 server:
-  host: auth-server
   port: 9000
 
 management:
@@ -8,17 +7,19 @@ management:
       exposure:
         include: health, info, metrics, prometheus
 aas:
+  iam:
+    base-uri: https://key-server.gxfs.dev
+  oidc:
+    issuer: https://auth-server.gxfs.dev
+  token:
+    ttl: 5m
   tsa:
     url: https://gaiax.vereign.com/tsa/policy
-  iam:
-    base-uri: http://key-server:8080
-  id-token:
-    ttl: 5m
       
 logging:
   level:
     root: INFO
     tsclaims: INFO
-    org.springframework.web: INFO
+    org.springframework.web: DEBUG
     org.springframework.security: INFO
-    eu.gaiax.difs.aas: INFO
+    eu.gaiax.difs.aas: DEBUG

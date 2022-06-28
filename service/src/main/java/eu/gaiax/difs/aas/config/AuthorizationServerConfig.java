@@ -73,7 +73,6 @@ import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 
 import eu.gaiax.difs.aas.properties.ScopeProperties;
-import eu.gaiax.difs.aas.properties.ServerProperties;
 import eu.gaiax.difs.aas.service.SsiAuthManager;
 import eu.gaiax.difs.aas.service.SsiAuthorizationService;
 
@@ -85,8 +84,12 @@ public class AuthorizationServerConfig {
 
     @Value("${aas.cache.size}")
     private int cacheSize;
-    @Value("${aas.id-token.ttl}")
-    private Duration ttl;
+    @Value("${aas.cache.ttl}")
+    private Duration cacheTtl;
+    @Value("${aas.oidc.issuer}")
+    private String oidcIssuer;
+    @Value("${aas.token.ttl}")
+    private Duration tokenTtl;
     @Value("${aas.jwk.length}")
     private int jwkLength;
     @Value("${aas.jwk.secret}")
@@ -94,13 +97,11 @@ public class AuthorizationServerConfig {
     
     private final ScopeProperties scopeProperties;
     private final ClientsProperties clientsProperties;
-    private final ServerProperties serverProperties;
     
     @Autowired
-    public AuthorizationServerConfig(ScopeProperties scopeProperties, ClientsProperties clientsProperties, ServerProperties serverProperties) {
+    public AuthorizationServerConfig(ScopeProperties scopeProperties, ClientsProperties clientsProperties) {
         this.scopeProperties = scopeProperties;
         this.clientsProperties = clientsProperties;
-        this.serverProperties = serverProperties;
     }
 
     @Bean
@@ -175,7 +176,7 @@ public class AuthorizationServerConfig {
                         //.tokenEndpointAuthenticationSigningAlgorithm(MacAlgorithm.HS256)
                         .build())
                 .tokenSettings(TokenSettings.builder()
-                        .accessTokenTimeToLive(ttl)
+                        .accessTokenTimeToLive(tokenTtl)
                         .build())
                 .build();
     }
@@ -183,7 +184,7 @@ public class AuthorizationServerConfig {
     @Bean
     public ProviderSettings providerSettings() {
         return ProviderSettings.builder()
-                .issuer(serverProperties.getBaseUrl())
+                .issuer(oidcIssuer)
                 // could be added later. but ClientRegistrationEndpoint is not present in OidcProviderConfiguration (yet?)
                 // so it is not clear, how should we expose it
                 //.oidcClientRegistrationEndpoint("/clients/registration")
@@ -193,7 +194,7 @@ public class AuthorizationServerConfig {
     @Bean
     public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) throws JOSEException {
         JWK jwk = jwkSource.get(new JWKSelector(new JWKMatcher.Builder().build()), null).get(0);
-        OAuth2TokenValidator<Jwt> jwtValidator = JwtValidators.createDefaultWithIssuer(serverProperties.getBaseUrl());
+        OAuth2TokenValidator<Jwt> jwtValidator = JwtValidators.createDefaultWithIssuer(oidcIssuer);
         RSAPublicKey publicKey = jwk.toRSAKey().toRSAPublicKey();
         NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withPublicKey(publicKey).build();
         jwtDecoder.setJwtValidator(jwtValidator);
@@ -229,7 +230,7 @@ public class AuthorizationServerConfig {
 
     @Bean
     public OAuth2AuthorizationService authorizationService() {
-        return new SsiAuthorizationService(cacheSize, ttl);
+        return new SsiAuthorizationService(cacheSize, cacheTtl);
     }
     
 }

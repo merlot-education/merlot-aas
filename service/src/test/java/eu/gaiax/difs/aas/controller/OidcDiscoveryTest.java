@@ -3,11 +3,10 @@ package eu.gaiax.difs.aas.controller;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import eu.gaiax.difs.aas.properties.ServerProperties;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -39,8 +38,8 @@ public class OidcDiscoveryTest {
     @Autowired
     private MockMvc mockMvc;
     
-    @Autowired
-    private ServerProperties serverProps;
+    @Value("${aas.oidc.issuer}")
+    private String oidcIssuer;
 
     @Test
     void getDiscoveryConfig_config() throws Exception {
@@ -48,9 +47,9 @@ public class OidcDiscoveryTest {
                 .andExpect(status().isOk()).andReturn();
 
         Map<String, Object> config = objectMapper.readValue(result.getResponse().getContentAsString(), MAP_TYPE_REF);
-        assertEquals(serverProps.getBaseUrl(), config.get("issuer").toString());
+        assertEquals(oidcIssuer, config.get("issuer").toString());
         
-        assertEquals(serverProps.getBaseUrl() + "/oauth2/jwks", config.get("jwks_uri"));
+        assertEquals(oidcIssuer + "/oauth2/jwks", config.get("jwks_uri"));
         result = mockMvc.perform(get((String) config.get("jwks_uri")))
                 .andExpect(status().isOk()).andReturn();
         Map<String, Object> keySet = objectMapper.readValue(result.getResponse().getContentAsString(), MAP_TYPE_REF);
