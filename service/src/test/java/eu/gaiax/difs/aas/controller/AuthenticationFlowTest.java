@@ -70,7 +70,6 @@ import com.nimbusds.jwt.JWTParser;
 import eu.gaiax.difs.aas.client.LocalTrustServiceClientImpl;
 import eu.gaiax.difs.aas.client.TrustServiceClient;
 import eu.gaiax.difs.aas.model.TrustServicePolicy;
-import eu.gaiax.difs.aas.properties.ServerProperties;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
@@ -82,9 +81,9 @@ public class AuthenticationFlowTest {
     
     @Value("${aas.iam.base-uri}")
     private String keycloakUri;
+    @Value("${aas.oidc.issuer}")
+    private String oidcIssuer;
     
-    @Autowired
-    private ServerProperties serverProps;
     @Autowired
     private MockMvc mockMvc;
     @Autowired
@@ -209,13 +208,13 @@ public class AuthenticationFlowTest {
     void testSiopLoginFlow() throws Exception {
         Map<String, Object> claims = getAuthClaims("openid", "QfjgI5XxMjNkvUU2f9sWQymGfKoaBr7Ro2jHprmBZrg.VTxL7FGKhi0.demo-app", "code", 
                 "aas-app-siop", keycloakUri + "/realms/gaia-x/broker/ssi-siop/endpoint", "Q5h3noccV6Hwb4pVHps41A", "SIOP", "secret2", null, rid -> 
-                    "openid://?scope=openid&response_type=id_token&client_id=" + serverProps.getBaseUrl() + "&redirect_uri=" + serverProps.getBaseUrl() + 
+                    "openid://?scope=openid&response_type=id_token&client_id=" + oidcIssuer + "&redirect_uri=" + oidcIssuer + 
                     "/ssi/siop-callback&response_mode=post&nonce=" + rid, rid -> {
                         try {
                             Map<String, Object> params = new HashMap<>();
                             params.put(IdTokenClaimNames.ISS, "https://self-issued.me/v2");
                             params.put(IdTokenClaimNames.SUB, "NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs");
-                            params.put(IdTokenClaimNames.AUD, serverProps.getBaseUrl());
+                            params.put(IdTokenClaimNames.AUD, oidcIssuer);
                             params.put(IdTokenClaimNames.NONCE, rid);
                             params.put(IdTokenClaimNames.EXP, Instant.now().plusSeconds(600).getEpochSecond());
                             params.put(IdTokenClaimNames.IAT, Instant.now().getEpochSecond());
@@ -251,14 +250,14 @@ public class AuthenticationFlowTest {
     void testSiopLoginMaxScope() throws Exception {
         Map<String, Object> claims = getAuthClaims("openid profile email", "QfjgI5XxMjNkvUU2f9sWQymGfKoaBr7Ro2jHprmBZrg.VTxL7FGKhi0.demo-app", "code", 
                 "aas-app-siop", keycloakUri + "/realms/gaia-x/broker/ssi-siop/endpoint", "Q5h3noccV6Hwb4pVHps41A", "SIOP", "secret2", null, rid -> 
-                    "openid://?scope=openid profile email&response_type=id_token&client_id=" + serverProps.getBaseUrl() + "&redirect_uri=" + serverProps.getBaseUrl() + 
+                    "openid://?scope=openid profile email&response_type=id_token&client_id=" + oidcIssuer + "&redirect_uri=" + oidcIssuer + 
                     "/ssi/siop-callback&response_mode=post&nonce=" + rid, rid -> {
                         try {
                             long stamp = System.currentTimeMillis();
                             Map<String, Object> params = new HashMap<>();
                             params.put(IdTokenClaimNames.ISS, "https://self-issued.me/v2");
                             params.put(IdTokenClaimNames.SUB, "NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs");
-                            params.put(IdTokenClaimNames.AUD, serverProps.getBaseUrl());
+                            params.put(IdTokenClaimNames.AUD, oidcIssuer);
                             params.put(IdTokenClaimNames.NONCE, rid);
                             params.put(IdTokenClaimNames.EXP, Instant.now().plusSeconds(600).getEpochSecond());
                             params.put(IdTokenClaimNames.IAT, Instant.now().getEpochSecond());
@@ -364,7 +363,7 @@ public class AuthenticationFlowTest {
         
         MvcResult authResult = getAuthResult("openid", "QfjgI5XxMjNkvUU2f9sWQymGfKoaBr7Ro2jHprmBZrg.VTxL7FGKhi0.demo-app", "code", "aas-app-siop", 
                 keycloakUri + "/realms/gaia-x/broker/ssi-siop/endpoint", "Q5h3noccV6Hwb4pVHps41A", "SIOP", null, rid -> 
-                    "openid://?scope=openid&response_type=id_token&client_id=" + serverProps.getBaseUrl() + "&redirect_uri=" + serverProps.getBaseUrl() + 
+                    "openid://?scope=openid&response_type=id_token&client_id=" + oidcIssuer + "&redirect_uri=" + oidcIssuer + 
                     "/ssi/siop-callback&response_mode=post&nonce=" + rid, null, "/ssi/login?error=server_error");
         String requestId = authResult.getRequest().getParameter(OAuth2ParameterNames.USERNAME); 
         HttpSession session = authResult.getRequest().getSession(false);
@@ -396,7 +395,7 @@ public class AuthenticationFlowTest {
         Map<String, Object> params = new HashMap<>();
         params.put(IdTokenClaimNames.ISS, "https://self-issued.me/v2");
         params.put(IdTokenClaimNames.SUB, "NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs");
-        params.put(IdTokenClaimNames.AUD, serverProps.getBaseUrl());
+        params.put(IdTokenClaimNames.AUD, oidcIssuer);
         params.put(IdTokenClaimNames.NONCE, requestId);
         params.put(IdTokenClaimNames.EXP, Instant.now().plusSeconds(600).getEpochSecond());
         params.put(IdTokenClaimNames.IAT, Instant.now().getEpochSecond());

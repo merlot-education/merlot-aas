@@ -14,7 +14,6 @@ import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.security.oauth2.core.oidc.StandardClaimNames;
 
 import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
-import eu.gaiax.difs.aas.properties.ServerProperties;
 import eu.gaiax.difs.aas.properties.StatusProperties;
 
 import static eu.gaiax.difs.aas.model.TrustServicePolicy.*;
@@ -25,14 +24,14 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
     private static final Logger log = LoggerFactory.getLogger("tsclaims");
 
     private final Map<String, Integer> countdowns = new ConcurrentHashMap<>();
-    private final ServerProperties serverProperties;
     private final StatusProperties statusProperties;
 
+    @Value("${aas.oidc.issuer}")
+    private String oidcIssuer;
     @Value("${aas.tsa.request.count}")
     private int pendingRequestCount;
     
-    public LocalTrustServiceClientImpl(ServerProperties serverProperties, StatusProperties statusProperties) {
-        this.serverProperties = serverProperties;
+    public LocalTrustServiceClientImpl(StatusProperties statusProperties) {
         this.statusProperties = statusProperties;
     }
     
@@ -88,7 +87,7 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
                 }
             }
             map.put(IdTokenClaimNames.SUB, requestId);
-            map.put(IdTokenClaimNames.ISS, serverProperties.getBaseUrl());
+            map.put(IdTokenClaimNames.ISS, oidcIssuer);
         }
 
         log.debug("Called local trust service client; policy: {}, params: {}, result: {} ", policy, params, map);

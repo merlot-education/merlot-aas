@@ -22,12 +22,12 @@ public abstract class SsiClaimsService {
     
     @Value("${aas.cache.size}")
     private int cacheSize;
-    @Value("${aas.id-token.ttl}")
+    @Value("${aas.cache.ttl}")
     private Duration ttl;
     @Value("${aas.tsa.delay}")
-    private long millisecondsToDelay;
+    private long delay;
     @Value("${aas.tsa.duration}")
-    private long requestingDuration;
+    private long duration;
 
     protected final TrustServiceClient trustServiceClient;
     
@@ -43,7 +43,7 @@ public abstract class SsiClaimsService {
     }
     
     protected Map<String, Object> loadTrustedClaims(String policy, String requestId) {
-        Instant finish = Instant.now().plusNanos(1_000_000 * requestingDuration);
+        Instant finish = Instant.now().plusNanos(1_000_000 * duration);
         while (Instant.now().isBefore(finish)) {
             Map<String, Object> evaluation = trustServiceClient.evaluate(policy, Map.of(TrustServiceClient.PN_REQUEST_ID, requestId));
 
@@ -72,7 +72,7 @@ public abstract class SsiClaimsService {
 
     private void delayNextRequest() {
         try {
-            TimeUnit.MILLISECONDS.sleep(millisecondsToDelay);
+            TimeUnit.MILLISECONDS.sleep(delay);
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
         }

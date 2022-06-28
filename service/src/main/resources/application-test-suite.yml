@@ -1,5 +1,4 @@
 server:
-  host: auth-server
   port: 9000
         
 aas:
@@ -16,4 +15,7 @@ aas:
       siop:
         id: aas-app-siop
         secret: "{noop}secret2"
-        redirect-uri: ${aas.iam.base-uri}/test/a/aas-test/callback    
+        redirect-uri: ${aas.iam.base-uri}/test/a/aas-test/callback
+  oidc:
+    issuer: http://auth-server:9000
+        

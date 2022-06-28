@@ -1,17 +1,13 @@
 server:
-  host: auth-server
   port: 8090
-  schema: http
   servlet:
     session:
       timeout: 10m
-  ssl:
-    enabled: false
   tomcat:
 #    accesslog:
 #      directory: /logs
 #      enabled: true
-    connection-timeout: 60s
+#    connection-timeout: 60s
     mbeanregistry:
       enabled: true
 
@@ -35,6 +31,7 @@ springdoc:
 aas:
   cache:
     size: 0
+    ttl: 5m
   iam:
     base-uri: http://key-server:8080
     iat:
@@ -49,13 +46,14 @@ aas:
         id: aas-app-siop
         secret: "{noop}secret2"
         redirect-uri: ${aas.iam.base-uri}/realms/gaia-x/broker/ssi-siop/endpoint
-  id-token:
-    clock-skew: 5s 
-    issuer: https://self-issued.me/v2
-    ttl: 5m
   jwk:
     length: 3072
     secret: 96ec048e-c640-4cfd-bc82-6571810a9d0f
+  oidc:
+    issuer: http://auth-server:8090
+  siop:
+    clock-skew: 5s 
+    issuer: https://self-issued.me/v2
   scopes:
     openid:
       - sub
@@ -73,10 +71,12 @@ aas:
     email:
       - email
       - email_verified
+  token:
+    ttl: 5m
   tsa:
     url: http://trustservice/api
     repo: aisbl
-    group: aisbl
+    group: example
     version: 1.0
     action: evaluation
     delay: 500 # in milliseconds

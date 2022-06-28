@@ -41,10 +41,11 @@ public class RestTrustServiceClientImpl implements TrustServiceClient {
     public Map<String, Object> evaluate(String policy, Map<String, Object> params) {
         log.debug("evaluate.enter; got policy: {}, params: {}", policy, params);
         claims_log.debug("evaluate.enter; got policy: {}, params: {}", policy, params);
-        String uri = "/{repo}/policies/{group}/{policyname}/{version}/{action}";
+        //String uri = "/{repo}/policies/{group}/{policyname}/{version}/{action}";
+        String uri = "/policy/{group}/{policyName}/{version}/{action}";
         // baseUrl doesn't work for some reason, so I specify it here
         Flux<Map<String, Object>> trustServiceResponse = client.post().uri(url, uriBuilder -> 
-                    uriBuilder.path(uri).build(repo, group, policy, version, action)) 
+                    uriBuilder.path(uri).build(/*repo,*/ group, policy, version, action)) 
                 .accept(MediaType.APPLICATION_JSON)
                 .bodyValue(params)
                 .retrieve()
