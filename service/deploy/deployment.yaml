@@ -5,15 +5,15 @@ metadata:
   labels:
     app: auth-server
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: auth-server
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25%
+      maxSurge: 50%
+      maxUnavailable: 50%
   template:
     metadata:
       labels:
@@ -26,12 +26,18 @@ spec:
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: test
-            - name: SERVER_HOST
-              value: 78.138.66.89
-            - name: AAS_TSA_DURATION
-              value: "100000"
+#            - name: SERVER_HOST
+#              value: auth-server.gxfs.dev
+#            - name: SERVER_PORT
+#              value: "80"
+            - name: AAS_CACHE_TTL
+              value: 3m
+            - name: AAS_TOKEN_TTL
+              value: 3m
             - name: AAS_IAM_BASE_URI
-              value: http://78.138.66.168:8080
+              value: https://key-server.gxfs.dev
+            - name: AAS_OIDC_ISSUER
+              value: https://auth-server.gxfs.dev
             - name: AAS_IAM_IAT_SECRET
               valueFrom:
                 secretKeyRef:
@@ -56,8 +62,8 @@ spec:
           ports:
             - name: "http"
               containerPort: 9000
-            - name: "https"
-              containerPort: 9443
+#            - name: "https"
+#              containerPort: 9443
 
           readinessProbe:
             httpGet:                 
