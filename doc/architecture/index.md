@@ -12,7 +12,7 @@ The components are:
 - [Organization Credential Manager](https://www.gxfs.eu/organizational-credential-manager/): GAIA-X LOT3 implementation.
 - [Trust Service API](https://www.gxfs.eu/trust-services-api/): GAIA-X LOT4 implementation.
 
-The Auth Server component is implemented as a regular Spring Boot Java application. Required OpenID/OAuth2 functionality is provided by [Spring Authorization Server](https://docs.spring.io/spring-security-oauth2-boot/docs/2.2.x-SNAPSHOT/reference/html/boot-features-security-oauth2-authorization-server.html) with help of [Spring Security](https://spring.io/projects/spring-security-oauth) components. 
+The Auth Server component is implemented as a regular Spring Boot Java application. Required OpenID/OAuth2 functionality is provided by [Spring Authorization Server](https://docs.spring.io/spring-authorization-server/docs/current/reference/html/index.html) with help of [Spring Security](https://spring.io/projects/spring-security-oauth) components. 
 
 The standard protocols used in component communications are:
 - [OIDC Discovery](https://openid.net/specs/openid-connect-discovery-1_0.html)
