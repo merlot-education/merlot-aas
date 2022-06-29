@@ -3,20 +3,25 @@ kind: Ingress
 metadata:
   annotations:
     kubernetes.io/ingress.class: nginx
-    nginx.ingress.kubernetes.io/affinity: "cookie"
-    nginx.ingress.kubernetes.io/session-cookie-name: "stickounet"
+    cert-manager.io/cluster-issuer: cert-manager-webhook
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/affinity: cookie
     nginx.ingress.kubernetes.io/session-cookie-expires: "172800"
     nginx.ingress.kubernetes.io/session-cookie-max-age: "172800"
   name: auth-server-ingress
-#  namespace: default
 spec:
+  tls:
+  - hosts:
+    - auth-server.gxfs.dev
+    secretName: wildcard-gxfs-dev
   rules:
-  - http:
+  - host: auth-server.gxfs.dev
+    http:
       paths:
-      - backend:
+      - path: /
+        pathType: Prefix
+        backend:
           service:
             name: auth-server-service
             port:
               number: 9000
-        path: /
-        pathType: Prefix
