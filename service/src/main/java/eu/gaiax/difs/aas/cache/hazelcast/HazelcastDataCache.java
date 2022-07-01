@@ -20,6 +20,11 @@ public class HazelcastDataCache<K, V> implements DataCache<K, V> {
     }
 
     @Override
+    public Map<K, V> getAll() {
+        return null;
+    }
+
+    @Override
     public Map<K, V> getAll(Collection<? extends K> keys) {
         // TODO Auto-generated method stub
         return null;

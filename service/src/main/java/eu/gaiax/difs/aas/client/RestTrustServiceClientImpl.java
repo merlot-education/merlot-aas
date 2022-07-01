@@ -9,6 +9,8 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
 import reactor.core.publisher.Flux;
 
 public class RestTrustServiceClientImpl implements TrustServiceClient {
@@ -52,6 +54,28 @@ public class RestTrustServiceClientImpl implements TrustServiceClient {
                 .bodyToFlux(MAP_TYPE_REF);
         Map<String, Object> result = trustServiceResponse.blockFirst();
         claims_log.debug("evaluate.exit; returning claims: {}", result);
+        String sts = (String) result.get("status");
+        AccessRequestStatusDto status;
+        if (sts == null) {
+            status = AccessRequestStatusDto.PENDING;
+        } else {
+            try {
+                status = AccessRequestStatusDto.valueOf(sts);
+            } catch (Exception ex) {
+                log.info("evaluate.error; got unexpected status: {}", sts);
+                status = AccessRequestStatusDto.REJECTED;
+            }
+        }
+        result.put("status", status);
+        result.remove("sub");
+        result.remove("iss");
+        result.remove("auth_time");
+        String requestId = (String) result.get(PN_REQUEST_ID);
+        if (requestId == null) {
+            requestId = (String) params.get(PN_REQUEST_ID);
+            // a quick fix for TSA mock..
+            result.put("sub", requestId);
+        }
         log.debug("evaluate.exit; returning claims: {}", result.size());
         return result;
     }

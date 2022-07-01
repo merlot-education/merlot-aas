@@ -37,6 +37,7 @@ public class SsiAuthManager implements AuthenticationManager {
             requestId = ((BearerTokenAuthenticationToken) authentication).getName(); // .getToken();
             scopes = Collections.emptyList();
         }
+        log.debug("authenticate; subject: {}, scopes: {}", requestId, scopes);
         
         boolean needAuthTime = false;
         Set<String> additionalClaims;

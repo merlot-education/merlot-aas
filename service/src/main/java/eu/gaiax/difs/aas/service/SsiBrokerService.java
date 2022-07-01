@@ -29,6 +29,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
+import org.springframework.security.oauth2.core.oidc.StandardClaimNames;
 import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -77,7 +78,7 @@ public class SsiBrokerService extends SsiClaimsService {
         Map<String, Object> result = trustServiceClient.evaluate(GET_LOGIN_PROOF_INVITATION, params);
         String link = (String) result.get(TrustServiceClient.PN_LINK);
         String requestId = (String) result.get(TrustServiceClient.PN_REQUEST_ID);
-        Map<String, Object> data = initAuthRequest(requestId, scopes, "OIDC");
+        Map<String, Object> data = initAuthRequest(requestId, scopes, "OIDC", link);
         log.debug("oidcAuthorize; OIDC request {} stored: {}", requestId, data);
 
         // encode link otherwise it'll not pass security check
@@ -97,7 +98,7 @@ public class SsiBrokerService extends SsiClaimsService {
 
         UUID requestId = UUID.randomUUID();
         String link = buildRequestString(scopes, requestId);
-        Map<String, Object> data = initAuthRequest(requestId.toString(), scopes, "SIOP");
+        Map<String, Object> data = initAuthRequest(requestId.toString(), scopes, "SIOP", link);
         log.debug("siopAuthorize; SIOP request {} stored: {}", requestId, data);
         
         String qrUrl = "/ssi/qr/" + Base64.getUrlEncoder().encodeToString(link.getBytes());
@@ -208,11 +209,12 @@ public class SsiBrokerService extends SsiClaimsService {
         log.debug("processSiopLoginResponse.exit; error processed: {}", error != null);
     }
     
-    private Map<String, Object> initAuthRequest(String requestId, Set<String> scopes, String authType) {
+    private Map<String, Object> initAuthRequest(String requestId, Set<String> scopes, String authType, String link) {
         Map<String, Object> data = new HashMap<>();
         data.put("request_time", Instant.now());
         data.put(OAuth2ParameterNames.SCOPE, scopes);
         data.put("auth_type", authType);
+        data.put("auth_link", link);
         claimsCache.put(requestId, data);
         //Map<String, Object> existing = claimsCache.put(requestId, data);
         //if (existing != null) {
@@ -257,7 +259,6 @@ public class SsiBrokerService extends SsiClaimsService {
         if (request == null) {
             return null;
         }
-        //(request.get("sub") != null || request.get("error") != null) &&
         
         Instant requestTime = (Instant) request.get("request_time");
         return requestTime != null && requestTime.isBefore(Instant.now()) && requestTime.isAfter(Instant.now().minus(clockSkew));
@@ -285,6 +286,7 @@ public class SsiBrokerService extends SsiClaimsService {
     public Map<String, Object> getUserClaims(String requestId, boolean required, Collection<String> requestedScopes, Collection<String> requestedClaims) {
         Map<String, Object> userClaims = getUserClaims(requestId, required);
         if (userClaims == null) {
+            log.debug("getUserClaims; no claims found, cache size is: {}", claimsCache.estimatedSize()); // .getAll());
             return null;
         }
         
@@ -312,7 +314,8 @@ public class SsiBrokerService extends SsiClaimsService {
                 userClaims = loadTrustedClaims(GET_LOGIN_PROOF_RESULT, requestId);
                 addAuthData(requestId, userClaims);
             }
-        } else if (!userClaims.containsKey(IdTokenClaimNames.SUB) && !userClaims.containsKey(OAuth2ParameterNames.ERROR)) {
+        } else if (!(userClaims.containsKey(IdTokenClaimNames.SUB) || userClaims.containsKey(OAuth2ParameterNames.ERROR) ||
+                userClaims.containsKey(StandardClaimNames.NAME) || userClaims.containsKey(StandardClaimNames.EMAIL))) {
             if (required) {
                 userClaims = loadTrustedClaims(GET_LOGIN_PROOF_RESULT, requestId);
                 addAuthData(requestId, userClaims);
