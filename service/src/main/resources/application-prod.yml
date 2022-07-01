@@ -9,8 +9,10 @@ management:
 aas:
   iam:
     base-uri: https://key-server.gxfs.dev
+#    base-uri: http://key-server:8080
   oidc:
     issuer: https://auth-server.gxfs.dev
+#    issuer: http://auth-server:9000
   token:
     ttl: 5m
   tsa:
@@ -20,6 +22,6 @@ logging:
   level:
     root: INFO
     tsclaims: INFO
-    org.springframework.web: DEBUG
+    org.springframework.web: INFO
     org.springframework.security: INFO
-    eu.gaiax.difs.aas: DEBUG
+    eu.gaiax.difs.aas: INFO

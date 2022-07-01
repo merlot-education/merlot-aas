@@ -42,6 +42,11 @@ public class CaffeineDataCache<K, V> implements DataCache<K, V> {
     }
 
     @Override
+    public Map<K, V> getAll() {
+        return dataCache.asMap();
+    }
+    
+    @Override
     public Map<K, V> getAll(Collection<? extends K> keys) {
         return dataCache.getAllPresent(keys);
     }

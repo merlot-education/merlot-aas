@@ -57,7 +57,7 @@ services:
           '-Dkeycloak.migration.dir=/tmp/import',
           '-Dkeycloak.migration.strategy=OVERWRITE_EXISTING',
           '-Dkeycloak.profile.feature.upload_scripts=enabled',
-          '--log-level=DEBUG,io.quarkus:INFO,liquibase:INFO,org.hibernate:INFO,org.infinispan:INFO,org.keycloak.services.scheduled:INFO,org.keycloak.transaction:INFO'
+          '--log-level=DEBUG,io.quarkus:INFO,liquibase:INFO,org.hibernate:INFO,org.infinispan:INFO,org.keycloak.services.scheduled:INFO,org.keycloak.transaction:INFO,io.netty.buffer.PoolThreadCache:INFO,org.keycloak.models.sessions.infinispan:INFO'
       ]
 
 #  nginx:
