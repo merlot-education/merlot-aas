@@ -7,13 +7,9 @@ Keycloaak deployment scripts for Kubernetes are in `/keycloak/deploy` folder. In
 >kubectl apply -f secret-pass.yaml
 >kubectl apply -f serviceaccount.yaml
 >kubectl apply -f deployment.yaml
+>kubectl apply -f ingress.yaml
 ```
-Get keycloak external IP from its service:
-
-```
-kubectl get services
-```
-Take `EXTERNAL-IP` value for `key-server-service` and open Keycloak administration console in browser at `http://<EXTERNAL-IP>:8080/admin`
+KeycloaK administration console must be accessible in browser at `https://key-server.gxfs.dev/admin`
 
 - move mouse pointer to the top-left corner under the Master realm and hit the appeared Add realm button:
 - ![Keycloak Add realm](./images/image2022-2-7_15-23-15.png "Keycloak Add realm")
