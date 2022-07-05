@@ -99,8 +99,8 @@
         <div class="card-bottom">
             <div class="card-bottom-contents">
                 <h2 id="greeting" th:text="#{qrTitle}">Scan the QR code with your mobile device</h2>
-                <img th:src="${qrUrl}" alt="qr Code">
-                <form th:action="@{/login}" method="post">
+                <img th:src="${qrUrl}" alt="QR Code">
+                <form id="login" th:action="@{/login}" method="post">
                     <table>
                         <tr>
                             <td><input class="input-box" type='hidden' name='username' th:value='${requestId}'/></td>
@@ -108,10 +108,10 @@
                         <tr>
                             <td><input class="input-box" type='hidden' name='password' th:value='${loginType}'/></td>
                         </tr>
-                        <tr>
+                        <!--tr>
                             <td><input id="sign-in-button" class="action_button" name="qr-smartphone-button" type="submit"
                                        th:value="#{login}"/></td>
-                        </tr>
+                        </tr-->
                         <tr>
                             <td><input id="scan-qr-browser-button" class="action_button" name="qr-browser-button" type="button"
                                        th:value="#{scanWithBrowser}"/></td>
@@ -131,6 +131,20 @@
 
 <script type="application/javascript" th:src="@{/js/translate.js}"></script>
 <script type="application/javascript" th:src="@{/js/modal.js}"></script>
+<script type="application/javascript">
+    window.onload = function() {
+        var auto = setTimeout(function() { autoRefresh(); }, 100);
+
+        function submitform() {
+           document.forms["login"].submit();
+        }
+
+        function autoRefresh() {
+           clearTimeout(auto);
+           auto = setTimeout(function() { submitform(); autoRefresh(); }, 7000);
+        }
+    }
+</script>
 
 <footer>
     <div class="footer-top">
