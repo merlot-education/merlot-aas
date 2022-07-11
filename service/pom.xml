@@ -184,14 +184,14 @@
                 <groupId>org.owasp</groupId>
                 <artifactId>dependency-check-maven</artifactId>
                 <configuration>
-                    <suppressionFile>./owasp/suppressions.xml</suppressionFile>
+                    <!--suppressionFile>./owasp/suppressions.xml</suppressionFile-->
                     <failBuildOnAnyVulnerability>false</failBuildOnAnyVulnerability>
                     <!--failBuildOnCVSS>50</failBuildOnCVSS-->
                 </configuration>
                 <executions>
                     <execution>
                         <goals>
-                            <goal>check</goal>
+                            <goal>aggregate</goal>
                         </goals>
                     </execution>
                 </executions>
