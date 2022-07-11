@@ -1,6 +1,6 @@
 ## Conformance & Verification
 
-See [AAS Test Plan](./Test_Plan.docx) for all details regarding projects testing activities.
+See [AAS Test Plan](./Test_Plan.pdf) for all details regarding projects testing activities.
 
 Some project functions were tested with [OpenID Conformance Suite](https://openid.net/certification/about-conformance-suite/), below you can find the official test suite results:
 
@@ -16,7 +16,7 @@ JMetter [Load tests and results](./load) are also provided.
 **The following requirements were tested manually, Jira Xray used as a Test repository:**
 <br>
 
-| Test case name                                       | Description                                  | 
+| Test case name                                       | Description                                    | 
 |------------------------------------------------------|:-----------------------------------------------|
 | Different TSA statuses                               |Check different statuses - GetLoginProofResult: REJECTED, GetIatProofResult: REJECTED, GetLoginProofResult: TIMED_OUT, GetIatProofResult: TIMED_OUT, GetLoginProofResult: ACCEPTED, GetIatProofResult: ACCEPTED | 
 | IDM.AA.00026 Standard IAM Compatibility              | The issued Initial Access Token MUST be compatible with the Client Registration Endpoint of the docked standard IAM. It MUST be possible to register with this IAT client.| 
