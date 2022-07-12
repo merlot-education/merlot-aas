@@ -188,13 +188,13 @@
                     <failBuildOnAnyVulnerability>false</failBuildOnAnyVulnerability>
                     <!--failBuildOnCVSS>50</failBuildOnCVSS-->
                 </configuration>
-                <executions>
+                <!--executions>
                     <execution>
                         <goals>
                             <goal>aggregate</goal>
                         </goals>
                     </execution>
-                </executions>
+                </executions-->
             </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
