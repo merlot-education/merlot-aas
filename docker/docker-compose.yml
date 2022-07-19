@@ -47,7 +47,7 @@ services:
 
     volumes:
       - "../keycloak/providers:/opt/keycloak/providers"
-      - "../keycloak/realms:/tmp/import"
+      - "../keycloak/realms_local:/tmp/import"
 
     command:
       [
