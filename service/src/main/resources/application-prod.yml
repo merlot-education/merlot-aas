@@ -16,7 +16,7 @@ aas:
   token:
     ttl: 5m
   tsa:
-    url: https://gaiax.vereign.com/tsa/policy
+    url: https://gaiax.vereign.com/tsa
       
 logging:
   level:

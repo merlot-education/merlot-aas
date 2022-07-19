@@ -16,8 +16,10 @@ spring:
             scope: openid
         provider:
           keycloak:
-#            issuer-uri: http://78.138.66.168:8080/realms/gaia-x
             issuer-uri: http://key-server:8080/realms/gaia-x
+            jwk-set-uri: http://key-server:8080/realms/gaia-x/protocol/openid-connect/certs
+#            issuer-uri: https://key-server.gxfs.dev/realms/gaia-x
+#            jwk-set-uri: https://key-server.gxfs.dev/realms/gaia-x/protocol/openid-connect/certs
 
 logging:
   level:
