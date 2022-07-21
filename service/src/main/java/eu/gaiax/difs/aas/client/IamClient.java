@@ -6,12 +6,15 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Component
 public class IamClient {
 
@@ -35,6 +38,8 @@ public class IamClient {
     }
 
     public Map<String, Object> registerIam(String clientName, List<String> redirectUris) {
+        log.debug("registerIam.enter; got clientName: {}, redirectUris: {}", clientName, redirectUris);
+        log.trace("registerIam; baseUri: {}, clientRegistrationUri: {}, clientIat: {}", baseUri, clientRegistrationUri, clientIat);
 
         Map<String, Object> map = new HashMap<>();
         map.put("client_name", clientName);
@@ -49,6 +54,8 @@ public class IamClient {
                 .retrieve()
                 .bodyToFlux(MAP_TYPE_REF);
 
-        return trustServiceResponse.blockFirst();
+        Map<String, Object> result = trustServiceResponse.blockFirst();
+        log.debug("registerIam.exit; returning: {}", result);
+        return result;
     }
 }

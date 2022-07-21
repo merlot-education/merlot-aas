@@ -43,7 +43,7 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
     public Map<String, Object> evaluate(String policy, Map<String, Object> params) {
         Map<String, Object> map = new HashMap<>();
         String requestId = (String) params.get(PN_REQUEST_ID);
-        if (requestId == null) {
+        if (requestId == null && (GET_LOGIN_PROOF_INVITATION.equals(policy) || GET_LOGIN_PROOF_RESULT.equals(policy))) {
             requestId = (String) params.get(IdTokenClaimNames.SUB);
         }
         if (requestId == null) {
@@ -52,6 +52,7 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
         map.put(PN_REQUEST_ID, requestId);
 
         if (GET_IAT_PROOF_INVITATION.equals(policy)) {
+            map.put(PN_STATUS, PENDING);
             return map;
         }
 

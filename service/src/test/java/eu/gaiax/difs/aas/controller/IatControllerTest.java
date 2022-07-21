@@ -59,20 +59,12 @@ public class IatControllerTest {
                 "scope", "responseScope",
                 "requestId", "responseRequestId",
                 "status", AccessRequestStatusDto.PENDING);
-        AccessResponseDto expectedResponse = new AccessResponseDto()
-                .subject("responseSubject")
-                .entity(new ServiceAccessScopeDto().scope("responseScope").did("responseDid"))
-                .requestId("responseRequestId")
-                .status(AccessRequestStatusDto.PENDING);
-
         when(trustServiceClient.evaluate(eq(TrustServicePolicy.GET_IAT_PROOF_RESULT), any())).thenReturn(serviceResponse);
 
         mockMvc.perform(
                         get("/clients/iat/requests/testRequestId")
                                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                //.andExpect(content().json(objectMapper.writeValueAsString(expectedResponse), false))
-                ;
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -83,22 +75,13 @@ public class IatControllerTest {
                 "scope", "responseScope",
                 "requestId", "responseRequestId",
                 "status", AccessRequestStatusDto.ACCEPTED);
-        AccessResponseDto expectedResponse = new AccessResponseDto()
-                .subject("responseSubject")
-                .entity(new ServiceAccessScopeDto().scope("responseScope").did("responseDid"))
-                .requestId("responseRequestId")
-                .status(AccessRequestStatusDto.ACCEPTED)
-                .initialAccessToken("keycloakIat");
-
         when(trustServiceClient.evaluate(eq(TrustServicePolicy.GET_IAT_PROOF_RESULT), any())).thenReturn(serviceResponse);
         when(iamClient.registerIam(any(), any())).thenReturn(Map.of("registration_access_token", "keycloakIat"));
 
         mockMvc.perform(
                         get("/clients/iat/requests/testRequestId")
                                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                //.andExpect(content().json(objectMapper.writeValueAsString(expectedResponse), false))
-                ;
+                .andExpect(status().isNotFound());
     }
 
     @Test

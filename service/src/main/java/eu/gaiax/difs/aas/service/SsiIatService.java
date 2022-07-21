@@ -13,9 +13,11 @@ import eu.gaiax.difs.aas.properties.ClientsProperties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -44,7 +46,10 @@ public class SsiIatService extends SsiClaimsService {
         log.debug("evaluateIatProofInvitation.enter; got request: {}", accessRequestDto);
         Map<String, Object> evalRequest = iatRequestToMap(accessRequestDto);
         Map<String, Object> evalResponse = evaluateIatProofInvitation(evalRequest);
-        AccessResponseDto accessResponseDto = mapToIatAccessResponse(evalResponse);
+        AccessResponseDto accessResponseDto = new AccessResponseDto().subject(accessRequestDto.getSubject())
+                .entity(accessRequestDto.getEntity()) 
+                .status((AccessRequestStatusDto) evalResponse.getOrDefault(TrustServiceClient.PN_STATUS, null))
+                .requestId((String) evalResponse.get(TrustServiceClient.PN_REQUEST_ID));
         log.debug("evaluateIatProofInvitation.exit; returning: {}", accessResponseDto);
         return accessResponseDto;
     }
@@ -76,6 +81,9 @@ public class SsiIatService extends SsiClaimsService {
         Map<String, Object> evalRequest =  Collections.singletonMap(TrustServiceClient.PN_REQUEST_ID, requestId);
         Map<String, Object> evalResponse = trustServiceClient.evaluate(GET_IAT_PROOF_RESULT, evalRequest);
         AccessResponseDto accessResponseDto = mapToIatAccessResponse(evalResponse);
+        if (accessResponseDto == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "request not found: " + requestId); 
+        }
 
         if (accessResponseDto.getStatus() == AccessRequestStatusDto.ACCEPTED) {
             Map<String, Object> regResponse = iamClient.registerIam(accessResponseDto.getSubject(), List.of(clientsProperties.getOidc().getRedirectUri()));
@@ -83,24 +91,6 @@ public class SsiIatService extends SsiClaimsService {
             accessResponseDto.setInitialAccessToken(iat);
         }
         log.debug("evaluateIatProofResult.exit; returning: {}", accessResponseDto);
-        return accessResponseDto;
-    }
-
-    public AccessResponseDto getIatProofResult(String requestId) {
-        log.debug("getIatProofResult.enter; got request: {}", requestId);
-        AccessResponseDto accessResponseDto;
-        Map<String, Object> iatClaims = claimsCache.get(requestId); 
-        if (iatClaims == null) {
-            iatClaims = loadTrustedClaims(GET_IAT_PROOF_RESULT, requestId);
-            //addAuthData(requestId, iatClaims);
-            accessResponseDto = mapToIatAccessResponse(iatClaims);
-            Map<String, Object> regResponse = iamClient.registerIam(accessResponseDto.getSubject(), List.of(clientsProperties.getOidc().getRedirectUri()));
-            String iat = (String) regResponse.get(PN_TOKEN);
-            accessResponseDto.setInitialAccessToken(iat);
-        } else {
-            accessResponseDto = mapToIatAccessResponse(iatClaims);
-        }
-        log.debug("getIatProofResult.exit; returning: {}", accessResponseDto);
         return accessResponseDto;
     }
 
@@ -133,11 +123,12 @@ public class SsiIatService extends SsiClaimsService {
         Map<String, Object> iatRequest = claimsCache.get(requestId);
         if (iatRequest == null) {
             log.info("mapToIatAccessResponse; no data found for requestId: {}", requestId);
-        } else {
-            entity = (String) iatRequest.get(IdTokenClaimNames.ISS);
-            subject = (String) iatRequest.get(IdTokenClaimNames.SUB);
-            scopes = (Collection<String>) iatRequest.get(OAuth2ParameterNames.SCOPE);
-        }
+            return null;
+        } 
+        entity = (String) iatRequest.get(IdTokenClaimNames.ISS);
+        subject = (String) iatRequest.get(IdTokenClaimNames.SUB);
+        scopes = (Collection<String>) iatRequest.get(OAuth2ParameterNames.SCOPE);
+        
         // update request with new data?
         // remove request after acceptance?
 
