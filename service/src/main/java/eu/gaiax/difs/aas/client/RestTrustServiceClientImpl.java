@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
@@ -53,8 +54,8 @@ public class RestTrustServiceClientImpl implements TrustServiceClient {
                 .retrieve()
                 .bodyToFlux(MAP_TYPE_REF);
         Map<String, Object> result = trustServiceResponse.blockFirst();
-        claims_log.debug("evaluate.exit; returning claims: {}", result);
-        String sts = (String) result.get("status");
+        claims_log.debug("evaluate; got claims: {}", result);
+        String sts = (String) result.get(PN_STATUS);
         AccessRequestStatusDto status;
         if (sts == null) {
             status = AccessRequestStatusDto.PENDING;
@@ -66,15 +67,15 @@ public class RestTrustServiceClientImpl implements TrustServiceClient {
                 status = AccessRequestStatusDto.REJECTED;
             }
         }
-        result.put("status", status);
-        result.remove("sub");
-        result.remove("iss");
-        result.remove("auth_time");
+        result.put(PN_STATUS, status);
+        result.remove(IdTokenClaimNames.SUB);
+        result.remove(IdTokenClaimNames.ISS);
+        result.remove(IdTokenClaimNames.AUTH_TIME);
         String requestId = (String) result.get(PN_REQUEST_ID);
         if (requestId == null) {
             requestId = (String) params.get(PN_REQUEST_ID);
             // a quick fix for TSA mock..
-            result.put("sub", requestId);
+            result.put(IdTokenClaimNames.SUB, requestId);
         }
         log.debug("evaluate.exit; returning claims: {}", result.size());
         return result;
