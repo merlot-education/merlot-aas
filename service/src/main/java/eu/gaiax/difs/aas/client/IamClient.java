@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -34,13 +33,13 @@ public class IamClient {
 
     public IamClient() {
         client = WebClient.builder()
+                .baseUrl(baseUri)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
     }
 
     public Map<String, Object> registerIam(String clientName, List<String> redirectUris) {
         log.debug("registerIam.enter; got clientName: {}, redirectUris: {}", clientName, redirectUris);
-        log.info("registerIam; baseUri: {}, clientRegistrationUri: {}, clientIat: {}", baseUri, clientRegistrationUri, clientIat);
 
         Map<String, Object> map = new HashMap<>();
         map.put("client_name", clientName);
