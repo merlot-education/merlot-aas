@@ -90,7 +90,7 @@ public class SsiIatService extends SsiClaimsService {
             String iat = (String) regResponse.get(PN_TOKEN);
             accessResponseDto.setInitialAccessToken(iat);
         }
-        log.debug("evaluateIatProofResult.exit; returning: {}", accessResponseDto);
+        log.debug("evaluateIatProofResult.exit; returning status: {}", accessResponseDto.getStatus());
         return accessResponseDto;
     }
 
