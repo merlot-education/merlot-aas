@@ -55,7 +55,7 @@ public class IamClient {
                 .bodyToFlux(MAP_TYPE_REF);
 
         Map<String, Object> result = trustServiceResponse.blockFirst();
-        log.debug("registerIam.exit; returning: {}", result);
+        log.debug("registerIam.exit; returning: {}", result.size());
         return result;
     }
 }
