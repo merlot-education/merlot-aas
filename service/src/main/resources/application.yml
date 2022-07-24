@@ -35,7 +35,7 @@ aas:
   iam:
     base-uri: http://key-server:8080
     iat:
-      dcr-uri: /realms/gaia-x/clients-registrations/openid-connect
+      dcr-uri: ${aas.iam.base-uri}/realms/gaia-x/clients-registrations/openid-connect
       secret: "{noop}iat"
     clients:
       oidc:

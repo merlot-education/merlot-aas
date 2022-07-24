@@ -22,9 +22,6 @@ public class IamClient {
     private static final ParameterizedTypeReference<Map<String, Object>> MAP_TYPE_REF = new ParameterizedTypeReference<>() {
     };
 
-    @Value("${aas.iam.base-uri}")
-    private String baseUri;
-
     @Value("${aas.iam.iat.dcr-uri}")
     private String clientRegistrationUri;
 
@@ -33,7 +30,6 @@ public class IamClient {
 
     public IamClient() {
         client = WebClient.builder()
-                .baseUrl(baseUri)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
     }
@@ -47,7 +43,7 @@ public class IamClient {
         map.put("grant_types", List.of("authorization_code"));
 
         Flux<Map<String, Object>> trustServiceResponse = client.post()
-                .uri(baseUri+clientRegistrationUri)
+                .uri(clientRegistrationUri)
                 .headers(h -> h.setBearerAuth(clientIat))
                 .accept(MediaType.APPLICATION_JSON)
                 .bodyValue(map)
