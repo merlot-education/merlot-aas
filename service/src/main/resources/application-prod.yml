@@ -9,14 +9,14 @@ management:
 aas:
   iam:
     base-uri: https://key-server.gxfs.dev
-#    base-uri: http://key-server:8080
   oidc:
     issuer: https://auth-server.gxfs.dev
-#    issuer: http://auth-server:9000
   token:
     ttl: 5m
   tsa:
     url: https://gaiax.vereign.com/tsa
+    delay: 5000 # in milliseconds
+    duration: 300000 # in milliseconds
       
 logging:
   level:
