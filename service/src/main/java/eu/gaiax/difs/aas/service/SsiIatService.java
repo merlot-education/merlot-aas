@@ -13,6 +13,7 @@ import eu.gaiax.difs.aas.properties.ClientsProperties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
@@ -33,13 +34,13 @@ public class SsiIatService extends SsiClaimsService {
     private static final Logger log = LoggerFactory.getLogger(SsiIatService.class);
     private static final String PN_TOKEN = "registration_access_token";
 
+    @Value("${aas.iam.iat.redirect-uri}")
+    private String redirectUri;
     private final IamClient iamClient;
-    private final ClientsProperties clientsProperties;
 
-    public SsiIatService(TrustServiceClient trustServiceClient, IamClient iamClient, ClientsProperties clientsProperties) {
+    public SsiIatService(TrustServiceClient trustServiceClient, IamClient iamClient) {
         super(trustServiceClient);
         this.iamClient = iamClient;
-        this.clientsProperties = clientsProperties;
     }
 
     public AccessResponseDto evaluateIatProofInvitation(AccessRequestDto accessRequestDto) {
@@ -86,7 +87,7 @@ public class SsiIatService extends SsiClaimsService {
         }
 
         if (accessResponseDto.getStatus() == AccessRequestStatusDto.ACCEPTED) {
-            Map<String, Object> regResponse = iamClient.registerIam(accessResponseDto.getSubject(), List.of(clientsProperties.getOidc().getRedirectUri()));
+            Map<String, Object> regResponse = iamClient.registerIam(accessResponseDto.getSubject(), List.of(redirectUri));
             String iat = (String) regResponse.get(PN_TOKEN);
             accessResponseDto.setInitialAccessToken(iat);
         }
