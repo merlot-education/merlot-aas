@@ -69,24 +69,26 @@ public class SsiController {
 
         String[] clientId = auth.getParameterValues(OAuth2ParameterNames.CLIENT_ID);
         if (clientId != null && clientId.length > 0) {
-            if ("aas-app-oidc".equals(clientId[0])) {
-                String[] age = auth.getParameterValues("max_age");
-                if (age != null && age.length > 0) {
-                    model.addAttribute("max_age", age[0]);
-                }
-
-                String[] hint = auth.getParameterValues("id_token_hint");
-                if (hint != null && hint.length > 0) {
-                    String sub = getSubject(hint[0]);
-                    if (sub != null) {
-                        model.addAttribute(IdTokenClaimNames.SUB, sub);
-                    }
-                }
-
-                ssiBrokerService.oidcAuthorize(model.asMap());
-            } else if ("aas-app-siop".equals(clientId[0])) {
+            if ("aas-app-siop".equals(clientId[0])) {
                 ssiBrokerService.siopAuthorize(model.asMap());
-            }
+            } else {
+                //if ("aas-app-oidc".equals(clientId[0])) {
+                    String[] age = auth.getParameterValues("max_age");
+                    if (age != null && age.length > 0) {
+                        model.addAttribute("max_age", age[0]);
+                    }
+    
+                    String[] hint = auth.getParameterValues("id_token_hint");
+                    if (hint != null && hint.length > 0) {
+                        String sub = getSubject(hint[0]);
+                        if (sub != null) {
+                            model.addAttribute(IdTokenClaimNames.SUB, sub);
+                        }
+                    }
+    
+                    ssiBrokerService.oidcAuthorize(model.asMap());
+                }
+            //}
             return "login-template.html";
         }
 

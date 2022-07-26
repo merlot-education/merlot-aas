@@ -50,7 +50,7 @@ aas:
        gxfs:
          id: gxfs-hmi-demo
          secret: "{noop}hmi-secret"
-         redirect-uri: http://localhost:3000/login/oauth2/*
+         redirect-uri: http://127.0.0.1:3000
   jwk:
     length: 3072
     secret: 96ec048e-c640-4cfd-bc82-6571810a9d0f
