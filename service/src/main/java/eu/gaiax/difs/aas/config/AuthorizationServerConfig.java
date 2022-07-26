@@ -28,6 +28,7 @@ import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import eu.gaiax.difs.aas.properties.ClientsProperties;
 import eu.gaiax.difs.aas.properties.ClientsProperties.ClientProperties;
@@ -157,8 +158,9 @@ public class AuthorizationServerConfig {
     @Bean
     public RegisteredClientRepository registeredClientRepository() {
         return new InMemoryRegisteredClientRepository(
-                prepareClient(clientsProperties.getOidc()),
-                prepareClient(clientsProperties.getSiop()));
+                clientsProperties.getClients().values().stream().map(cp -> prepareClient(cp)).collect(Collectors.toList()));
+                //prepareClient(clientsProperties.getOidc()),
+                //prepareClient(clientsProperties.getSiop()));
     }
 
     private RegisteredClient prepareClient(ClientProperties client) {
