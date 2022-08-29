@@ -14,8 +14,6 @@ import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 public class RestTrustServiceClientImpl implements TrustServiceClient {
 
@@ -47,19 +45,10 @@ public class RestTrustServiceClientImpl implements TrustServiceClient {
     public Map<String, Object> evaluate(String policy, Map<String, Object> params) {
         log.debug("evaluate.enter; got policy: {}, params: {}", policy, params);
         claims_log.debug("evaluate.enter; got policy: {}, params: {}", policy, params);
-        //String uri = "/{repo}/policies/{group}/{policyname}/{version}/{action}";
         String uri = "/policy/{group}/{policyName}/{version}/{action}";
         // baseUrl doesn't work for some reason, so I specify it here
-        //Flux<Map<String, Object>> trustServiceResponse = client.post().uri(url, uriBuilder -> 
-        //            uriBuilder.path(uri).build(/*repo,*/ group, policy, version, action)) 
-        //        .accept(MediaType.APPLICATION_JSON)
-        //        .bodyValue(params)
-        //        .retrieve()
-        //        .bodyToFlux(MAP_TYPE_REF);
-        //Map<String, Object> result = trustServiceResponse.blockFirst();
-        
         ResponseEntity<Map<String, Object>> trustServiceResponse = client.post().uri(url, uriBuilder -> 
-                uriBuilder.path(uri).build(/*repo,*/ group, policy, version, action)) 
+                uriBuilder.path(uri).build(group, policy, version, action)) 
             .accept(MediaType.APPLICATION_JSON)
             .bodyValue(params)
             .retrieve()
