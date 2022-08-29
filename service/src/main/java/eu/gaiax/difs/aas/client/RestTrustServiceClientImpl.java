@@ -55,10 +55,11 @@ public class RestTrustServiceClientImpl implements TrustServiceClient {
             .toEntity(MAP_TYPE_REF)
             .block();
         Map<String, Object> result = trustServiceResponse.getBody();
+        int code = trustServiceResponse.getStatusCodeValue();
+        log.debug("evaluate; got claims: {}, statusCode: {}", result, code);
         claims_log.debug("evaluate; got claims: {}", result);
 
         AccessRequestStatusDto status;
-        int code = trustServiceResponse.getStatusCodeValue();
         log.debug("evaluate; got response code: {}", code);
         if (code == HttpStatus.GATEWAY_TIMEOUT.value()) { //504
             status = AccessRequestStatusDto.TIMED_OUT;
@@ -85,7 +86,7 @@ public class RestTrustServiceClientImpl implements TrustServiceClient {
             // a quick fix for TSA mock..
             result.put(IdTokenClaimNames.SUB, requestId);
         }
-        log.debug("evaluate.exit; returning claims: {} with status: {}", result.size(), status);
+        log.debug("evaluate.exit; returning claims: {} with status: {}", result, status);
         return result;
     }
     

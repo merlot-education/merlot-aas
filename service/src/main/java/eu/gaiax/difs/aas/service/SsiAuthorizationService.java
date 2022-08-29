@@ -89,21 +89,6 @@ public class SsiAuthorizationService implements OAuth2AuthorizationService {
             }
         }
         
-        //for (OAuth2Authorization authorization : this.authorizations.values()) {
-        //    if (hasToken(authorization, token, tokenType)) {
-        //        log.debug("findByToken.exit; returning authorized: {}", authorization);
-        //        return authorization;
-        //    }
-        //}
-        //List<OAuth2Authorization> values = new ArrayList<>(this.initializedAuthorizations.values());
-        
-        //Collection<OAuth2Authorization> values = this.initializedAuthorizations.values();
-        //for (OAuth2Authorization authorization : values) {
-        //    if (hasToken(authorization, token, tokenType)) {
-        //        log.debug("findByToken.exit; returning initialized: {}", authorization);
-        //        return authorization;
-        //    }
-        //}
         log.info("findByToken.exit; no authorization found for token: {}, type: {}; authorizations size: {}, codes size: {}", 
                 token, tkType, authorizations.estimatedSize(), codes.size());
         if (token.startsWith("${")) {
@@ -125,49 +110,4 @@ public class SsiAuthorizationService implements OAuth2AuthorizationService {
             ", refreshToken: " + authorization.getRefreshToken() + "]";
     }
 
-/*    
-    private static boolean isComplete(OAuth2Authorization authorization) {
-        return authorization.getAccessToken() != null;
-    }
-
-    private static boolean hasToken(OAuth2Authorization authorization, String token, @Nullable OAuth2TokenType tokenType) {
-        if (tokenType == null) {
-            return matchesState(authorization, token) ||
-                    matchesAuthorizationCode(authorization, token) ||
-                    matchesAccessToken(authorization, token) ||
-                    matchesRefreshToken(authorization, token);
-        } else if (OAuth2ParameterNames.STATE.equals(tokenType.getValue())) {
-            return matchesState(authorization, token);
-        } else if (OAuth2ParameterNames.CODE.equals(tokenType.getValue())) {
-            return matchesAuthorizationCode(authorization, token);
-        } else if (OAuth2TokenType.ACCESS_TOKEN.equals(tokenType)) {
-            return matchesAccessToken(authorization, token);
-        } else if (OAuth2TokenType.REFRESH_TOKEN.equals(tokenType)) {
-            return matchesRefreshToken(authorization, token);
-        }
-        return false;
-    }
-
-    private static boolean matchesState(OAuth2Authorization authorization, String token) {
-        return token.equals(authorization.getAttribute(OAuth2ParameterNames.STATE));
-    }
-
-    private static boolean matchesAuthorizationCode(OAuth2Authorization authorization, String token) {
-        OAuth2Authorization.Token<OAuth2AuthorizationCode> authorizationCode =
-                authorization.getToken(OAuth2AuthorizationCode.class);
-        return authorizationCode != null && authorizationCode.getToken().getTokenValue().equals(token);
-    }
-
-    private static boolean matchesAccessToken(OAuth2Authorization authorization, String token) {
-        OAuth2Authorization.Token<OAuth2AccessToken> accessToken =
-                authorization.getToken(OAuth2AccessToken.class);
-        return accessToken != null && accessToken.getToken().getTokenValue().equals(token);
-    }
-
-    private static boolean matchesRefreshToken(OAuth2Authorization authorization, String token) {
-        OAuth2Authorization.Token<OAuth2RefreshToken> refreshToken =
-                authorization.getToken(OAuth2RefreshToken.class);
-        return refreshToken != null && refreshToken.getToken().getTokenValue().equals(token);
-    }
-*/
 }
