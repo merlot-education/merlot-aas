@@ -57,6 +57,7 @@ public abstract class SsiClaimsService {
                 case ACCEPTED:
                     return evaluation;
                 case PENDING:
+                    //return evaluation;
                     delayNextRequest();
                     break;
                 case REJECTED:

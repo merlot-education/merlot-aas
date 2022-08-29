@@ -71,9 +71,12 @@ public class SsiBrokerService extends SsiClaimsService {
         Set<String> scopes = processScopes(model);
         // a quick fix..
         if (scopes.size() > 1) {
-            scopes.remove(OidcScopes.OPENID);
+            Set<String> scopes2 = new HashSet<>(scopes);
+            scopes2.remove(OidcScopes.OPENID);
+            params.put(OAuth2ParameterNames.SCOPE, scopes2);
+        } else {
+            params.put(OAuth2ParameterNames.SCOPE, scopes);
         }
-        params.put(OAuth2ParameterNames.SCOPE, scopes);
         
         // they can be provided in re-login scenario..
         processAttribute(model, params, IdTokenClaimNames.SUB);
