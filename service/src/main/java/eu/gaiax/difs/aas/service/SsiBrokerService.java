@@ -29,6 +29,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
+import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.core.oidc.StandardClaimNames;
 import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
 import org.springframework.stereotype.Service;
@@ -68,6 +69,10 @@ public class SsiBrokerService extends SsiClaimsService {
         params.put(TrustServiceClient.PN_NAMESPACE, TrustServiceClient.NS_LOGIN);
 
         Set<String> scopes = processScopes(model);
+        // a quick fix..
+        if (scopes.size() > 1) {
+            scopes.remove(OidcScopes.OPENID);
+        }
         params.put(OAuth2ParameterNames.SCOPE, scopes);
         
         // they can be provided in re-login scenario..
@@ -114,7 +119,13 @@ public class SsiBrokerService extends SsiClaimsService {
         Set<String> scopes = new HashSet<>();
         Object o = model.get(OAuth2ParameterNames.SCOPE);
         if (o != null) {
-            Arrays.stream((String[]) o).forEach(s -> scopes.addAll(Arrays.asList(s.split(" "))));
+            Arrays.stream((String[]) o).forEach(ss -> {
+                Arrays.asList(ss.split(" ")).stream().forEach(s -> {
+                    if (scopeProperties.getScopes().containsKey(s)) {
+                        scopes.add(s);
+                    }
+                });
+            });
         }
         return scopes;
     }
