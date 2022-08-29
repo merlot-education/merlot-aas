@@ -7,12 +7,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public class RestTrustServiceClientImpl implements TrustServiceClient {
 
@@ -47,26 +50,42 @@ public class RestTrustServiceClientImpl implements TrustServiceClient {
         //String uri = "/{repo}/policies/{group}/{policyname}/{version}/{action}";
         String uri = "/policy/{group}/{policyName}/{version}/{action}";
         // baseUrl doesn't work for some reason, so I specify it here
-        Flux<Map<String, Object>> trustServiceResponse = client.post().uri(url, uriBuilder -> 
-                    uriBuilder.path(uri).build(/*repo,*/ group, policy, version, action)) 
-                .accept(MediaType.APPLICATION_JSON)
-                .bodyValue(params)
-                .retrieve()
-                .bodyToFlux(MAP_TYPE_REF);
-        Map<String, Object> result = trustServiceResponse.blockFirst();
+        //Flux<Map<String, Object>> trustServiceResponse = client.post().uri(url, uriBuilder -> 
+        //            uriBuilder.path(uri).build(/*repo,*/ group, policy, version, action)) 
+        //        .accept(MediaType.APPLICATION_JSON)
+        //        .bodyValue(params)
+        //        .retrieve()
+        //        .bodyToFlux(MAP_TYPE_REF);
+        //Map<String, Object> result = trustServiceResponse.blockFirst();
+        
+        ResponseEntity<Map<String, Object>> trustServiceResponse = client.post().uri(url, uriBuilder -> 
+                uriBuilder.path(uri).build(/*repo,*/ group, policy, version, action)) 
+            .accept(MediaType.APPLICATION_JSON)
+            .bodyValue(params)
+            .retrieve()
+            .toEntity(MAP_TYPE_REF)
+            .block();
+        Map<String, Object> result = trustServiceResponse.getBody();
         claims_log.debug("evaluate; got claims: {}", result);
-        String sts = (String) result.get(PN_STATUS);
+
         AccessRequestStatusDto status;
-        if (sts == null) {
+        int code = trustServiceResponse.getStatusCodeValue();
+        log.debug("evaluate; got response code: {}", code);
+        if (code == HttpStatus.GATEWAY_TIMEOUT.value()) { //504
+            status = AccessRequestStatusDto.TIMED_OUT;
+        } else if (code >= 400) {
+            status = AccessRequestStatusDto.REJECTED;
+        } else if (code == HttpStatus.NO_CONTENT.value()) { //204
             status = AccessRequestStatusDto.PENDING;
-        } else {
-            try {
-                status = AccessRequestStatusDto.valueOf(sts);
-            } catch (Exception ex) {
-                log.info("evaluate.error; got unexpected status: {}", sts);
-                status = AccessRequestStatusDto.REJECTED;
-            }
+        } else { // should be 200
+            status = AccessRequestStatusDto.ACCEPTED;
         }
+
+        result.remove("claims");
+        if (result.size() == 0 && status == AccessRequestStatusDto.ACCEPTED) {
+            status = AccessRequestStatusDto.PENDING;
+        }
+        
         result.put(PN_STATUS, status);
         result.remove(IdTokenClaimNames.SUB);
         result.remove(IdTokenClaimNames.ISS);
@@ -77,7 +96,7 @@ public class RestTrustServiceClientImpl implements TrustServiceClient {
             // a quick fix for TSA mock..
             result.put(IdTokenClaimNames.SUB, requestId);
         }
-        log.debug("evaluate.exit; returning claims: {}", result.size());
+        log.debug("evaluate.exit; returning claims: {} with status: {}", result.size(), status);
         return result;
     }
     
