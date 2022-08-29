@@ -13,18 +13,20 @@ spring:
             provider: keycloak
             client-id: demo-app
             client-secret: secret
-            scope: openid
+            scope: 
+              - openid
+              - profile
         provider:
           keycloak:
-            issuer-uri: http://key-server:8080/realms/gaia-x
-            jwk-set-uri: http://key-server:8080/realms/gaia-x/protocol/openid-connect/certs
+#          aas-app:
+#            issuer-uri: http://key-server:8080/realms/gaia-x
+#            issuer-uri: https://auth-server.gxfs.dev
+            issuer-uri: http://key-server.gxfs.dev/realms/gaia-x
 #            issuer-uri: https://key-server.gxfs.dev/realms/gaia-x
-#            jwk-set-uri: https://key-server.gxfs.dev/realms/gaia-x/protocol/openid-connect/certs
 
 logging:
   level:
     root: INFO
+    eu.gaiax.difs.aas: DEBUG
     org.springframework.web: DEBUG
     org.springframework.security: DEBUG
-    org.springframework.web.client.RestTemplate: DEBUG    
-    eu.gaiax.difs.aas: DEBUG
