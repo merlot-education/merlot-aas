@@ -14,7 +14,7 @@ aas:
   token:
     ttl: 5m
   tsa:
-    url: https://gaiax.vereign.com/tsa
+    url: https://gaiax.vereign.com/tsa/policy
     delay: 5000 # in milliseconds
     duration: 300000 # in milliseconds
       
