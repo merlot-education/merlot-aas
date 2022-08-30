@@ -19,6 +19,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 
+import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
+
 public class SsiAuthProvider implements AuthenticationProvider {
 
     private static final Logger log = LoggerFactory.getLogger(SsiAuthProvider.class);
@@ -39,6 +41,11 @@ public class SsiAuthProvider implements AuthenticationProvider {
             log.warn("authenticate.error; no claims found for {}:{}", authType, requestId);
             throw new OAuth2AuthenticationException(SERVER_ERROR);
         }
+        //AccessRequestStatusDto status = (AccessRequestStatusDto) claims.get("status");
+        //if (AccessRequestStatusDto.PENDING == status) {
+        //    log.debug("authenticate.exit; returning null at PENDING status");
+        //    return null;
+        //}
         
         if ("SIOP".equals(authType)) {
             String error = (String) claims.get("error");
@@ -61,7 +68,7 @@ public class SsiAuthProvider implements AuthenticationProvider {
                 authentication.getCredentials(), authorities);
         token.setDetails(authentication.getDetails());
 
-        log.debug("authenticate.exit; returning: {} with name: {}", token, token.getName());
+        log.debug("authenticate.exit; returning: {}", token);
         return token;
     }
 
