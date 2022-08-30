@@ -28,7 +28,9 @@ public abstract class SsiClaimsService {
     private long delay;
     @Value("${aas.tsa.duration}")
     private long duration;
-
+    @Value("${spring.profiles.active:default}")
+    private String activeProfile;
+    
     protected final TrustServiceClient trustServiceClient;
     
     protected DataCache<String, Map<String, Object>> claimsCache;
@@ -44,6 +46,7 @@ public abstract class SsiClaimsService {
     
     protected Map<String, Object> loadTrustedClaims(String policy, String requestId) {
         Instant finish = Instant.now().plusNanos(1_000_000 * duration);
+        boolean skipLoop = "prod".equalsIgnoreCase(activeProfile);
         while (Instant.now().isBefore(finish)) {
             Map<String, Object> evaluation = trustServiceClient.evaluate(policy, Map.of(TrustServiceClient.PN_REQUEST_ID, requestId));
 
@@ -57,7 +60,9 @@ public abstract class SsiClaimsService {
                 case ACCEPTED:
                     return evaluation;
                 case PENDING:
-                    //return evaluation;
+                    if (skipLoop) {
+                        return evaluation;
+                    }
                     delayNextRequest();
                     break;
                 case REJECTED:
@@ -70,7 +75,7 @@ public abstract class SsiClaimsService {
         //log.error("loadTrustedClaims; Time for calling TrustServiceClient expired, time spent: {} ms", requestingStart.until(LocalTime.now(), MILLIS));
         throw new OAuth2AuthenticationException(LOGIN_TIMED_OUT);
     }
-
+    
     private void delayNextRequest() {
         try {
             TimeUnit.MILLISECONDS.sleep(delay);
