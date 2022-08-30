@@ -56,6 +56,7 @@ aas:
     secret: 96ec048e-c640-4cfd-bc82-6571810a9d0f
   oidc:
     issuer: http://auth-server:8090
+    static-scopes:
   siop:
     clock-skew: 5s 
     issuer: https://self-issued.me/v2

@@ -29,7 +29,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
-import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.core.oidc.StandardClaimNames;
 import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
 import org.springframework.stereotype.Service;
@@ -50,6 +49,8 @@ public class SsiBrokerService extends SsiClaimsService {
 
     @Value("${aas.oidc.issuer}")
     private String oidcIssuer;
+    @Value("${aas.oidc.static-scopes}")
+    private Set<String> staticScopes;
     @Value("${aas.siop.clock-skew}")
     private Duration clockSkew;
     @Value("${aas.siop.issuer}")
@@ -69,11 +70,8 @@ public class SsiBrokerService extends SsiClaimsService {
         params.put(TrustServiceClient.PN_NAMESPACE, TrustServiceClient.NS_LOGIN);
 
         Set<String> scopes = processScopes(model);
-        // a quick fix..
-        if (scopes.size() > 1) {
-            Set<String> scopes2 = new HashSet<>(scopes);
-            scopes2.remove(OidcScopes.OPENID);
-            params.put(OAuth2ParameterNames.SCOPE, scopes2);
+        if (staticScopes != null && !staticScopes.isEmpty()) {
+            params.put(OAuth2ParameterNames.SCOPE, staticScopes);
         } else {
             params.put(OAuth2ParameterNames.SCOPE, scopes);
         }
