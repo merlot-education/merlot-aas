@@ -63,6 +63,9 @@ import org.springframework.security.oauth2.server.authorization.oidc.web.OidcUse
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.jwk.JWK;
@@ -109,7 +112,11 @@ public class AuthorizationServerConfig {
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
         applySecurity(http);
-        http.formLogin()
+        http
+            .cors()
+                .configurationSource(corsConfigurationSource())
+            .and()
+            .formLogin()
                 .loginPage("/ssi/login")
                 .and()
                 .oauth2ResourceServer()
@@ -233,6 +240,19 @@ public class AuthorizationServerConfig {
     @Bean
     public OAuth2AuthorizationService authorizationService() {
         return new SsiAuthorizationService(cacheSize, cacheTtl);
+    }
+    
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.addAllowedOriginPattern("*");
+        config.addAllowedHeader("*");
+        config.addAllowedMethod("OPTIONS");
+        config.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/oauth2/**", config);
+        return source;
     }
     
 }
