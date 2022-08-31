@@ -39,7 +39,7 @@ import eu.gaiax.difs.aas.service.SsiJwtCustomizer;
 /**
  * The Spring Security config.
  */
-@EnableWebSecurity(debug = true)
+@EnableWebSecurity //(debug = true)
 public class SecurityConfig {
 
     private final String[] ANT_MATCHERS = {
@@ -60,7 +60,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf().disable()
-                .cors() //.disable()
+                .cors() 
                 .and()
                 .authorizeRequests()
                     .antMatchers(ANT_MATCHERS).permitAll()
@@ -68,7 +68,11 @@ public class SecurityConfig {
                     .anyRequest().authenticated()
                 .and()
                 .formLogin()
-                .failureHandler(ssiAuthenticationFailureHandler());
+                    .failureHandler(ssiAuthenticationFailureHandler())
+                .and()
+                .logout()
+                    .logoutSuccessUrl("/ssi/login?logout")
+                ;
         return http.build();
     }
 

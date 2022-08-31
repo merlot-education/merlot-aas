@@ -56,8 +56,7 @@ public class RestTrustServiceClientImpl implements TrustServiceClient {
             .block();
         Map<String, Object> result = trustServiceResponse.getBody();
         int code = trustServiceResponse.getStatusCodeValue();
-        log.debug("evaluate; got claims: {}, statusCode: {}", result, code);
-        claims_log.debug("evaluate; got claims: {}", result);
+        claims_log.debug("evaluate; got claims: {}, status code", result, code);
 
         AccessRequestStatusDto status;
         log.debug("evaluate; got response code: {}", code);
@@ -86,7 +85,7 @@ public class RestTrustServiceClientImpl implements TrustServiceClient {
             // a quick fix for TSA mock..
             result.put(IdTokenClaimNames.SUB, requestId);
         }
-        log.debug("evaluate.exit; returning claims: {} with status: {}", result, status);
+        log.debug("evaluate.exit; returning claims: {} with status: {}", result.size(), status);
         return result;
     }
     

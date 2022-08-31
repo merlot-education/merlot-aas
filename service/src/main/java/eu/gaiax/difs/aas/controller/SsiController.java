@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
+import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
 import org.springframework.security.web.savedrequest.DefaultSavedRequest;
 import org.springframework.stereotype.Controller;
@@ -28,6 +29,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -56,9 +58,16 @@ public class SsiController {
         }
         
         if (auth == null) {
-            log.debug("login; session attributes: {}", request.getSession().getAttributeNames());
-            model.addAttribute("errorMessage", getErrorMessage("sessionTimeout", locale));
-            return "login-template.html";
+            String out = request.getParameter("logout");
+            if (out == null) {
+                model.addAttribute("errorMessage", getErrorMessage("sessionTimeout", locale));
+                return "login-template.html";
+            } else {
+                model.addAttribute(OAuth2ParameterNames.SCOPE, new String[] {OidcScopes.OPENID});
+                // assume OIDC client for now..
+                ssiBrokerService.oidcAuthorize(model.asMap());
+                return "login-template.html";
+            }
         }
         
         model.addAttribute(OAuth2ParameterNames.SCOPE, auth.getParameterValues(OAuth2ParameterNames.SCOPE));
@@ -72,23 +81,22 @@ public class SsiController {
             if ("aas-app-siop".equals(clientId[0])) {
                 ssiBrokerService.siopAuthorize(model.asMap());
             } else {
-                //if ("aas-app-oidc".equals(clientId[0])) {
-                    String[] age = auth.getParameterValues("max_age");
-                    if (age != null && age.length > 0) {
-                        model.addAttribute("max_age", age[0]);
-                    }
-    
-                    String[] hint = auth.getParameterValues("id_token_hint");
-                    if (hint != null && hint.length > 0) {
-                        String sub = getSubject(hint[0]);
-                        if (sub != null) {
-                            model.addAttribute(IdTokenClaimNames.SUB, sub);
-                        }
-                    }
-    
-                    ssiBrokerService.oidcAuthorize(model.asMap());
+                // we assume all other clients use OIDC protocol
+                String[] age = auth.getParameterValues("max_age");
+                if (age != null && age.length > 0) {
+                    model.addAttribute("max_age", age[0]);
                 }
-            //}
+    
+                String[] hint = auth.getParameterValues("id_token_hint");
+                if (hint != null && hint.length > 0) {
+                    String sub = getSubject(hint[0]);
+                    if (sub != null) {
+                        model.addAttribute(IdTokenClaimNames.SUB, sub);
+                    }
+                }
+ 
+                ssiBrokerService.oidcAuthorize(model.asMap());
+            }
             return "login-template.html";
         }
 
