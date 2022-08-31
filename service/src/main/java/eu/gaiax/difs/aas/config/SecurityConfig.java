@@ -21,6 +21,7 @@
 package eu.gaiax.difs.aas.config;
 
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -59,11 +60,12 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf().disable()
-                //.cors().disable()
+                .cors() //.disable()
+                .and()
                 .authorizeRequests()
-                .antMatchers(ANT_MATCHERS)
-                .permitAll()
-                .anyRequest().authenticated()
+                    .antMatchers(ANT_MATCHERS).permitAll()
+                    .antMatchers(HttpMethod.OPTIONS, "/oauth2/token").permitAll()
+                    .anyRequest().authenticated()
                 .and()
                 .formLogin()
                 .failureHandler(ssiAuthenticationFailureHandler());
