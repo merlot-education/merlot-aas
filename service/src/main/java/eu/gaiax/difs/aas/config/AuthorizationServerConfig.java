@@ -118,8 +118,8 @@ public class AuthorizationServerConfig {
             .and()
             .formLogin()
                 .loginPage("/ssi/login")
-                .and()
-                .oauth2ResourceServer()
+            .and()
+            .oauth2ResourceServer()
                 .jwt();
         return http.build();
     }

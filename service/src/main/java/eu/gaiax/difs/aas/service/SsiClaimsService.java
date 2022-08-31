@@ -46,7 +46,6 @@ public abstract class SsiClaimsService {
     
     protected Map<String, Object> loadTrustedClaims(String policy, String requestId) {
         Instant finish = Instant.now().plusNanos(1_000_000 * duration);
-        boolean skipLoop = false; //"prod".equalsIgnoreCase(activeProfile);
         while (Instant.now().isBefore(finish)) {
             Map<String, Object> evaluation = trustServiceClient.evaluate(policy, Map.of(TrustServiceClient.PN_REQUEST_ID, requestId));
 
@@ -60,9 +59,6 @@ public abstract class SsiClaimsService {
                 case ACCEPTED:
                     return evaluation;
                 case PENDING:
-                    if (skipLoop) {
-                        return evaluation;
-                    }
                     delayNextRequest();
                     break;
                 case REJECTED:

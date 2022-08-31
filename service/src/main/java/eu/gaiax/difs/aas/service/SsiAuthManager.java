@@ -59,7 +59,7 @@ public class SsiAuthManager implements AuthenticationManager {
         int cnt = 0;
         OidcUserInfo.Builder uiBuilder = OidcUserInfo.builder();
         Map<String, Object> userDetails = ssiBrokerService.getUserClaims(requestId, false, scopes, additionalClaims); //required?
-        log.debug("authenticate; user claims: {}", userDetails);
+        //log.debug("authenticate; user claims: {}", userDetails);
         if (userDetails != null) {
             for (Map.Entry<String, Object> e: userDetails.entrySet()) {
                 if (!IdTokenClaimNames.AUTH_TIME.equals(e.getKey()) || needAuthTime) {

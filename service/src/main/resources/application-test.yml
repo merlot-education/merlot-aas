@@ -21,6 +21,6 @@ logging:
   level:
     root: INFO
     tsclaims: INFO
+    eu.gaiax.difs.aas: INFO
     org.springframework.web: INFO
     org.springframework.security: INFO
-    eu.gaiax.difs.aas: INFO
