@@ -1,5 +1,6 @@
 package eu.gaiax.difs.aas.service;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -56,7 +57,6 @@ public class SsiAuthManager implements AuthenticationManager {
             additionalClaims = Collections.emptySet();
         }
 
-        int cnt = 0;
         OidcUserInfo.Builder uiBuilder = OidcUserInfo.builder();
         Map<String, Object> userDetails = ssiBrokerService.getUserClaims(requestId, false, scopes, additionalClaims); //required?
         //log.debug("authenticate; user claims: {}", userDetails);
@@ -64,12 +64,13 @@ public class SsiAuthManager implements AuthenticationManager {
             for (Map.Entry<String, Object> e: userDetails.entrySet()) {
                 if (!IdTokenClaimNames.AUTH_TIME.equals(e.getKey()) || needAuthTime) {
                     uiBuilder.claim(e.getKey(), e.getValue());
-                    cnt++;
                 }
             }
         }
+        List<String> claims = new ArrayList<>();
+        uiBuilder.claims(c -> claims.addAll(c.keySet()));
         OidcUserInfoAuthenticationToken token = new OidcUserInfoAuthenticationToken(authentication, uiBuilder.build());
-        log.debug("authenticate.exit; added {} claims for subject: {}", cnt, requestId);
+        log.debug("authenticate.exit; returning claims: {}, for subject: {}", claims, requestId);
         return token;
     }
 
