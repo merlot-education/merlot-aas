@@ -41,11 +41,6 @@ public class SsiAuthProvider implements AuthenticationProvider {
             log.warn("authenticate.error; no claims found for {}:{}", authType, requestId);
             throw new OAuth2AuthenticationException(SERVER_ERROR);
         }
-        //AccessRequestStatusDto status = (AccessRequestStatusDto) claims.get("status");
-        //if (AccessRequestStatusDto.PENDING == status) {
-        //    log.debug("authenticate.exit; returning null at PENDING status");
-        //    return null;
-        //}
         
         if ("SIOP".equals(authType)) {
             String error = (String) claims.get("error");
