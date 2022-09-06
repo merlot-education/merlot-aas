@@ -88,6 +88,7 @@ public final class SsiOidcProviderConfigurationEndpointFilter extends OncePerReq
                 // scopes_supported
                 .scopes(oidcScopes())
                 .claims(claims())
+                .claim("end_session_endpoint", this.providerSettings.getIssuer() + "/logout")
                 .build();
 
         ServletServerHttpResponse httpResponse = new ServletServerHttpResponse(response);
