@@ -53,7 +53,7 @@ aas:
          redirect-uri: http://127.0.0.1:3000
        gxfs-demo:
          id: gxfs-demo
-         secret: "{noop}hmi-secret"
+         secret: "{noop}hmi-secret2"
          redirect-uri: https://demo.gxfs.dev
 
   jwk:
