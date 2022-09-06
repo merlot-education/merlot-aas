@@ -10,7 +10,9 @@ import org.springframework.security.oauth2.server.authorization.OAuth2Authorizat
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
@@ -26,7 +28,8 @@ public class SsiJwtCustomizer implements OAuth2TokenCustomizer<JwtEncodingContex
 
     @Override
     public void customize(JwtEncodingContext context) {
-        log.debug("customize.enter; got context: {}", context);
+        log.debug("customize.enter; got context with tokenType: {}, grantType: {}, scopes: {}", context.getTokenType().getValue(), 
+                context.getAuthorizationGrantType().getValue(), context.getAuthorizedScopes());
         String requestId = getRequestId(context);
         
         boolean updated = false;
@@ -66,7 +69,9 @@ public class SsiJwtCustomizer implements OAuth2TokenCustomizer<JwtEncodingContex
                 }
             }
         }
-        log.debug("customize.exit; updated claims: {} for request: {}", updated, requestId);
+        List<String> claims = new ArrayList<>();
+        context.getClaims().claims(c -> claims.addAll(c.keySet()));
+        log.debug("customize.exit; updated: {}, claims: {}, for request: {}", updated, claims, requestId);
     }
 
     private String getRequestId(JwtEncodingContext context) {

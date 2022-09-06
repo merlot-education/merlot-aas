@@ -291,7 +291,7 @@ public class SsiBrokerService extends SsiClaimsService {
             String link = new String(Base64.getUrlDecoder().decode(qrUrl));
             userClaims.put(TrustServiceClient.PN_LINK, link);
         }
-        log.debug("getSubjectClaims.exit; returning: {}", userClaims == null ? null : userClaims.size());
+        log.debug("getSubjectClaims.exit; returning: {}", userClaims == null ? null : userClaims.keySet());
         return userClaims;
     }
 
