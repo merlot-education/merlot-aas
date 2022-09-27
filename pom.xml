@@ -69,6 +69,9 @@
     <url>https://gitlab.com/${repository.path}</url>
     <scm>
         <url>https://gitlab.com/${repository.path}</url>
+        <connection>scm:git:git://gitlab.com/${repository.path}.git/</connection>
+        <!--developerConnection>scm:git:ssh://gitlab.com:dsukhoroslov/${repository.path}.git</developerConnection-->
+        <tag>HEAD</tag>
     </scm>
     <issueManagement>
         <url>https://gitlab.com/${repository.path}/-/issues</url>
@@ -265,6 +268,11 @@
                         <mainClass>eu.gaiax.difs.aas.AuthServiceApplication</mainClass>
                     </container-->
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>3.0.0-M6</version>
             </plugin>
         </plugins>
     </build>
