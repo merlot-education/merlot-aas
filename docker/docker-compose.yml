@@ -6,28 +6,26 @@ services:
     build:
       context: ../service
       dockerfile: Dockerfile
+    container_name: "auth-server"
     environment:
       - "SPRING_PROFILES_ACTIVE=${PROFILES_AAS}"
     ports:
       - "9000:9000"
     networks:
       - "gaia-x"
-#    depends_on:
-#      - nginx
     restart: unless-stopped
 
   app:
     build:
       context: ../app
       dockerfile: Dockerfile
+    container_name: "test-server"
     environment:
       - "SPRING_PROFILES_ACTIVE=${PROFILES_AAS}"
     ports:
       - "8990:8990"
     networks:
       - "gaia-x"
-#    depends_on:
-#      - nginx
     restart: unless-stopped
 
   keycloak:
@@ -59,15 +57,6 @@ services:
           '-Dkeycloak.profile.feature.upload_scripts=enabled',
           '--log-level=DEBUG,io.quarkus:INFO,liquibase:INFO,org.hibernate:INFO,org.infinispan:INFO,org.keycloak.services.scheduled:INFO,org.keycloak.transaction:INFO,io.netty.buffer.PoolThreadCache:INFO,org.keycloak.models.sessions.infinispan:INFO'
       ]
-
-#  nginx:
-#    image: nginx:latest
-#    volumes:
-#      - "./nginx.conf:/etc/nginx/nginx.conf:ro"
-#    ports:
-#      - "9000:9000"
-#    networks:
-#      - "gaia-x"
 
 networks:
   gaia-x:

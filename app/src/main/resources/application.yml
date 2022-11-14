@@ -19,9 +19,9 @@ spring:
         provider:
           keycloak:
 #          aas-app:
-#            issuer-uri: http://key-server:8080/realms/gaia-x
+            issuer-uri: http://key-server:8080/realms/gaia-x
 #            issuer-uri: https://auth-server.gxfs.dev
-            issuer-uri: http://key-server.gxfs.dev/realms/gaia-x
+#            issuer-uri: http://key-server.gxfs.dev/realms/gaia-x
 #            issuer-uri: https://key-server.gxfs.dev/realms/gaia-x
 
 logging:
