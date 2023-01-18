@@ -17,10 +17,10 @@ To start with AAS project download it to your local machine, go to project's roo
 
 After all artifacts are ready you can run local image with docker compose: 
 
-    >cd \docker
+    >cd docker
     >docker-compose up
 
-The running image contains a pre-configured Keycloak instance, two instances of AA service and one Nginx for load balancing requests between AAS instances. It also contains an instance of Demo application protected by AAS and IAM (keycloak). To test how the image works try to open in your browser protected resource from Demo app: `http://test-server:8990/demo`. If you're not authenticated yet you'll be redirected to the Keycloak login page:
+The running image contains a pre-configured Keycloak instance and an instance of AA service. It also contains an instance of Demo application protected by AAS and IAM (keycloak). To test how the image works try to open in your browser protected resource from Demo app: `http://test-server:8990/demo`. If you're not authenticated yet you'll be redirected to the Keycloak login page:
 
 ![Keycloak login](./doc/images/keycloak_login.png "Keycloak login")
 
