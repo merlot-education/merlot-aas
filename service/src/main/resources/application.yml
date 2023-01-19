@@ -42,19 +42,24 @@ aas:
        oidc:
          id: aas-app-oidc
          secret: "{noop}secret"
-         redirect-uri: ${aas.iam.base-uri}/realms/gaia-x/broker/ssi-oidc/endpoint
+         redirect-uris: 
+           - ${aas.iam.base-uri}/realms/gaia-x/broker/ssi-oidc/endpoint
        siop:
          id: aas-app-siop
          secret: "{noop}secret2"
-         redirect-uri: ${aas.iam.base-uri}/realms/gaia-x/broker/ssi-siop/endpoint
+         redirect-uris: 
+           - ${aas.iam.base-uri}/realms/gaia-x/broker/ssi-siop/endpoint
        gxfs:
-         id: gxfs-hmi-demo
-         secret: "{noop}hmi-secret"
-         redirect-uri: http://127.0.0.1:3000
-       gxfs-demo:
          id: gxfs-demo
          secret: "{noop}hmi-secret2"
-         redirect-uri: https://demo.gxfs.dev
+         redirect-uris: 
+           - https://demo.gxfs.dev
+       portal:
+         id: demo-portal
+         secret: "{noop}demo-portal"
+         redirect-uris: 
+           - https://fc-demo-server.gxfs.dev
+           - https://fc-server.gxfs.dev
   jwk:
     length: 3072
     secret: 96ec048e-c640-4cfd-bc82-6571810a9d0f

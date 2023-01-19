@@ -165,9 +165,8 @@ public class AuthorizationServerConfig {
     @Bean
     public RegisteredClientRepository registeredClientRepository() {
         return new InMemoryRegisteredClientRepository(
-                clientsProperties.getClients().values().stream().map(cp -> prepareClient(cp)).collect(Collectors.toList()));
-                //prepareClient(clientsProperties.getOidc()),
-                //prepareClient(clientsProperties.getSiop()));
+                clientsProperties.getClients().values().stream()
+                	.map(cp -> prepareClient(cp)).collect(Collectors.toList()));
     }
 
     private RegisteredClient prepareClient(ClientProperties client) {
@@ -177,7 +176,7 @@ public class AuthorizationServerConfig {
                 .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
-                .redirectUri(client.getRedirectUri())
+                .redirectUris((consumer) -> consumer.addAll(client.getRedirectUris()))
                 .scopes(c -> c.addAll(List.of(OidcScopes.OPENID, OidcScopes.PROFILE, OidcScopes.EMAIL)))
                 .clientSettings(ClientSettings.builder()
                         .tokenEndpointAuthenticationSigningAlgorithm(SignatureAlgorithm.RS256)

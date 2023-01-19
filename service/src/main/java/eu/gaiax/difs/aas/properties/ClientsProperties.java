@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Set;
 import java.util.Map;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -24,11 +25,11 @@ public class ClientsProperties {
 
         private String secret;
 
-        private String redirectUri;
+        private Set<String> redirectUris;
 
         @Override
         public String toString() {
-            return "{id=" + id + ", secret=" + secret + ", redirectUri=" + redirectUri + "}";
+            return "{id=" + id + ", secret=" + secret + ", redirectUris=" + redirectUris + "}";
         }
         
     }
