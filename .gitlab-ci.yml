@@ -32,6 +32,10 @@ cache:
   paths:
     - .m2/repository
 
+stages:
+- test
+- deploy
+
 # For merge requests do not `deploy` but only run `verify`.
 # See https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html
 .verify: &verify
@@ -57,7 +61,7 @@ deploy:jdk11:
 #        then echo "CI settings missing\! If deploying to GitLab Maven Repository, please see https://docs.gitlab.com/ee/user/packages/maven_repository/index.html#create-maven-packages-with-gitlab-cicd for instructions.";
 #      fi
 #    - 'mvn $MAVEN_CLI_OPTS deploy -s ci_settings.xml'
-    - 'mvn $MAVEN_CLI_OPTS compile jib:build'
+    - 'mvn $MAVEN_CLI_OPTS package jib:build -am'
   only:
     variables:
       - $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
