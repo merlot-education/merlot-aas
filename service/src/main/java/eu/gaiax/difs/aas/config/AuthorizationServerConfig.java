@@ -195,7 +195,7 @@ public class AuthorizationServerConfig {
                 .issuer(oidcIssuer)
                 // could be added later. but ClientRegistrationEndpoint is not present in OidcProviderConfiguration (yet?)
                 // so it is not clear, how should we expose it
-                //.oidcClientRegistrationEndpoint("/clients/registration")
+                .oidcClientRegistrationEndpoint("/clients/registration")
                 .build();
     }
     
