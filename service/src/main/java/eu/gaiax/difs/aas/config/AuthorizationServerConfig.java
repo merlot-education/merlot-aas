@@ -79,10 +79,12 @@ import com.nimbusds.jose.proc.SecurityContext;
 import eu.gaiax.difs.aas.properties.ScopeProperties;
 import eu.gaiax.difs.aas.service.SsiAuthManager;
 import eu.gaiax.difs.aas.service.SsiAuthorizationService;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The Spring Authorization Server config.
  */
+@Slf4j
 @Configuration
 public class AuthorizationServerConfig {
 
@@ -170,6 +172,7 @@ public class AuthorizationServerConfig {
     }
 
     private RegisteredClient prepareClient(ClientProperties client) {
+    	log.debug("prepareClient.enter; client: {}", client);
         return RegisteredClient.withId(UUID.randomUUID().toString())
                 .clientId(client.getId())
                 .clientSecret(client.getSecret())

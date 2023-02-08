@@ -60,6 +60,7 @@ aas:
          redirect-uris: 
            - https://fc-demo-server.gxfs.dev
            - https://fc-server.gxfs.dev
+           - http://78.138.66.181:8088/*
   jwk:
     length: 3072
     secret: 96ec048e-c640-4cfd-bc82-6571810a9d0f
