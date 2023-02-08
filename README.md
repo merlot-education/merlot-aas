@@ -57,3 +57,4 @@ The project implementation wouldn't be possible without a great help of our part
 
 ## License
 GAIA-X Authentication & Authorization Server is Open Source software released under the [Apache 2.0 license](https://www.apache.org/licenses/LICENSE-2.0.html).
+
