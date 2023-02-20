@@ -28,4 +28,12 @@ To test locally how AAS, IAM and Demo application protected with IAM work togeth
 127.0.0.1	key-server
 127.0.0.1	test-server
 ```
-Then you can test how OIDC Authentication Flow works accessing http://test-server:8990/demo endpoint. You should be redirected to Keycloak Login page. Choose OIDC Broker option - then you'll be redirected to GAIA-X custom Login page. Press Login button - now you'll get access to protected Demo application.
+On the first start we must set expected secret values for predefined SSI Identity Providers. To do this please open keycloak admin console at `http://key-server:8080/admin`, select `Gaia-X` realm, go to Identity Providers section and set proper Client Secret values:
+- SSI OIDC Broker secret is `secret`
+- SSI SIOP Broker secret is `secret2`
+
+Then you can test how OIDC Authentication Flow works accessing `http://test-server:8990/demo` endpoint. You should be redirected to Keycloak Login page:
+
+![Keycloak login](../images/keycloak_login.png "Keycloak login")
+
+Choose OIDC Broker option - then you'll be redirected to GAIA-X custom Login page. After some time you'll be automatically authenticated and redirected back to the protected Demo application.
