@@ -11,11 +11,13 @@ aas:
       oidc:
         id: aas-app-oidc
         secret: "{noop}secret"
-        redirect-uri: ${aas.iam.base-uri}/test/a/aas-test/callback
+        redirect-uris: 
+           - ${aas.iam.base-uri}/test/a/aas-test/callback
       siop:
         id: aas-app-siop
         secret: "{noop}secret2"
-        redirect-uri: ${aas.iam.base-uri}/test/a/aas-test/callback
+        redirect-uris: 
+           - ${aas.iam.base-uri}/test/a/aas-test/callback
   oidc:
     issuer: http://auth-server:9000
         

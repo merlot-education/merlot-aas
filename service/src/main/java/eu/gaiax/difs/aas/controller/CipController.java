@@ -39,7 +39,7 @@ public class CipController {
         if (TrustServiceClient.NS_ACCESS.equals(namespace)) {
             return ssiIatService.getIatProofClaims(subject, scope, params);
         }
-        return ssiBrokerService.getSubjectClaims(subject, Arrays.asList(scope.split(" ")));
+        return ssiBrokerService.loadSubjectClaims(subject, Arrays.asList(scope.split(" ")));
     }
     
 }

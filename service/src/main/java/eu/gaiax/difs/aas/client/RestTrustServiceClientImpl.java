@@ -14,10 +14,11 @@ import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class RestTrustServiceClientImpl implements TrustServiceClient {
 
-    private static final Logger log = LoggerFactory.getLogger(RestTrustServiceClientImpl.class);
     private static final Logger claims_log = LoggerFactory.getLogger("tsclaims");
 
     private final WebClient client;
@@ -60,7 +61,6 @@ public class RestTrustServiceClientImpl implements TrustServiceClient {
         log.debug("evaluate; got claims: {}, status code: {}", result.keySet(), code);
 
         AccessRequestStatusDto status;
-        log.debug("evaluate; got response code: {}", code);
         if (code == HttpStatus.GATEWAY_TIMEOUT.value()) { //504
             status = AccessRequestStatusDto.TIMED_OUT;
         } else if (code >= 400) {

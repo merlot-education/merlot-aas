@@ -17,6 +17,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Base64;
@@ -26,6 +28,7 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -42,6 +45,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.json.JacksonJsonParser;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.access.AccessDeniedException;
@@ -49,6 +53,7 @@ import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.security.oauth2.core.oidc.StandardClaimNames;
 import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -72,6 +77,7 @@ import eu.gaiax.difs.aas.client.TrustServiceClient;
 import eu.gaiax.difs.aas.model.TrustServicePolicy;
 
 @SpringBootTest
+@ActiveProfiles("dev")
 @ExtendWith(SpringExtension.class)
 @AutoConfigureMockMvc
 public class AuthenticationFlowTest {
@@ -83,6 +89,8 @@ public class AuthenticationFlowTest {
     private String keycloakUri;
     @Value("${aas.oidc.issuer}")
     private String oidcIssuer;
+    @Value("${aas.tsa.request.count}")
+    private int tryCount;
     
     @Autowired
     private MockMvc mockMvc;
@@ -90,18 +98,45 @@ public class AuthenticationFlowTest {
     private ObjectMapper mapper;
     @Autowired
     private TrustServiceClient trustServiceClient;
+    
+    private String challenge = UUID.randomUUID().toString(); 
+    
+    
+    private String statusCallback(HttpSession ssn, int finalStatus) {
+    	String redirect = null;
+    	try {
+    		int cnt = 0;
+    		do {
+    			MvcResult stsResult = mockMvc.perform(get("/ssi/login/status")
+    					.contentType(MediaType.APPLICATION_JSON)
+    					.cookie(new Cookie("JSESSIONID", ssn.getId())).session((MockHttpSession) ssn))
+    				.andReturn();
+				cnt++;
+				if (cnt <= tryCount) {
+					assertEquals(HttpStatus.ACCEPTED.value(), stsResult.getResponse().getStatus());
+				} else {
+					assertEquals(finalStatus, stsResult.getResponse().getStatus());
+					if (finalStatus == 302) {
+						redirect = stsResult.getResponse().getRedirectedUrl();
+					}
+					break;
+				}
+    		} while (true);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+    	return redirect;
+    }
 
     @Test
     void testOidcLoginFlow() throws Exception {
 
         ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig(TrustServicePolicy.GET_LOGIN_PROOF_RESULT, ACCEPTED);
 
-        //Map<String, Object> claims = getAuthClaims("openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc",
-        //        keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", "secret", null, s -> "uri://" + s, null);
+        Map<String, Object> claims = getAuthClaims("openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc",
+                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", "secret", null, s -> "uri://" + s, 
+                ssn -> statusCallback(ssn, HttpStatus.FOUND.value()));
 
-        Map<String, Object> claims = getAuthClaims("profile openid", "b43e24c9285542418a57b8fc00d283f8", "code", "gxfs-demo",
-                "https://demo.gxfs.dev", "sxXudRdJkvAp5kh_QqJQxzij2lDDD4ofb4Fx_rFn7x4", "OIDC", "hmi-secret2", null, s -> "uri://" + s, null);
-        
         // check claims..
         assertNotNull(claims.get(IdTokenClaimNames.ISS));
         assertNotNull(claims.get(IdTokenClaimNames.SUB));
@@ -128,13 +163,14 @@ public class AuthenticationFlowTest {
         ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig(TrustServicePolicy.GET_LOGIN_PROOF_RESULT, ACCEPTED);
 
         Map<String, Object> claims = getAuthClaims("openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc",
-                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", "secret", null, s -> "uri://" + s, null);
+                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", "secret", null, s -> "uri://" + s, 
+                ssn -> statusCallback(ssn, HttpStatus.FOUND.value()));
 
         String token = (String) claims.get(OAuth2ParameterNames.ACCESS_TOKEN);
 
         Map<String, Object> claims2 = getAuthClaims("openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc",
                 keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", "secret", Map.of("max_age", 10, "id_token_hint", token), 
-                s -> "uri://" + s, null);
+                s -> "uri://" + s, ssn -> statusCallback(ssn, HttpStatus.FOUND.value()));
         
         assertEquals(claims.get(IdTokenClaimNames.SUB), claims2.get(IdTokenClaimNames.SUB));
         Long iat = ((Date) claims.get(IdTokenClaimNames.IAT)).toInstant().getEpochSecond();
@@ -149,7 +185,8 @@ public class AuthenticationFlowTest {
         ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig(TrustServicePolicy.GET_LOGIN_PROOF_RESULT, ACCEPTED);
 
         Map<String, Object> claims = getAuthClaims("openid profile email", "some.state", "code", "aas-app-oidc",
-                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "some-nonce", "OIDC", "secret", Map.of("max_age", 1), s -> "uri://" + s, null);
+                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "some-nonce", "OIDC", "secret", Map.of("max_age", 1), s -> "uri://" + s, 
+                ssn -> statusCallback(ssn, HttpStatus.FOUND.value()));
         
         // check claims..
         assertNotNull(claims.get(IdTokenClaimNames.ISS));
@@ -190,7 +227,7 @@ public class AuthenticationFlowTest {
         Map<String, Object> claims = getAuthClaims("openid", "some.state", "code", "aas-app-oidc",
                 keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "some-nonce", "OIDC", "secret", 
                 Map.of("claims", "{\"userinfo\": {\"name\": {\"essential\": true}, \"email\": null}, \"id_token\": {\"auth_time\": {\"essential\": true}}}"), 
-                s -> "uri://" + s, null);
+                s -> "uri://" + s, ssn -> statusCallback(ssn, HttpStatus.FOUND.value()));
 
         // check claims..
         assertNotNull(claims.get(IdTokenClaimNames.ISS));
@@ -206,19 +243,54 @@ public class AuthenticationFlowTest {
         assertNotNull(userInfo.get(StandardClaimNames.NAME));
         assertNotNull(userInfo.get(StandardClaimNames.EMAIL));
     }
+
+    @Test
+    void testPkceLoginFlow() throws Exception {
+
+        ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig(TrustServicePolicy.GET_LOGIN_PROOF_RESULT, ACCEPTED);
+        
+		MessageDigest md = MessageDigest.getInstance("SHA-256");
+		byte[] digest = md.digest(challenge.getBytes(StandardCharsets.US_ASCII));
+		String hash = Base64.getUrlEncoder().withoutPadding().encodeToString(digest);
+
+        Map<String, Object> claims = getAuthClaims("profile openid", "b43e24c9285542418a57b8fc00d283f8", "code", "gxfs-demo",
+                "https://demo.gxfs.dev", "sxXudRdJkvAp5kh_QqJQxzij2lDDD4ofb4Fx_rFn7x4", "OIDC", null, 
+                Map.of("code_challenge_method", "S256", "code_challenge", hash), 
+                s -> "uri://" + s, ssn -> statusCallback(ssn, HttpStatus.FOUND.value()));
+        
+        // check claims..
+        assertNotNull(claims.get(IdTokenClaimNames.ISS));
+        assertNotNull(claims.get(IdTokenClaimNames.SUB));
+        assertNull(claims.get(IdTokenClaimNames.AUTH_TIME));
+        assertNull(claims.get(StandardClaimNames.NAME));
+        assertNull(claims.get(StandardClaimNames.GIVEN_NAME));
+        assertNull(claims.get(StandardClaimNames.FAMILY_NAME));
+        assertNull(claims.get(StandardClaimNames.MIDDLE_NAME));
+        assertNull(claims.get(StandardClaimNames.PREFERRED_USERNAME));
+        assertNull(claims.get(StandardClaimNames.GENDER));
+        assertNull(claims.get(StandardClaimNames.BIRTHDATE));
+        assertNull(claims.get(StandardClaimNames.UPDATED_AT));
+        assertNull(claims.get(StandardClaimNames.EMAIL));
+        assertNull(claims.get(StandardClaimNames.EMAIL_VERIFIED));
+
+        Map<String, Object> userInfo = getUserInfo((String) claims.get(OAuth2ParameterNames.ACCESS_TOKEN));
+        assertEquals(claims.get(IdTokenClaimNames.ISS), userInfo.get(IdTokenClaimNames.ISS));
+        assertEquals(claims.get(IdTokenClaimNames.SUB), userInfo.get(IdTokenClaimNames.SUB));
+    }
+   
     
     @Test
     void testSiopLoginFlow() throws Exception {
         Map<String, Object> claims = getAuthClaims("openid", "QfjgI5XxMjNkvUU2f9sWQymGfKoaBr7Ro2jHprmBZrg.VTxL7FGKhi0.demo-app", "code", 
                 "aas-app-siop", keycloakUri + "/realms/gaia-x/broker/ssi-siop/endpoint", "Q5h3noccV6Hwb4pVHps41A", "SIOP", "secret2", null, rid -> 
                     "openid://?scope=openid&response_type=id_token&client_id=" + oidcIssuer + "&redirect_uri=" + oidcIssuer + 
-                    "/ssi/siop-callback&response_mode=post&nonce=" + rid, rid -> {
+                    "/ssi/siop-callback&response_mode=post&nonce=" + rid, ssn -> {
                         try {
                             Map<String, Object> params = new HashMap<>();
                             params.put(IdTokenClaimNames.ISS, "https://self-issued.me/v2");
                             params.put(IdTokenClaimNames.SUB, "NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs");
                             params.put(IdTokenClaimNames.AUD, oidcIssuer);
-                            params.put(IdTokenClaimNames.NONCE, rid);
+                            params.put(IdTokenClaimNames.NONCE, ssn.getAttribute("requestId"));
                             params.put(IdTokenClaimNames.EXP, Instant.now().plusSeconds(600).getEpochSecond());
                             params.put(IdTokenClaimNames.IAT, Instant.now().getEpochSecond());
                             params.put(IdTokenClaimNames.AUTH_TIME, Instant.now().getEpochSecond());
@@ -230,6 +302,7 @@ public class AuthenticationFlowTest {
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
+                        return null;
                     }
                 );
 
@@ -254,8 +327,9 @@ public class AuthenticationFlowTest {
         Map<String, Object> claims = getAuthClaims("openid profile email", "QfjgI5XxMjNkvUU2f9sWQymGfKoaBr7Ro2jHprmBZrg.VTxL7FGKhi0.demo-app", "code", 
                 "aas-app-siop", keycloakUri + "/realms/gaia-x/broker/ssi-siop/endpoint", "Q5h3noccV6Hwb4pVHps41A", "SIOP", "secret2", null, rid -> 
                     "openid://?scope=openid profile email&response_type=id_token&client_id=" + oidcIssuer + "&redirect_uri=" + oidcIssuer + 
-                    "/ssi/siop-callback&response_mode=post&nonce=" + rid, rid -> {
+                    "/ssi/siop-callback&response_mode=post&nonce=" + rid, ssn -> {
                         try {
+                        	String rid = (String) ssn.getAttribute("requestId");
                             long stamp = System.currentTimeMillis();
                             Map<String, Object> params = new HashMap<>();
                             params.put(IdTokenClaimNames.ISS, "https://self-issued.me/v2");
@@ -283,6 +357,7 @@ public class AuthenticationFlowTest {
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
+                        return null;
                     }
                 );
 
@@ -323,7 +398,8 @@ public class AuthenticationFlowTest {
         ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig(TrustServicePolicy.GET_LOGIN_PROOF_RESULT, TIMED_OUT);
 
         MvcResult authResult = getAuthResult("openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc", 
-                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", null, s -> "uri://" + s, null, 
+                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", null, s -> "uri://" + s, 
+                ssn -> statusCallback(ssn, HttpStatus.FOUND.value()), 
                 "/ssi/login?error=login_timed_out");
         assertNotNull(authResult.getRequest().getParameter(OAuth2ParameterNames.USERNAME));
         assertNotNull(authResult.getRequest().getParameter(OAuth2ParameterNames.PASSWORD));
@@ -335,7 +411,8 @@ public class AuthenticationFlowTest {
         ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig(TrustServicePolicy.GET_LOGIN_PROOF_RESULT, REJECTED);
 
         MvcResult authResult = getAuthResult("openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc", 
-                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", null, s -> "uri://" + s, null, 
+                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", null, s -> "uri://" + s, 
+                ssn -> statusCallback(ssn, HttpStatus.FOUND.value()), // .BAD_GATEWAY.value()),
                 "/ssi/login?error=login_rejected");
         assertNotNull(authResult.getRequest().getParameter(OAuth2ParameterNames.USERNAME));
         assertNotNull(authResult.getRequest().getParameter(OAuth2ParameterNames.PASSWORD));
@@ -364,10 +441,16 @@ public class AuthenticationFlowTest {
     @Test
     void testSiopCallbackError() throws Exception {
         
+//        Map<String, Object> claims = getAuthClaims("openid", "QfjgI5XxMjNkvUU2f9sWQymGfKoaBr7Ro2jHprmBZrg.VTxL7FGKhi0.demo-app", "code", 
+//                "aas-app-siop", keycloakUri + "/realms/gaia-x/broker/ssi-siop/endpoint", "Q5h3noccV6Hwb4pVHps41A", "SIOP", "secret2", null, rid -> 
+//                    "openid://?scope=openid&response_type=id_token&client_id=" + oidcIssuer + "&redirect_uri=" + oidcIssuer + 
+//                    "/ssi/siop-callback&response_mode=post&nonce=" + rid, ssn -> {
+    	
         MvcResult authResult = getAuthResult("openid", "QfjgI5XxMjNkvUU2f9sWQymGfKoaBr7Ro2jHprmBZrg.VTxL7FGKhi0.demo-app", "code", "aas-app-siop", 
                 keycloakUri + "/realms/gaia-x/broker/ssi-siop/endpoint", "Q5h3noccV6Hwb4pVHps41A", "SIOP", null, rid -> 
                     "openid://?scope=openid&response_type=id_token&client_id=" + oidcIssuer + "&redirect_uri=" + oidcIssuer + 
-                    "/ssi/siop-callback&response_mode=post&nonce=" + rid, null, "/ssi/login?error=server_error");
+                    "/ssi/siop-callback&response_mode=post&nonce=" + rid, null, //ssn -> statusCallback(ssn, HttpStatus.FOUND.value()), 
+                    "/ssi/login?error=server_error");
         String requestId = authResult.getRequest().getParameter(OAuth2ParameterNames.USERNAME); 
         HttpSession session = authResult.getRequest().getSession(false);
         String reUrl = authResult.getResponse().getHeader("Location");
@@ -420,11 +503,24 @@ public class AuthenticationFlowTest {
     }
     
     private Map<String, Object> getAuthClaims(String scope, String state, String responseType, String clientId, String redirectUri, String nonce, String protocol, 
-            String secret, Map<String, Object> optional, Function<String, String> urlBuilder, Consumer<String> callback) throws Exception {
+            String secret, Map<String, Object> optional, Function<String, String> urlBuilder, Function<HttpSession, String> callback) throws Exception {
 
         String authCode = getAuthCode(scope, state, responseType, clientId, redirectUri, nonce, protocol, optional, urlBuilder, callback);
-        String bearer = Base64.getEncoder().encodeToString((clientId + ":" + secret).getBytes());
-        MvcResult result = mockMvc.perform(
+        MvcResult result;
+        if (secret == null) {
+            result = mockMvc.perform(
+                    post("/oauth2/token")
+                            .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                            .param(OAuth2ParameterNames.CODE, authCode)
+                            .param(OAuth2ParameterNames.GRANT_TYPE, "authorization_code")
+                            .param(OAuth2ParameterNames.REDIRECT_URI, redirectUri)
+                            .param(OAuth2ParameterNames.CLIENT_ID, clientId)
+                            .param("code_verifier", challenge))
+                    .andExpect(status().isOk())
+                    .andReturn();
+        } else {
+          String bearer = Base64.getEncoder().encodeToString((clientId + ":" + secret).getBytes());
+          result = mockMvc.perform(
                 post("/oauth2/token")
                         .header("Authorization", "Basic " + bearer)
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -433,7 +529,8 @@ public class AuthenticationFlowTest {
                         .param(OAuth2ParameterNames.REDIRECT_URI, redirectUri))
                 .andExpect(status().isOk())
                 .andReturn();
-
+        }
+        
         String token = result.getResponse().getContentAsString();
         Map<String, Object> tokenFields = new JacksonJsonParser().parseMap(token);
         
@@ -461,7 +558,7 @@ public class AuthenticationFlowTest {
     }
     
     private String getAuthCode(String scope, String state, String responseType, String clientId, String redirectUri, String nonce, String protocol,
-            Map<String, Object> optional, Function<String, String> urlBuilder, Consumer<String> callback) throws Exception {
+            Map<String, Object> optional, Function<String, String> urlBuilder, Function<HttpSession, String> callback) throws Exception {
 
         MvcResult authResult = getAuthResult(scope, state, responseType, clientId, redirectUri, nonce, protocol, optional, urlBuilder, callback, "/oauth2/authorize");
         HttpSession session = authResult.getRequest().getSession(false);
@@ -484,7 +581,7 @@ public class AuthenticationFlowTest {
     }
 
     private MvcResult getAuthResult(String scope, String state, String responseType, String clientId, String redirectUri, String nonce, String protocol,
-            Map<String, Object> optional, Function<String, String> urlBuilder, Consumer<String> callback, String loginRedirect) throws Exception {
+            Map<String, Object> optional, Function<String, String> urlBuilder, Function<HttpSession, String> callback, String loginRedirect) throws Exception {
 
         Map<String, Object> params = getAuthRequestParams(scope, state, responseType, clientId, redirectUri, nonce, optional);
         String rq = getAuthRequest(params);
@@ -521,11 +618,13 @@ public class AuthenticationFlowTest {
         String resultQrUrl = decodeQR(result.getResponse().getContentAsByteArray());
         assertEquals(expectedUrl, resultQrUrl);
 
+        String redirectUrl = null;
         if (callback != null) {
-            callback.accept(requestId);
+            redirectUrl = callback.apply(session);
         }
         
-        result = mockMvc
+        if (redirectUrl == null) {
+        	result = mockMvc
                 .perform(post("/login")
                         .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
@@ -534,6 +633,17 @@ public class AuthenticationFlowTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(header().string("Location", containsString(loginRedirect))) //!!
                 .andReturn();
+        } else {
+        	assertEquals(loginRedirect, redirectUrl);
+        	result = mockMvc
+                .perform(get(redirectUrl)
+                        .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .cookie(new Cookie("JSESSIONID", session.getId())).session((MockHttpSession) session)
+                        .param(OAuth2ParameterNames.USERNAME, requestId).param(OAuth2ParameterNames.PASSWORD, protocol))
+                .andExpect(status().isOk()) 
+                .andReturn();        	
+        }
         return result;
     }
     

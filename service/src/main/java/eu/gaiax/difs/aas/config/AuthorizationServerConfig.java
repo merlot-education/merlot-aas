@@ -20,6 +20,21 @@
 
 package eu.gaiax.difs.aas.config;
 
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.jwk.JWK;
+import com.nimbusds.jose.jwk.JWKMatcher;
+import com.nimbusds.jose.jwk.JWKSelector;
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.source.JWKSource;
+import com.nimbusds.jose.proc.SecurityContext;
+import eu.gaiax.difs.aas.properties.ClientsProperties;
+import eu.gaiax.difs.aas.properties.ClientsProperties.ClientProperties;
+import eu.gaiax.difs.aas.properties.ScopeProperties;
+import eu.gaiax.difs.aas.service.SsiAuthManager;
+import eu.gaiax.difs.aas.service.SsiAuthorizationService;
+import lombok.extern.slf4j.Slf4j;
+
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -27,11 +42,9 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
-import eu.gaiax.difs.aas.properties.ClientsProperties;
-import eu.gaiax.difs.aas.properties.ClientsProperties.ClientProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -67,20 +80,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.jwk.JWK;
-import com.nimbusds.jose.jwk.JWKMatcher;
-import com.nimbusds.jose.jwk.JWKSelector;
-import com.nimbusds.jose.jwk.JWKSet;
-import com.nimbusds.jose.jwk.RSAKey;
-import com.nimbusds.jose.jwk.source.JWKSource;
-import com.nimbusds.jose.proc.SecurityContext;
-
-import eu.gaiax.difs.aas.properties.ScopeProperties;
-import eu.gaiax.difs.aas.service.SsiAuthManager;
-import eu.gaiax.difs.aas.service.SsiAuthorizationService;
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * The Spring Authorization Server config.
  */
@@ -100,10 +99,10 @@ public class AuthorizationServerConfig {
     private int jwkLength;
     @Value("${aas.jwk.secret}")
     private String jwkSecret;
-    
+
     private final ScopeProperties scopeProperties;
     private final ClientsProperties clientsProperties;
-    
+
     @Autowired
     public AuthorizationServerConfig(ScopeProperties scopeProperties, ClientsProperties clientsProperties) {
         this.scopeProperties = scopeProperties;
@@ -115,33 +114,33 @@ public class AuthorizationServerConfig {
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
         applySecurity(http);
         http
-            .cors()
-                .configurationSource(corsConfigurationSource())
-            .and()
-            .formLogin()
-                .loginPage("/ssi/login")
-            .and()
-            .oauth2ResourceServer()
-                .jwt();
+          .cors()
+          .configurationSource(corsConfigurationSource())
+          .and()
+          .formLogin()
+          .loginPage("/ssi/login")
+          .and()
+          .oauth2ResourceServer()
+          .jwt();
         return http.build();
     }
 
     private void applySecurity(HttpSecurity http) throws Exception {
         OAuth2AuthorizationServerConfigurer<HttpSecurity> authorizationServerConfigurer =
-                new OAuth2AuthorizationServerConfigurer<>();
+          new OAuth2AuthorizationServerConfigurer<>();
 
         authorizationServerConfigurer.addObjectPostProcessor(ssiObjectPostProcessor());
 
         RequestMatcher endpointsMatcher = authorizationServerConfigurer.getEndpointsMatcher();
 
         http.requestMatcher(endpointsMatcher)
-                .authorizeRequests(authorizeRequests -> authorizeRequests.anyRequest().authenticated())
-                .csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher))
-                .objectPostProcessor(ssiObjectPostProcessor())
-                .apply(authorizationServerConfigurer)
-                .and()
-                .addFilterAfter(new SsiOAuth2ValidationFilter(), LogoutFilter.class)
-                ;
+          .authorizeRequests(authorizeRequests -> authorizeRequests.anyRequest().authenticated())
+          .csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher))
+          .objectPostProcessor(ssiObjectPostProcessor())
+          .apply(authorizationServerConfigurer)
+          .and()
+          .addFilterAfter(new SsiOAuth2ValidationFilter(), LogoutFilter.class)
+        ;
     }
 
     private ObjectPostProcessor<Object> ssiObjectPostProcessor() {
@@ -165,43 +164,62 @@ public class AuthorizationServerConfig {
     }
 
     @Bean
-    public RegisteredClientRepository registeredClientRepository() {
-        return new InMemoryRegisteredClientRepository(
-                clientsProperties.getClients().values().stream()
-                	.map(cp -> prepareClient(cp)).collect(Collectors.toList()));
+    public RegisteredClientRepository registeredClientRepository() throws Exception {
+        Map<String, ClientProperties> clients = clientsProperties.getClients();
+        if (clients == null) {
+            log.error("registeredClientRepository.error. No Clients Registered! Check your configuration for errors if this is not intentional.");
+            throw new Exception("No Clients registered");
+        }
+        
+    	log.info("registeredClientRepository.enter; amount of configured clients: {}", clients.size());
+        List<RegisteredClient> accepted = clients.values().stream()
+        	.filter(cl -> cl.getId() != null)
+        	.map(cl -> prepareClient(cl))
+        	.collect(Collectors.toList());
+    	log.info("registeredClientRepository.exit; amount of accepted clients: {}", accepted.size());
+        return new InMemoryRegisteredClientRepository(accepted);
     }
 
     private RegisteredClient prepareClient(ClientProperties client) {
     	log.debug("prepareClient.enter; client: {}", client);
-        return RegisteredClient.withId(UUID.randomUUID().toString())
+    	RegisteredClient.Builder rcBuilder = RegisteredClient.withId(UUID.randomUUID().toString())
                 .clientId(client.getId())
-                .clientSecret(client.getSecret())
-                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
                 .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
                 .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
-                .redirectUris((consumer) -> consumer.addAll(client.getRedirectUris()))
+                .redirectUris(c -> c.addAll(client.getRedirectUris()))
                 .scopes(c -> c.addAll(List.of(OidcScopes.OPENID, OidcScopes.PROFILE, OidcScopes.EMAIL)))
                 .clientSettings(ClientSettings.builder()
-                        .tokenEndpointAuthenticationSigningAlgorithm(SignatureAlgorithm.RS256)
-                        // maybe we'll use it later on..
-                        //.tokenEndpointAuthenticationSigningAlgorithm(MacAlgorithm.HS256)
-                        .build())
+                	// can be used for PKCE, but not strictly required
+                	//.requireAuthorizationConsent(false) 
+                	//.requireProofKey(true)
+                      .tokenEndpointAuthenticationSigningAlgorithm(SignatureAlgorithm.RS256)
+                    // maybe we'll use it later on..
+                    //.tokenEndpointAuthenticationSigningAlgorithm(MacAlgorithm.HS256)
+                    .build())
                 .tokenSettings(TokenSettings.builder()
-                        .accessTokenTimeToLive(tokenTtl)
-                        .build())
-                .build();
+                    .accessTokenTimeToLive(tokenTtl)
+                    .build());    	
+        if (client.getSecret() == null || client.getSecret().isEmpty()) {
+            rcBuilder = rcBuilder
+                .clientAuthenticationMethod(ClientAuthenticationMethod.NONE);
+        } else {
+            rcBuilder = rcBuilder
+                .clientSecret(client.getSecret())
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC);
+        }
+        return rcBuilder.build();
     }
 
     @Bean
     public ProviderSettings providerSettings() {
         return ProviderSettings.builder()
-                .issuer(oidcIssuer)
-                // could be added later. but ClientRegistrationEndpoint is not present in OidcProviderConfiguration (yet?)
-                // so it is not clear, how should we expose it
-                .oidcClientRegistrationEndpoint("/clients/registration")
-                .build();
+          .issuer(oidcIssuer)
+          // could be added later. but ClientRegistrationEndpoint is not present in OidcProviderConfiguration (yet?)
+          // so it is not clear, how should we expose it
+          //.oidcClientRegistrationEndpoint("/clients/registration")
+          .build();
     }
-    
+
     @Bean
     public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) throws JOSEException {
         JWK jwk = jwkSource.get(new JWKSelector(new JWKMatcher.Builder().build()), null).get(0);
@@ -211,7 +229,7 @@ public class AuthorizationServerConfig {
         jwtDecoder.setJwtValidator(jwtValidator);
         return jwtDecoder;
     }
-    
+
     @Bean
     public JWKSource<SecurityContext> jwkSource() {
         RSAKey rsaKey = generateRsa();
@@ -224,9 +242,9 @@ public class AuthorizationServerConfig {
         RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
         RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
         return new RSAKey.Builder(publicKey)
-                .privateKey(privateKey)
-                .keyID(jwkSecret)
-                .build();
+          .privateKey(privateKey)
+          .keyID(jwkSecret)
+          .build();
     }
 
     private KeyPair generateRsaKey() {
@@ -243,18 +261,26 @@ public class AuthorizationServerConfig {
     public OAuth2AuthorizationService authorizationService() {
         return new SsiAuthorizationService(cacheSize, cacheTtl);
     }
-    
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOriginPattern("*");
+     
+        // TODO: take CORS config from props. Or, can we use Clienmt's redirect-uris instead?
+        config.addAllowedOriginPattern("https://fc-demo-server.gxfs.dev");
+        config.addAllowedOriginPattern("https://integration.gxfs.dev");
+        config.addAllowedOriginPattern("http://127.0.0.1:3000");
         config.addAllowedHeader("*");
         config.addAllowedMethod("POST");
+        config.addAllowedMethod("GET");
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/oauth2/**", config);
+        source.registerCorsConfiguration("/logout", config);
+        //source.registerCorsConfiguration("/ssi/logout", config);
         return source;
     }
-    
+
 }
+

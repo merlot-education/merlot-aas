@@ -6,17 +6,6 @@ management:
     web:
       exposure:
         include: health, info, metrics, prometheus
-aas:
-  iam:
-    base-uri: https://key-server.gxfs.dev
-  oidc:
-    issuer: https://auth-server.gxfs.dev
-  token:
-    ttl: 5m
-  tsa:
-    url: https://gaiax.vereign.com/tsa/policy
-    delay: 5000 # in milliseconds
-    duration: 300000 # in milliseconds
       
 logging:
   level:

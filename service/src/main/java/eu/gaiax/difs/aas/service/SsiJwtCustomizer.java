@@ -1,7 +1,5 @@
 package eu.gaiax.difs.aas.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.json.JacksonJsonParser;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
@@ -9,6 +7,8 @@ import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
+
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,9 +19,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+@Slf4j
 public class SsiJwtCustomizer implements OAuth2TokenCustomizer<JwtEncodingContext> {
-
-    private static final Logger log = LoggerFactory.getLogger(SsiJwtCustomizer.class);
 
     @Autowired
     private  SsiBrokerService ssiBrokerService;
@@ -71,6 +70,12 @@ public class SsiJwtCustomizer implements OAuth2TokenCustomizer<JwtEncodingContex
         }
         List<String> claims = new ArrayList<>();
         context.getClaims().claims(c -> claims.addAll(c.keySet()));
+        //Map<String, Object> userDetails = ssiBrokerService.getUserClaims(requestId,false); // required?
+        //if (userDetails != null) {
+        //    for (Map.Entry<String, Object> e: userDetails.entrySet()) {
+        //        context.getClaims().claim(e.getKey(), e.getValue());
+        //    }
+        //}
         log.debug("customize.exit; updated: {}, claims: {}, for request: {}", updated, claims, requestId);
     }
 

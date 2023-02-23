@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -7,12 +8,12 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>2.7.0</version>
-        <relativePath />
+        <relativePath/>
     </parent>
 
     <groupId>eu.gaiax.difs.aas</groupId>
     <artifactId>auth-service-parent</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>auth-service-parent</name>
@@ -63,14 +64,15 @@
         <repository.path>gaia-x/data-infrastructure-federation-services/authenticationauthorization</repository.path>
         <!--jib-->
         <ci-registry>${env.CI_REGISTRY}/${repository.path}</ci-registry>
+        <imagename>${env.IMAGE_NAME}</imagename>
     </properties>
 
     <url>https://gitlab.com/${repository.path}</url>
     <scm>
         <url>https://gitlab.com/${repository.path}</url>
-        <connection>scm:git:git://gitlab.com/${repository.path}.git</connection>
+        <connection>scm:git:git://gitlab.com/${repository.path}.git/</connection>
         <!--developerConnection>scm:git:ssh://gitlab.com:dsukhoroslov/${repository.path}.git</developerConnection-->
-        <tag>auth-service-parent-1.0.0</tag>
+        <tag>HEAD</tag>
     </scm>
     <issueManagement>
         <url>https://gitlab.com/${repository.path}/-/issues</url>
@@ -257,6 +259,7 @@
                 <artifactId>jib-maven-plugin</artifactId>
                 <configuration>
                     <to>
+                        <!--image>${ci-registry}/${imagename}</image-->
                         <image>${ci-registry}/${project.name}-image</image>
                         <auth>
                             <username>${env.CI_REGISTRY_USER}</username>
@@ -272,9 +275,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
                 <version>3.0.0-M6</version>
-                <configuration>
+                <!--configuration>
                     <autoVersionSubmodules>true</autoVersionSubmodules>
-                </configuration>
+                </configuration-->
             </plugin>
         </plugins>
     </build>
