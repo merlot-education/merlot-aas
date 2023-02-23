@@ -1,6 +1,7 @@
 package eu.gaiax.difs.aas.config;
 
 import java.io.IOException;
+import java.net.http.HttpHeaders;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -92,6 +93,7 @@ public final class SsiOidcProviderConfigurationEndpointFilter extends OncePerReq
                 .build();
 
         ServletServerHttpResponse httpResponse = new ServletServerHttpResponse(response);
+        httpResponse.getHeaders().add("Access-Control-Allow-Origin", "*");
         this.providerConfigurationHttpMessageConverter.write(providerConfiguration, MediaType.APPLICATION_JSON, httpResponse);
     }
 
@@ -100,7 +102,11 @@ public final class SsiOidcProviderConfigurationEndpointFilter extends OncePerReq
     }
 
     private Consumer<List<String>> clientAuthenticationMethods() {
-        return (authenticationMethods) -> authenticationMethods.add(ClientAuthenticationMethod.CLIENT_SECRET_BASIC.getValue());
+        
+        return (authenticationMethods) -> { 
+                                                authenticationMethods.add(ClientAuthenticationMethod.CLIENT_SECRET_BASIC.getValue());
+                                                authenticationMethods.add(ClientAuthenticationMethod.NONE.getValue());
+                                          };
     }
 
     private Consumer<List<String>> oidcScopes() {

@@ -1,6 +1,12 @@
 server:
   port: 9000
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
 aas:
   cache:
     ttl: 1m
@@ -20,7 +26,7 @@ aas:
 logging:
   level:
     root: INFO
-    tsclaims: INFO
-    eu.gaiax.difs.aas: INFO
-    org.springframework.web: INFO
-    org.springframework.security: INFO
+    tsclaims: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    eu.gaiax.difs.aas: DEBUG

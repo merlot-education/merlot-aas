@@ -35,6 +35,7 @@ import org.springframework.security.web.authentication.AuthenticationFailureHand
 
 import eu.gaiax.difs.aas.service.SsiAuthProvider;
 import eu.gaiax.difs.aas.service.SsiJwtCustomizer;
+import org.springframework.security.web.authentication.Http403ForbiddenEntryPoint;
 
 /**
  * The Spring Security config.
@@ -59,20 +60,25 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf().disable()
-                .cors() 
-                .and()
-                .authorizeRequests()
-                    .antMatchers(ANT_MATCHERS).permitAll()
-                    .antMatchers(HttpMethod.OPTIONS, "/oauth2/token").permitAll()
-                    .anyRequest().authenticated()
-                .and()
-                .formLogin()
-                    .failureHandler(ssiAuthenticationFailureHandler())
-                .and()
-                .logout()
-                    .logoutSuccessUrl("/ssi/login?logout")
-                ;
+        http
+          .csrf()
+            .disable()
+            .cors()
+          .and()
+            .authorizeRequests()
+                .antMatchers(ANT_MATCHERS).permitAll()
+                .antMatchers(HttpMethod.OPTIONS, "/oauth2/token").permitAll()
+                .anyRequest().authenticated()
+          .and()
+            .formLogin()
+                .failureHandler(ssiAuthenticationFailureHandler())
+          //.and()
+          //  .exceptionHandling()
+          //      .authenticationEntryPoint(new Http403ForbiddenEntryPoint())
+          .and()
+            .logout().
+                logoutSuccessUrl("/ssi/login?logout")
+            .invalidateHttpSession(true);
         return http.build();
     }
 

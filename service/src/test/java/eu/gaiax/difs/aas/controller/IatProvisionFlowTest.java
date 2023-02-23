@@ -20,6 +20,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -35,6 +36,7 @@ import eu.gaiax.difs.aas.generated.model.ServiceAccessScopeDto;
 import eu.gaiax.difs.aas.model.TrustServicePolicy;
 
 @SpringBootTest
+@ActiveProfiles("dev")
 @ExtendWith(SpringExtension.class)
 @AutoConfigureMockMvc(addFilters = false)
 public class IatProvisionFlowTest {

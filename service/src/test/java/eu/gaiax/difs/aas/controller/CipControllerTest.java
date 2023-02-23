@@ -18,6 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.security.oauth2.core.oidc.StandardClaimNames;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -30,6 +31,7 @@ import eu.gaiax.difs.aas.client.TrustServiceClient;
 import eu.gaiax.difs.aas.model.TrustServicePolicy;
 
 @SpringBootTest
+@ActiveProfiles("dev")
 @ExtendWith(SpringExtension.class)
 @AutoConfigureMockMvc(addFilters = false)
 public class CipControllerTest {

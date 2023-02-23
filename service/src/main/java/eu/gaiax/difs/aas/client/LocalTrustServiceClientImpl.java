@@ -7,21 +7,19 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.security.oauth2.core.oidc.StandardClaimNames;
 
 import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
 import eu.gaiax.difs.aas.properties.StatusProperties;
+import lombok.extern.slf4j.Slf4j;
 
 import static eu.gaiax.difs.aas.model.TrustServicePolicy.*;
 import static eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto.*;
 
+@Slf4j
 public class LocalTrustServiceClientImpl implements TrustServiceClient {
-
-    private static final Logger log = LoggerFactory.getLogger("tsclaims");
 
     private final Map<String, Integer> countdowns = new ConcurrentHashMap<>();
     private final StatusProperties statusProperties;

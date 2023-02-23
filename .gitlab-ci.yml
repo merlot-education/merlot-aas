@@ -1,18 +1,7 @@
-# This file is a template, and might need editing before it works on your project.
-# To contribute improvements to CI/CD templates, please follow the Development guide at:
-# https://docs.gitlab.com/ee/development/cicd/templates.html
-# This specific template is located at:
-# https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Maven.gitlab-ci.yml
-
-# Build JAVA applications using Apache Maven (http://maven.apache.org)
-# For docker image tags see https://hub.docker.com/_/maven/
-#
-# For general lifecycle information see https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html
-
-# This template will build and test your projects
-# * Caches downloaded dependencies and plugins between invocation.
-# * Verify but don't deploy merge requests.
-# * Deploy built artifacts from master branch only.
+stages:
+  - build
+  - docker
+  - deploy
 
 variables:
   # This will suppress any download for dependencies and plugins or upload messages which would clutter the console log.
@@ -22,8 +11,10 @@ variables:
   # when running from the command line.
   # `installAtEnd` and `deployAtEnd` are only effective with recent version of the corresponding plugins.
   MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end --show-version -DinstallAtEnd=true -DdeployAtEnd=true"
+  REGISTRY_PATH: ${CI_REGISTRY}/gaia-x/data-infrastructure-federation-services
+  TAG: ${CI_COMMIT_BRANCH}-${CI_PIPELINE_ID}
+  IMAGE_NAME: auth-service-image:${TAG}
 
-# This template uses jdk8 for verifying and deploying images
 image: maven:3-jdk-11
 
 # Cache downloaded dependencies and plugins between builds.
@@ -32,14 +23,10 @@ cache:
   paths:
     - .m2/repository
 
-stages:
-- test
-- deploy
-
 # For merge requests do not `deploy` but only run `verify`.
 # See https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html
 .verify: &verify
-  stage: test
+  stage: build
   script:
     - 'mvn $MAVEN_CLI_OPTS verify'
   except:
@@ -50,24 +37,43 @@ stages:
 verify:jdk11:
   <<: *verify
 
+sast:
+  stage: build
+include:
+- template: Security/SAST.gitlab-ci.yml
+
+
 # To deploy packages from CI, create a ci_settings.xml file
 # For deploying packages to GitLab's Maven Repository: See https://docs.gitlab.com/ee/user/packages/maven_repository/index.html#create-maven-packages-with-gitlab-cicd for more details.
 # Please note: The GitLab Maven Repository is currently only available in GitLab Premium / Ultimate.
-# For `master` branch run `mvn deploy` automatically.
-deploy:jdk11:
-  stage: deploy
+# For `master` branch run `mvn deploy` automatically. Considering this: https://phauer.com/2019/no-fat-jar-in-docker-image/
+docker:
+#deploy:jdk11:
+  stage: docker
+  only:
+    - integration
+    - main
+    - /^release\/\d*[.]\d*[.]\d*$/
+    - tags
+#    variables:
+#      - $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   script:
 #    - if [ ! -f ci_settings.xml ];
 #        then echo "CI settings missing\! If deploying to GitLab Maven Repository, please see https://docs.gitlab.com/ee/user/packages/maven_repository/index.html#create-maven-packages-with-gitlab-cicd for instructions.";
 #      fi
 #    - 'mvn $MAVEN_CLI_OPTS deploy -s ci_settings.xml'
-    - 'mvn $MAVEN_CLI_OPTS package jib:build -am'
-  only:
-    variables:
-      - $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+#    - 'mvn $MAVEN_CLI_OPTS package jib:build -am'
+    - 'mvn $MAVEN_CLI_OPTS compile jib:build'
+    - 'export IMAGE_NAME=auth-service-image'
+    - 'mvn $MAVEN_CLI_OPTS compile jib:build'
       
-sast:
+helm_package:
   stage: deploy
-include:
-- template: Security/SAST.gitlab-ci.yml
-      
+  image: dtzar/helm-kubectl:3.10.1
+  rules:
+    - if: $CI_TASK == "helm_package" && $CHANNEL
+  script:
+    - helm dependency update deploy/helm/${CHANNEL}
+    - helm package deploy/helm/${CHANNEL} -d deploy/helm/package/${CHANNEL}
+    - export FILE_NAME=$(ls deploy/helm/package/${CHANNEL}/*.tgz)
+    - 'curl --request POST --user gitlab-ci-token:$CI_JOB_TOKEN --form "chart=@${FILE_NAME}" "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/helm/api/${CHANNEL}/charts"'
