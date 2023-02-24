@@ -55,7 +55,7 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
         }
 
         if (GET_LOGIN_PROOF_INVITATION.equals(policy)) {
-            map.put(PN_LINK, "uri://" + requestId);
+            map.put(PN_LINK, LINK_SCHEME + requestId);
             return map;
         }
 

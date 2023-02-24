@@ -35,8 +35,14 @@ public class ClientsConfig {
     @Bean
     @Profile("!prod")
     public InvitationServiceClient localInvitationServiceClient(StatusProperties statusProperties) {
-    	//looks like not implemented yet
-        return new RestInvitationServiceClientImpl();
+        return new InvitationServiceClient() {
+
+			@Override
+			public String getMobileInvitationUrl(String url) {
+				return url;
+			}
+        	
+        };
     }
     
 }

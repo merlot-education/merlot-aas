@@ -1,5 +1,6 @@
 package eu.gaiax.difs.aas.controller;
 
+import static eu.gaiax.difs.aas.client.TrustServiceClient.LINK_SCHEME;
 import static eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto.ACCEPTED;
 import static eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto.REJECTED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -91,7 +92,7 @@ public class CipControllerTest {
         assertNotNull(claims.get("requestId"));
         String requestId = (String) claims.get("requestId");
         assertNotNull(claims.get("link"));
-        assertEquals("uri://qwerty890", claims.get("link"));
+        assertEquals(LINK_SCHEME + "qwerty890", claims.get("link"));
         assertNotNull(claims.get(IdTokenClaimNames.SUB));
         assertNull(claims.get(IdTokenClaimNames.ISS));
         assertNull(claims.get(IdTokenClaimNames.AUTH_TIME));
