@@ -1,5 +1,6 @@
 package eu.gaiax.difs.aas.controller;
 
+import static eu.gaiax.difs.aas.client.TrustServiceClient.LINK_SCHEME;
 import static eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto.ACCEPTED;
 import static eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto.REJECTED;
 import static eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto.TIMED_OUT;
@@ -29,7 +30,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.UUID;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -134,7 +134,7 @@ public class AuthenticationFlowTest {
         ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig(TrustServicePolicy.GET_LOGIN_PROOF_RESULT, ACCEPTED);
 
         Map<String, Object> claims = getAuthClaims("openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc",
-                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", "secret", null, s -> "uri://" + s, 
+                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", "secret", null, s -> LINK_SCHEME + s, 
                 ssn -> statusCallback(ssn, HttpStatus.FOUND.value()));
 
         // check claims..
@@ -163,14 +163,14 @@ public class AuthenticationFlowTest {
         ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig(TrustServicePolicy.GET_LOGIN_PROOF_RESULT, ACCEPTED);
 
         Map<String, Object> claims = getAuthClaims("openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc",
-                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", "secret", null, s -> "uri://" + s, 
+                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", "secret", null, s -> LINK_SCHEME + s, 
                 ssn -> statusCallback(ssn, HttpStatus.FOUND.value()));
 
         String token = (String) claims.get(OAuth2ParameterNames.ACCESS_TOKEN);
 
         Map<String, Object> claims2 = getAuthClaims("openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc",
                 keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", "secret", Map.of("max_age", 10, "id_token_hint", token), 
-                s -> "uri://" + s, ssn -> statusCallback(ssn, HttpStatus.FOUND.value()));
+                s -> LINK_SCHEME + s, ssn -> statusCallback(ssn, HttpStatus.FOUND.value()));
         
         assertEquals(claims.get(IdTokenClaimNames.SUB), claims2.get(IdTokenClaimNames.SUB));
         Long iat = ((Date) claims.get(IdTokenClaimNames.IAT)).toInstant().getEpochSecond();
@@ -185,7 +185,7 @@ public class AuthenticationFlowTest {
         ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig(TrustServicePolicy.GET_LOGIN_PROOF_RESULT, ACCEPTED);
 
         Map<String, Object> claims = getAuthClaims("openid profile email", "some.state", "code", "aas-app-oidc",
-                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "some-nonce", "OIDC", "secret", Map.of("max_age", 1), s -> "uri://" + s, 
+                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "some-nonce", "OIDC", "secret", Map.of("max_age", 1), s -> LINK_SCHEME + s, 
                 ssn -> statusCallback(ssn, HttpStatus.FOUND.value()));
         
         // check claims..
@@ -227,7 +227,7 @@ public class AuthenticationFlowTest {
         Map<String, Object> claims = getAuthClaims("openid", "some.state", "code", "aas-app-oidc",
                 keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "some-nonce", "OIDC", "secret", 
                 Map.of("claims", "{\"userinfo\": {\"name\": {\"essential\": true}, \"email\": null}, \"id_token\": {\"auth_time\": {\"essential\": true}}}"), 
-                s -> "uri://" + s, ssn -> statusCallback(ssn, HttpStatus.FOUND.value()));
+                s -> LINK_SCHEME + s, ssn -> statusCallback(ssn, HttpStatus.FOUND.value()));
 
         // check claims..
         assertNotNull(claims.get(IdTokenClaimNames.ISS));
@@ -256,7 +256,7 @@ public class AuthenticationFlowTest {
         Map<String, Object> claims = getAuthClaims("profile openid", "b43e24c9285542418a57b8fc00d283f8", "code", "gxfs-demo",
                 "https://demo.gxfs.dev", "sxXudRdJkvAp5kh_QqJQxzij2lDDD4ofb4Fx_rFn7x4", "OIDC", null, 
                 Map.of("code_challenge_method", "S256", "code_challenge", hash), 
-                s -> "uri://" + s, ssn -> statusCallback(ssn, HttpStatus.FOUND.value()));
+                s -> LINK_SCHEME + s, ssn -> statusCallback(ssn, HttpStatus.FOUND.value()));
         
         // check claims..
         assertNotNull(claims.get(IdTokenClaimNames.ISS));
@@ -398,7 +398,7 @@ public class AuthenticationFlowTest {
         ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig(TrustServicePolicy.GET_LOGIN_PROOF_RESULT, TIMED_OUT);
 
         MvcResult authResult = getAuthResult("openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc", 
-                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", null, s -> "uri://" + s, 
+                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", null, s -> LINK_SCHEME + s, 
                 ssn -> statusCallback(ssn, HttpStatus.FOUND.value()), 
                 "/ssi/login?error=login_timed_out");
         assertNotNull(authResult.getRequest().getParameter(OAuth2ParameterNames.USERNAME));
@@ -411,7 +411,7 @@ public class AuthenticationFlowTest {
         ((LocalTrustServiceClientImpl) trustServiceClient).setStatusConfig(TrustServicePolicy.GET_LOGIN_PROOF_RESULT, REJECTED);
 
         MvcResult authResult = getAuthResult("openid", "HAQlByTNfgFLmnoY38xP9pb8qZtZGu2aBEyBao8ezkE.bLmqaatm4kw.demo-app", "code", "aas-app-oidc", 
-                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", null, s -> "uri://" + s, 
+                keycloakUri + "/realms/gaia-x/broker/ssi-oidc/endpoint", "fXCqL9w6_Daqmibe5nD7Rg", "OIDC", null, s -> LINK_SCHEME + s, 
                 ssn -> statusCallback(ssn, HttpStatus.FOUND.value()), // .BAD_GATEWAY.value()),
                 "/ssi/login?error=login_rejected");
         assertNotNull(authResult.getRequest().getParameter(OAuth2ParameterNames.USERNAME));

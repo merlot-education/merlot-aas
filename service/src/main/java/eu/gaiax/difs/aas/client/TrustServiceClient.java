@@ -9,6 +9,8 @@ public interface TrustServiceClient {
     String PN_REQUEST_ID = "requestId";
     String PN_STATUS = "status";
     
+    String LINK_SCHEME = "https://gaia-x.org/";
+    
     String NS_LOGIN = "Login";
     String NS_ACCESS = "Access";
     

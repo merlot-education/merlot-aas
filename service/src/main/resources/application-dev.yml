@@ -57,9 +57,11 @@ aas:
            - https://fc-demo-server.gxfs.dev
            - https://fc-server.gxfs.dev
            - http://78.138.66.181:8088/*
+  invitation:
+    uri: gxfspcm://aries_connection_invitation?
   jwk:
-      length: 3072
-      secret: 96ec048e-c640-4cfd-bc82-6571810a9d0f
+    length: 3072
+    secret: 96ec048e-c640-4cfd-bc82-6571810a9d0f
   oidc:
     issuer: http://auth-server:8090
     static-scopes:
