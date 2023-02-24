@@ -35,14 +35,19 @@ import eu.gaiax.difs.aas.service.SsiAuthManager;
 import eu.gaiax.difs.aas.service.SsiAuthorizationService;
 import lombok.extern.slf4j.Slf4j;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -266,10 +271,23 @@ public class AuthorizationServerConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
      
-        // TODO: take CORS config from props. Or, can we use Clienmt's redirect-uris instead?
-        config.addAllowedOriginPattern("https://fc-demo-server.gxfs.dev");
-        config.addAllowedOriginPattern("https://integration.gxfs.dev");
-        config.addAllowedOriginPattern("http://127.0.0.1:3000");
+        // take CORS config from props. Or, can we use Client redirect-uris instead?
+        Set<String> uris = new HashSet<>();        
+        clientsProperties.getClients().values().stream().flatMap(p -> p.getRedirectUris().stream())
+        	.forEach(u -> {
+        		try {
+        		    URI uri = new URI(u);
+        		    uris.add(uri.getScheme() + "://" + uri.getHost());
+        		} catch (URISyntaxException ex) {
+        			// skip it?
+        		}
+        	});
+        uris.add("https://fc-demo-server.gxfs.dev");
+        uris.add("https://integration.gxfs.dev");
+        uris.add("http://127.0.0.1:3000"); // i doubt port is required here
+        config.setAllowedOrigins(new ArrayList<>(uris));
+        log.debug("corsConfigurationSource; CORS origins: {}", config.getAllowedOrigins());
+        
         config.addAllowedHeader("*");
         config.addAllowedMethod("POST");
         config.addAllowedMethod("GET");
