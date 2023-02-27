@@ -29,9 +29,9 @@ cache:
   stage: build
   script:
     - 'mvn $MAVEN_CLI_OPTS verify'
-  except:
-    variables:
-      - $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+#  except:
+#    variables:
+#      - $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
 # Verify merge requests using JDK11
 verify:jdk11:
@@ -47,8 +47,7 @@ include:
 # For deploying packages to GitLab's Maven Repository: See https://docs.gitlab.com/ee/user/packages/maven_repository/index.html#create-maven-packages-with-gitlab-cicd for more details.
 # Please note: The GitLab Maven Repository is currently only available in GitLab Premium / Ultimate.
 # For `master` branch run `mvn deploy` automatically. Considering this: https://phauer.com/2019/no-fat-jar-in-docker-image/
-docker:
-#deploy:jdk11:
+build-image:
   stage: docker
   only:
     - integration
@@ -62,10 +61,10 @@ docker:
 #        then echo "CI settings missing\! If deploying to GitLab Maven Repository, please see https://docs.gitlab.com/ee/user/packages/maven_repository/index.html#create-maven-packages-with-gitlab-cicd for instructions.";
 #      fi
 #    - 'mvn $MAVEN_CLI_OPTS deploy -s ci_settings.xml'
-#    - 'mvn $MAVEN_CLI_OPTS package jib:build -am'
-    - 'mvn $MAVEN_CLI_OPTS compile jib:build'
-    - 'export IMAGE_NAME=auth-service-image'
-    - 'mvn $MAVEN_CLI_OPTS compile jib:build'
+    - 'mvn $MAVEN_CLI_OPTS package jib:build -am'
+#    - 'mvn $MAVEN_CLI_OPTS compile jib:build'
+#    - 'export IMAGE_NAME=auth-service-image'
+#    - 'mvn $MAVEN_CLI_OPTS compile jib:build'
       
 helm_package:
   stage: deploy
