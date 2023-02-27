@@ -1,12 +1,6 @@
 server:
   port: 9000
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "*"
-
 aas:
   cache:
     ttl: 1m

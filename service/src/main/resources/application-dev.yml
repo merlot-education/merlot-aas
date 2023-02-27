@@ -2,27 +2,7 @@ server:
   port: 8090
   servlet:
     session:
-      timeout: 10m
-  tomcat:
-    mbeanregistry:
-      enabled: true
-
-spring:
-  application:
-    name: auth-service
-  messages:
-    encoding: ISO-8859-1
-    
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "*"
-
-springdoc:
-  api-docs:
-    path: /api/docs
-    enabled: true
+      timeout: 5m
 
 aas:
   cache:
@@ -30,33 +10,21 @@ aas:
     ttl: 5m
   iam:
     base-uri: http://key-server:8080
+    clients:
+      oidc:
+        id: aas-app-oidc
+        secret: "{noop}secret"
+        redirect-uris: 
+          - ${aas.iam.base-uri}/realms/gaia-x/broker/ssi-oidc/endpoint
+      siop:
+        id: aas-app-siop
+        secret: "{noop}secret2"
+        redirect-uris: 
+          - ${aas.iam.base-uri}/realms/gaia-x/broker/ssi-siop/endpoint
     iat:
       dcr-uri: ${aas.iam.base-uri}/realms/gaia-x/clients-registrations/openid-connect
       redirect-uri: ${aas.oidc.issuer}/*
       secret: "{noop}iat"
-    clients:
-       oidc:
-         id: aas-app-oidc
-         secret: "{noop}secret"
-         redirect-uris: 
-           - ${aas.iam.base-uri}/realms/gaia-x/broker/ssi-oidc/endpoint
-       siop:
-         id: aas-app-siop
-         secret: "{noop}secret2"
-         redirect-uris: 
-           - ${aas.iam.base-uri}/realms/gaia-x/broker/ssi-siop/endpoint
-       gxfs:
-         id: gxfs-demo
-#         secret: "{noop}hmi-secret2"
-         redirect-uris: 
-           - https://demo.gxfs.dev
-       portal:
-         id: demo-portal
-         secret: "{noop}demo-portal"
-         redirect-uris: 
-           - https://fc-demo-server.gxfs.dev
-           - https://fc-server.gxfs.dev
-           - http://78.138.66.181:8088/*
   invitation:
     uri: gxfspcm://aries_connection_invitation?
   jwk:
@@ -100,11 +68,4 @@ aas:
     statuses:
       GetLoginProofResult: ACCEPTED
       GetIatProofResult: ACCEPTED
-    
-logging:
-  level:
-    root: INFO
-    tsclaims: DEBUG
-    org.springframework.web: DEBUG
-    org.springframework.security: DEBUG
-    eu.gaiax.difs.aas: DEBUG
+
