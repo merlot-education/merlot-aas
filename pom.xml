@@ -258,6 +258,10 @@
                 <groupId>com.google.cloud.tools</groupId>
                 <artifactId>jib-maven-plugin</artifactId>
                 <configuration>
+                    <container>
+						<!-- ${maven.build.timestamp} should work also -->
+                        <creationTime>USE_CURRENT_TIMESTAMP</creationTime>
+                    </container>
                     <to>
                         <!--image>${ci-registry}/${imagename}</image-->
                         <image>${ci-registry}/${project.artifactId}:${project.version}</image>
