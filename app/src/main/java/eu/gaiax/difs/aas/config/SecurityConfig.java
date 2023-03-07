@@ -1,7 +1,7 @@
 package eu.gaiax.difs.aas.config;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -23,10 +23,10 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         
         http
-          .authorizeRequests()
-          .antMatchers("/demo").authenticated()
-          .antMatchers("/demo/read").hasAuthority("SCOPE_profile")
-          .antMatchers("/demo/write").hasAuthority("SCOPE_email")
+          .authorizeHttpRequests()
+          .requestMatchers("/demo").authenticated()
+          .requestMatchers("/demo/read").hasAuthority("SCOPE_profile")
+          .requestMatchers("/demo/write").hasAuthority("SCOPE_email")
           .anyRequest().permitAll()
           .and()
           .oauth2Login(oauth2Login ->

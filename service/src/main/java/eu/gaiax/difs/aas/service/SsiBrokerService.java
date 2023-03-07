@@ -203,6 +203,7 @@ public class SsiBrokerService extends SsiClaimsService {
             try {
                 verifier.verify(JWTClaimsSet.parse(response), null);
             } catch(ParseException | BadJWTException ex) {
+                log.info("processSiopLoginResponse.error; {}", ex.getMessage());
                 claimsCache.remove(requestId);
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_response: " + ex.getMessage()); 
             }
@@ -250,7 +251,7 @@ public class SsiBrokerService extends SsiClaimsService {
             request.put("additional_parameters", additionalParams);
             claimsCache.put(requestId, request);
         }
-        log.debug("addAuthData.exit; updated: {}", result);
+        log.debug("setAdditionalParameters.exit; updated: {}, cacheSize: {}", result, claimsCache.estimatedSize());
         return result;
         
     }
@@ -266,7 +267,7 @@ public class SsiBrokerService extends SsiClaimsService {
             data.putAll(request);
         }
         claimsCache.put(requestId, data);
-        log.debug("addAuthData.exit; returning: {}, stored claims: {}", result, data.size());
+        log.debug("addAuthData.exit; returning: {}, stored claims: {}, cacheSize: {}", result, data.size(), claimsCache.estimatedSize());
         return result;
     }
 

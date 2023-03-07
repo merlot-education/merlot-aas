@@ -9,7 +9,6 @@ import eu.gaiax.difs.aas.generated.model.AccessRequestDto;
 import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
 import eu.gaiax.difs.aas.generated.model.AccessResponseDto;
 import eu.gaiax.difs.aas.generated.model.ServiceAccessScopeDto;
-import eu.gaiax.difs.aas.properties.ClientsProperties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

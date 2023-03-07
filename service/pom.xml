@@ -65,7 +65,7 @@
         </dependency>
         <dependency>
             <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-ui</artifactId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -149,9 +149,9 @@
                     <generateApiDocumentation>false</generateApiDocumentation>
                     <generateModelDocumentation>false</generateModelDocumentation>
                     <configOptions>
-                        <serializableModel>true</serializableModel>
-                        <oas3>true</oas3>
-                        <useSpringfox>false</useSpringfox>
+                        <!--serializableModel>true</serializableModel-->
+                        <useSwaggerUI>true</useSwaggerUI>
+                        <useSpringBoot3>true</useSpringBoot3>
                     </configOptions>
                 </configuration>
                 <executions>
@@ -179,22 +179,6 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.owasp</groupId>
-                <artifactId>dependency-check-maven</artifactId>
-                <configuration>
-                    <!--suppressionFile>./owasp/suppressions.xml</suppressionFile-->
-                    <failBuildOnAnyVulnerability>false</failBuildOnAnyVulnerability>
-                    <!--failBuildOnCVSS>50</failBuildOnCVSS-->
-                </configuration>
-                <!--executions>
-                    <execution>
-                        <goals>
-                            <goal>aggregate</goal>
-                        </goals>
-                    </execution>
-                </executions-->
             </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>

@@ -15,8 +15,8 @@ import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
 import eu.gaiax.difs.aas.properties.StatusProperties;
 import lombok.extern.slf4j.Slf4j;
 
-import static eu.gaiax.difs.aas.model.TrustServicePolicy.*;
 import static eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto.*;
+import static eu.gaiax.difs.aas.model.TrustServicePolicy.*;
 
 @Slf4j
 public class LocalTrustServiceClientImpl implements TrustServiceClient {
