@@ -36,7 +36,7 @@ import eu.gaiax.difs.aas.model.TrustServicePolicy;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
-@AutoConfigureMockMvc(addFilters = false)
+@AutoConfigureMockMvc
 public class IatProvisionFlowTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();

@@ -1,9 +1,10 @@
 package eu.gaiax.difs.aas.controller;
 
-import static eu.gaiax.difs.aas.client.TrustServiceClient.LINK_SCHEME;
 import static eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto.ACCEPTED;
 import static eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto.REJECTED;
 import static eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto.TIMED_OUT;
+import static eu.gaiax.difs.aas.client.TrustServiceClient.LINK_SCHEME;
+
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -34,9 +35,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
-import javax.servlet.ServletException;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpSession;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -589,12 +590,12 @@ public class AuthenticationFlowTest {
                 .perform(get("/oauth2/authorize?" + rq, values).accept(MediaType.TEXT_HTML,
                         MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(header().string("Location", containsString("/ssi/login"))).andReturn();
+                .andExpect(header().string("Location", containsString("/ssi/login"))).andReturn(); //ssi/login
 
         HttpSession session = result.getRequest().getSession(false);
 
         result = mockMvc
-                .perform(get("/ssi/login")
+                .perform(get("/ssi/login") 
                         .accept(MediaType.TEXT_HTML, MediaType.APPLICATION_XHTML_XML, MediaType.APPLICATION_XML)
                         .cookie(new Cookie("JSESSIONID", session.getId())).session((MockHttpSession) session))
                 .andExpect(status().isOk()).andReturn();
@@ -606,6 +607,7 @@ public class AuthenticationFlowTest {
         session = result.getRequest().getSession(false);
         String qrUrl = result.getModelAndView().getModel().get("qrUrl").toString();
         String requestId = result.getModelAndView().getModel().get("requestId").toString();
+        //String requestId = "123";
 
         result = mockMvc
                 .perform(get(qrUrl).accept(MediaType.IMAGE_PNG, MediaType.IMAGE_GIF)

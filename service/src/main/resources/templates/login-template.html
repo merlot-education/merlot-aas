@@ -56,7 +56,7 @@
             <div class="card-bottom-contents">
                 <h2 id="greeting" th:text="#{qrTitle}">Scan the QR code with your mobile device</h2>
                 <img th:src="${qrUrl}" alt="QR Code">
-                <form id="login" th:action="@{/login}" method="post">
+                <form id="login" th:action="@{/ssi/login}" method="post">
                     <table>
                         <tr>
                             <td><input class="input-box" type='hidden' name='username' th:value='${requestId}'/></td>

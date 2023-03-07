@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.authority.mapping.SimpleAuthorityMapper;
 import org.springframework.security.core.session.SessionRegistryImpl;
@@ -103,6 +104,18 @@ public class SecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
         return new HttpSessionManager();
     }
 
+	@Override
+	public void init(WebSecurity builder) throws Exception {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void configure(WebSecurity builder) throws Exception {
+		// TODO Auto-generated method stub
+		
+	}
+    
     /**
      * Define security constraints for the application resources.
      */
@@ -111,9 +124,9 @@ public class SecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
 
         super.configure(http);
         http
-            .authorizeRequests()
-            .antMatchers("/demo").authenticated()
-            .antMatchers("/demo/**").authenticated()
+            .authorizeHttpRequests()
+            .requestMatchers("/demo").authenticated()
+            .requestMatchers("/demo/**").authenticated()
             .anyRequest().permitAll();
     }
     

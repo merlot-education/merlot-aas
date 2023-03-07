@@ -25,8 +25,13 @@ public class SsiAuthManager implements AuthenticationManager {
     
     @Autowired
     private SsiBrokerService ssiBrokerService;
+
+//    public SsiAuthManager(SsiBrokerService ssiBrokerService) {
+//    	this.ssiBrokerService = ssiBrokerService;
+//    }
     
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         log.debug("authenticate.enter; got authentication: {}", authentication);
         String requestId = null;
@@ -39,6 +44,10 @@ public class SsiAuthManager implements AuthenticationManager {
             scopes = Collections.emptyList();
         }
         log.debug("authenticate; subject: {}, scopes: {}", requestId, scopes);
+        
+        //if (ssiBrokerService == null) {
+        //	ssiBrokerService = SsiBrokerService.INSTANCE;
+        //}
         
         boolean needAuthTime = false;
         Set<String> additionalClaims;

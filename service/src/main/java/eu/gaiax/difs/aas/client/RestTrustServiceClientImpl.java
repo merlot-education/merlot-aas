@@ -12,7 +12,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.web.reactive.function.client.WebClient;
-
 import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
 import lombok.extern.slf4j.Slf4j;
 

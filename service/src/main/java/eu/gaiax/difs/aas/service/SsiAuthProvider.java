@@ -19,8 +19,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 
-import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
-
 public class SsiAuthProvider implements AuthenticationProvider {
 
     private static final Logger log = LoggerFactory.getLogger(SsiAuthProvider.class);

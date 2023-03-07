@@ -20,21 +20,6 @@
 
 package eu.gaiax.difs.aas.config;
 
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.jwk.JWK;
-import com.nimbusds.jose.jwk.JWKMatcher;
-import com.nimbusds.jose.jwk.JWKSelector;
-import com.nimbusds.jose.jwk.JWKSet;
-import com.nimbusds.jose.jwk.RSAKey;
-import com.nimbusds.jose.jwk.source.JWKSource;
-import com.nimbusds.jose.proc.SecurityContext;
-import eu.gaiax.difs.aas.properties.ClientsProperties;
-import eu.gaiax.difs.aas.properties.ClientsProperties.ClientProperties;
-import eu.gaiax.difs.aas.properties.ScopeProperties;
-import eu.gaiax.difs.aas.service.SsiAuthManager;
-import eu.gaiax.difs.aas.service.SsiAuthorizationService;
-import lombok.extern.slf4j.Slf4j;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.KeyPair;
@@ -49,7 +34,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -59,11 +46,13 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.ObjectPostProcessor;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.oauth2.server.authorization.OAuth2AuthorizationServerConfigurer;
+import org.springframework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2ResourceServerConfigurer;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationResponseType;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
+import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -73,17 +62,37 @@ import org.springframework.security.oauth2.server.authorization.OAuth2Authorizat
 import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
-import org.springframework.security.oauth2.server.authorization.config.ClientSettings;
-import org.springframework.security.oauth2.server.authorization.config.ProviderSettings;
-import org.springframework.security.oauth2.server.authorization.config.TokenSettings;
-import org.springframework.security.oauth2.server.authorization.oidc.web.OidcProviderConfigurationEndpointFilter;
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
+import org.springframework.security.oauth2.server.authorization.oidc.authentication.OidcUserInfoAuthenticationContext;
+import org.springframework.security.oauth2.server.authorization.oidc.authentication.OidcUserInfoAuthenticationToken;
 import org.springframework.security.oauth2.server.authorization.oidc.web.OidcUserInfoEndpointFilter;
+import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
+import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
+import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.jwk.JWK;
+import com.nimbusds.jose.jwk.JWKMatcher;
+import com.nimbusds.jose.jwk.JWKSelector;
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.source.JWKSource;
+import com.nimbusds.jose.proc.SecurityContext;
+
+import eu.gaiax.difs.aas.properties.ClientsProperties;
+import eu.gaiax.difs.aas.properties.ClientsProperties.ClientProperties;
+import eu.gaiax.difs.aas.properties.ScopeProperties;
+import eu.gaiax.difs.aas.service.SsiAuthManager;
+import eu.gaiax.difs.aas.service.SsiAuthorizationService;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The Spring Authorization Server config.
@@ -104,48 +113,110 @@ public class AuthorizationServerConfig {
     private int jwkLength;
     @Value("${aas.jwk.secret}")
     private String jwkSecret;
-
+    
     private final ScopeProperties scopeProperties;
     private final ClientsProperties clientsProperties;
-
+    
     @Autowired
     public AuthorizationServerConfig(ScopeProperties scopeProperties, ClientsProperties clientsProperties) {
         this.scopeProperties = scopeProperties;
         this.clientsProperties = clientsProperties;
     }
+    
+	@Bean 
+	@Order(Ordered.HIGHEST_PRECEDENCE)
+	public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
+    	log.debug("authorizationServerSecurityFilterChain.enter");
+		applySecurity(http);
+		
+		http  
+		    .cors()
+		        .configurationSource(corsConfigurationSource())
+		    .and()
+			// Redirect to the login page when not authenticated from the
+			// authorization endpoint
+			.exceptionHandling((exceptions) -> exceptions
+				.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/ssi/login"))
+			)
+            .formLogin()
+             //   .loginPage("/ssi/login")
+            //    .loginProcessingUrl("/login")
+            .and()    
+			// Accept access tokens for User Info and/or Client Registration
+			.oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt)
+			;
 
-    @Bean
-    @Order(Ordered.HIGHEST_PRECEDENCE)
-    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
-        applySecurity(http);
-        http
-          .cors()
-          .configurationSource(corsConfigurationSource())
-          .and()
-          .formLogin()
-          .loginPage("/ssi/login")
-          .and()
-          .oauth2ResourceServer()
-          .jwt();
-        return http.build();
-    }
-
+    	log.debug("authorizationServerSecurityFilterChain.exit");
+		return http.build();
+	}   
+	
     private void applySecurity(HttpSecurity http) throws Exception {
-        OAuth2AuthorizationServerConfigurer<HttpSecurity> authorizationServerConfigurer =
-          new OAuth2AuthorizationServerConfigurer<>();
-
+        OAuth2AuthorizationServerConfigurer authorizationServerConfigurer =
+                new OAuth2AuthorizationServerConfigurer();
+     
+   		authorizationServerConfigurer.oidc(oidc ->
+   				oidc.providerConfigurationEndpoint(providerConfigurationEndpoint ->
+   						providerConfigurationEndpoint
+   							.providerConfigurationCustomizer(c -> c.claims(claims())
+   									.grantTypes(g -> {
+   										g.clear();
+   										g.add(AuthorizationGrantType.AUTHORIZATION_CODE.getValue());
+   									})
+   									.responseTypes(r -> {
+   										r.clear();
+   										r.add(OAuth2AuthorizationResponseType.CODE.getValue());
+   									})
+   									.scopes(s -> {
+   										s.clear();
+   										s.addAll(scopeProperties.getScopes().keySet());
+   									})
+   									.tokenEndpointAuthenticationMethods(m -> {
+   										m.clear();
+   										m.addAll(List.of(ClientAuthenticationMethod.NONE.getValue(), 
+   												ClientAuthenticationMethod.CLIENT_SECRET_BASIC.getValue()));
+   									})
+   					)
+   					//.userInfoEndpoint((userInfoEndpoint) ->
+   					//    userInfoEndpoint.userInfoMapper(ctx -> userInfo(ctx)))
+   			    )
+   			);
+        
         authorizationServerConfigurer.addObjectPostProcessor(ssiObjectPostProcessor());
-
         RequestMatcher endpointsMatcher = authorizationServerConfigurer.getEndpointsMatcher();
+		
+        http.securityMatcher(endpointsMatcher)
+                .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
+                .csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher))
+                .objectPostProcessor(ssiObjectPostProcessor())
+                .apply(authorizationServerConfigurer)
+                .and()
+                .addFilterAfter(new SsiOAuth2ValidationFilter(), LogoutFilter.class)
+                ;
+    }
+    
+    private Consumer<Map<String, Object>> claims() {
+        List<String> supportedClaims = scopeProperties.getScopes()
+                .values().stream().flatMap(List::stream)
+                .distinct().sorted()
+                .collect(Collectors.toList());
 
-        http.requestMatcher(endpointsMatcher)
-          .authorizeRequests(authorizeRequests -> authorizeRequests.anyRequest().authenticated())
-          .csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher))
-          .objectPostProcessor(ssiObjectPostProcessor())
-          .apply(authorizationServerConfigurer)
-          .and()
-          .addFilterAfter(new SsiOAuth2ValidationFilter(), LogoutFilter.class)
-        ;
+        return (claims) -> {
+            claims.put("userinfo_signing_alg_values_supported", List.of("RS256"));
+            claims.put("display_values_supported", List.of("page"));
+            claims.put("claims_supported", supportedClaims);
+            claims.put("claims_locales_supported", List.of("en"));
+            claims.put("ui_locales_supported", List.of("en", "de", "fr", "ru", "sk"));
+            claims.put("end_session_endpoint", oidcIssuer + "/logout");
+        };
+    }
+    
+    private OidcUserInfo userInfo(OidcUserInfoAuthenticationContext context) {
+    	log.debug("userInfo.enter; got context: {}", context);
+        OidcUserInfoAuthenticationToken authentication = context.getAuthentication();
+        JwtAuthenticationToken principal = (JwtAuthenticationToken) authentication.getPrincipal();
+    	OidcUserInfo info = new OidcUserInfo(principal.getToken().getClaims());
+    	log.debug("userInfo.exit; returning: {}", info);
+    	return info;
     }
 
     private ObjectPostProcessor<Object> ssiObjectPostProcessor() {
@@ -153,9 +224,9 @@ public class AuthorizationServerConfig {
             @Override
             @SuppressWarnings("unchecked")
             public <O> O postProcess(O object) {
-                if (object instanceof OidcProviderConfigurationEndpointFilter) {
+                /*if (object instanceof OidcProviderConfigurationEndpointFilter) {
                     return (O) new SsiOidcProviderConfigurationEndpointFilter(providerSettings(), scopeProperties);
-                } else if (object instanceof OidcUserInfoEndpointFilter) {
+                } else*/ if (object instanceof OidcUserInfoEndpointFilter) {
                     return (O) new SsiOidcUserInfoEndpointFilter(authenticationManager());
                 }
                 return object;
@@ -176,12 +247,12 @@ public class AuthorizationServerConfig {
             throw new Exception("No Clients registered");
         }
         
-    	log.info("registeredClientRepository.enter; amount of configured clients: {}", clients.size());
+    	log.info("registeredClientRepository.enter; declared clients: {}", clients.size());
         List<RegisteredClient> accepted = clients.values().stream()
         	.filter(cl -> cl.getId() != null)
         	.map(cl -> prepareClient(cl))
         	.collect(Collectors.toList());
-    	log.info("registeredClientRepository.exit; amount of accepted clients: {}", accepted.size());
+    	log.info("registeredClientRepository.exit; accepted clients: {}", accepted.size());
         return new InMemoryRegisteredClientRepository(accepted);
     }
 
@@ -216,15 +287,15 @@ public class AuthorizationServerConfig {
     }
 
     @Bean
-    public ProviderSettings providerSettings() {
-        return ProviderSettings.builder()
-          .issuer(oidcIssuer)
-          // could be added later. but ClientRegistrationEndpoint is not present in OidcProviderConfiguration (yet?)
-          // so it is not clear, how should we expose it
-          //.oidcClientRegistrationEndpoint("/clients/registration")
-          .build();
+    public AuthorizationServerSettings providerSettings() {
+        return AuthorizationServerSettings.builder()
+                .issuer(oidcIssuer)
+                // could be added later. but ClientRegistrationEndpoint is not present in OidcProviderConfiguration (yet?)
+                // so it is not clear, how should we expose it
+                //.oidcClientRegistrationEndpoint("/clients/registration")
+                .build();
     }
-
+    
     @Bean
     public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) throws JOSEException {
         JWK jwk = jwkSource.get(new JWKSelector(new JWKMatcher.Builder().build()), null).get(0);
@@ -234,7 +305,7 @@ public class AuthorizationServerConfig {
         jwtDecoder.setJwtValidator(jwtValidator);
         return jwtDecoder;
     }
-
+    
     @Bean
     public JWKSource<SecurityContext> jwkSource() {
         RSAKey rsaKey = generateRsa();
@@ -247,9 +318,9 @@ public class AuthorizationServerConfig {
         RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
         RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
         return new RSAKey.Builder(publicKey)
-          .privateKey(privateKey)
-          .keyID(jwkSecret)
-          .build();
+                .privateKey(privateKey)
+                .keyID(jwkSecret)
+                .build();
     }
 
     private KeyPair generateRsaKey() {
@@ -266,7 +337,12 @@ public class AuthorizationServerConfig {
     public OAuth2AuthorizationService authorizationService() {
         return new SsiAuthorizationService(cacheSize, cacheTtl);
     }
-
+    
+    //@Bean
+    //public OAuth2AuthorizationConsentService authorizationConsentService(JdbcTemplate jdbcTemplate, RegisteredClientRepository registeredClientRepository) {
+    //    return new JdbcOAuth2AuthorizationConsentService(jdbcTemplate, registeredClientRepository);
+    //}
+    
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
@@ -299,6 +375,6 @@ public class AuthorizationServerConfig {
         //source.registerCorsConfiguration("/ssi/logout", config);
         return source;
     }
-
+    
 }
 

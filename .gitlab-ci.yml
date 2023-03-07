@@ -15,7 +15,7 @@ variables:
   TAG: ${CI_COMMIT_BRANCH}-${CI_PIPELINE_ID}
   IMAGE_NAME: auth-service-image:${TAG}
 
-image: maven:3-jdk-11
+image: maven:3.9.0-eclipse-temurin-17
 
 # Cache downloaded dependencies and plugins between builds.
 # To keep cache across branches add 'key: "$CI_JOB_NAME"'
@@ -33,8 +33,8 @@ cache:
 #    variables:
 #      - $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
-# Verify merge requests using JDK11
-verify:jdk11:
+# Verify merge requests using JDK17
+verify:jdk17:
   <<: *verify
 
 sast:

@@ -26,8 +26,8 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -184,6 +184,12 @@ public class SsiController {
         return ResponseEntity.ok(ssiBrokerService.getQR(qrid));
     }
 
+    //@PostMapping(value = "/login")
+    //public void login2(HttpServletRequest request, Model model) {
+    //    log.debug("login2; request: {}, model: {}", request, model);
+        //DefaultSavedRequest auth = (DefaultSavedRequest) request.getSession().getAttribute("SPRING_SECURITY_SAVED_REQUEST");
+    //}
+    
     @ResponseBody
     @PostMapping(value = "/siop-callback", consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE})
     public void siopCallback(@RequestParam MultiValueMap<String, Object> body) {

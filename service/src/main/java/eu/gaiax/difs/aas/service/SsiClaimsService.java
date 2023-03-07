@@ -8,8 +8,6 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import javax.annotation.PostConstruct;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 
@@ -17,7 +15,10 @@ import eu.gaiax.difs.aas.cache.DataCache;
 import eu.gaiax.difs.aas.cache.caffeine.CaffeineDataCache;
 import eu.gaiax.difs.aas.client.TrustServiceClient;
 import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public abstract class SsiClaimsService {
     
     @Value("${aas.cache.size}")
@@ -39,7 +40,8 @@ public abstract class SsiClaimsService {
     
     @PostConstruct
     public void init() {
-        claimsCache = new CaffeineDataCache<>(cacheSize, ttl, null); 
+    	log.info("init; cacheSize: {}, ttl: {}", cacheSize, ttl);
+        claimsCache = new CaffeineDataCache<>(1024, ttl, null); 
     }
     
     protected Map<String, Object> getTrustedClaims(String policy, String requestId) {
