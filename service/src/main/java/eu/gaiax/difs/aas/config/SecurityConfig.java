@@ -35,6 +35,7 @@ import org.springframework.security.oauth2.server.authorization.token.JwtEncodin
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 import eu.gaiax.difs.aas.service.SsiAuthProvider;
@@ -52,6 +53,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http, HandlerMappingIntrospector introspector) throws Exception {
     	log.debug("defaultSecurityFilterChain.enter");
+    	HttpSessionRequestCache requestCache = new HttpSessionRequestCache();
+        requestCache.setRequestMatcher(antMatcher("/oauth2/**"));
+        requestCache.setMatchingRequestParameterName(null);
     	http
             .csrf()
                 .disable()
@@ -80,7 +84,9 @@ public class SecurityConfig {
             .and()
                 .logout()
                     .logoutSuccessUrl("/ssi/login?logout")
-                    .invalidateHttpSession(true);
+                    .invalidateHttpSession(true)
+            .and()
+            	.requestCache(cache -> cache.requestCache(requestCache));
     	log.debug("defaultSecurityFilterChain.exit");
         return http.build();
     }
