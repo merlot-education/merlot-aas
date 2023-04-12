@@ -10,9 +10,24 @@ server:
 spring:
   application:
     name: auth-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: postgres
+    password: postgres
+    platform: postgresql
+    hikari:
+      connectionTimeout: 30000
+      idleTimeout: 600000
+      maxLifetime: 1800000
+      minimumIdle: 8
+      maximumPoolSize: 128
+  liquibase:
+    change-log: classpath:/liquibase/aas-changelog.xml
   messages:
     encoding: ISO-8859-1
-    
+  mvc:
+    log-request-details: true
+
 management:
   endpoints:
     web:
@@ -34,36 +49,13 @@ aas:
       dcr-uri: ${aas.iam.base-uri}/realms/gaia-x/clients-registrations/openid-connect
       redirect-uri: ${aas.oidc.issuer}/*
       secret: "{noop}iat"
-    clients:
-       oidc:
-         id: aas-app-oidc
-         secret: "{noop}secret"
-         redirect-uris: 
-           - ${aas.iam.base-uri}/realms/gaia-x/broker/ssi-oidc/endpoint
-       siop:
-         id: aas-app-siop
-         secret: "{noop}secret2"
-         redirect-uris: 
-           - ${aas.iam.base-uri}/realms/gaia-x/broker/ssi-siop/endpoint
-       gxfs:
-         id: gxfs-demo
-#         secret: "{noop}hmi-secret2"
-         redirect-uris: 
-           - https://demo.gxfs.dev
-       portal:
-         id: demo-portal
-         secret: "{noop}demo-portal"
-         redirect-uris: 
-           - https://fc-demo-server.gxfs.dev
-           - https://fc-server.gxfs.dev
-           - http://78.138.66.181:8088/*
   invitation:
     uri: gxfspcm://aries_connection_invitation?
   jwk:
     length: 3072
     secret: 96ec048e-c640-4cfd-bc82-6571810a9d0f
   oidc:
-    issuer: http://auth-server:8090
+    issuer: http://auth-server:${server.port}
     static-scopes:
   siop:
     clock-skew: 5s 
@@ -106,5 +98,5 @@ logging:
     root: INFO
     tsclaims: DEBUG
     org.springframework.web: DEBUG
-    org.springframework.security: DEBUG
+    org.springframework.security: TRACE #DEBUG
     eu.gaiax.difs.aas: DEBUG

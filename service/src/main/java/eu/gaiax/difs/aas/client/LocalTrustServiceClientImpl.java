@@ -89,7 +89,7 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
             map.put(IdTokenClaimNames.ISS, oidcIssuer);
         }
 
-        log.debug("Called local trust service client; policy: {}, params: {}, result: {} ", policy, params, map);
+        log.debug("evaluate.exit; policy: {}, params: {}, result: {} ", policy, params, map);
         return map;
     }
 
