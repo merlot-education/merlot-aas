@@ -77,14 +77,14 @@ public class SsiAuthorizationService implements OAuth2AuthorizationService {
         Assert.hasText(token, "token cannot be empty");
         String tkType = tokenType == null ? null : tokenType.getValue();
         log.debug("findByToken.enter; got token: {}, type: {}", token, tkType);
-        if ("code".equals(tokenType.getValue())) {
+        //if ("code".equals(tokenType.getValue())) {
             String id = codes.get(token);
             if (id != null) {
                 OAuth2Authorization authorization = findById(id);
                 log.debug("findByToken.exit; returning auth from codes: {}", printAuth(authorization));
                 return authorization;
             }
-        }
+        //}
         
         log.info("findByToken.exit; no authorization found for token: {}, type: {}; authorizations size: {}, codes size: {}", 
                 token, tkType, authorizations.estimatedSize(), codes.size());

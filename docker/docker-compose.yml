@@ -1,62 +1,105 @@
-version: '3.8'
+version: '3.9'
 
 services:
 
-  aas:
-    build:
-      context: ../service
-      dockerfile: Dockerfile
-    container_name: "auth-server"
+  postgres:
+    image: library/postgres:${KC_POSTGRES_IMAGE_TAG:-14}
+    container_name: "aas-db-server"
+    restart: on-failure
     environment:
-      - "SPRING_PROFILES_ACTIVE=${PROFILES_AAS}"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    healthcheck:
+      test: pg_isready -d postgres
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
     ports:
-      - "9000:9000"
+      - ${KC_POSTGRES_PORT_MAPPING:-5432}:5432
     networks:
       - "gaia-x"
-    restart: unless-stopped
-
-  app:
-    build:
-      context: ../app
-      dockerfile: Dockerfile
-    container_name: "test-server"
-    environment:
-      - "SPRING_PROFILES_ACTIVE=${PROFILES_AAS}"
-    ports:
-      - "8990:8990"
-    networks:
-      - "gaia-x"
-    restart: unless-stopped
-
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          
   keycloak:
-    container_name: "key-server"
+    container_name: "aas-key-server"
     environment:
+      KC_DB_URL: jdbc:postgresql://postgres:5432/postgres
+      KC_DB_USERNAME: postgres
+      KC_DB_PASSWORD: postgres
+      KC_DB_SCHEMA: public
+      KC_FEATURES: preview
       KEYCLOAK_ADMIN: "${KEYCLOAK_ADMIN}"
       KEYCLOAK_ADMIN_PASSWORD: "${KEYCLOAK_ADMIN_PASSWORD}"
-      PROXY_ADDRESS_FORWARDING: "${PROXY_ADDRESS_FORWARDING}"
+#      PROXY_ADDRESS_FORWARDING: "${PROXY_ADDRESS_FORWARDING}"
     image: "quay.io/keycloak/keycloak:${KEYCLOAK_VERSION}"
     ports:
+#      - 8282:8080
       - "8080:8080"
     extra_hosts:
       - "auth-server:host-gateway"
     networks:
       - "gaia-x"
     restart: unless-stopped
-
+    depends_on:
+      postgres:
+        condition: service_healthy
     volumes:
       - "../keycloak/providers:/opt/keycloak/providers"
-      - "../keycloak/realms_local:/tmp/import"
-
+      - "../keycloak/realms_local:/opt/keycloak/data/import"    
     command:
       [
-          'start-dev --auto-build',
-          '-Dkeycloak.migration.action=import',
-          '-Dkeycloak.migration.provider=dir',
-          '-Dkeycloak.migration.dir=/tmp/import',
-          '-Dkeycloak.migration.strategy=OVERWRITE_EXISTING',
-          '-Dkeycloak.profile.feature.upload_scripts=enabled',
+          'start --auto-build --db postgres --hostname-strict-https false --hostname-strict false --proxy edge --http-enabled true --import-realm ',
+#       --spi-user-profile-legacy-user-profile-read-only-attributes *_RES_ACCESS_MODE
+#          '-Dkeycloak.migration.strategy=OVERWRITE_EXISTING',
           '--log-level=DEBUG,io.quarkus:INFO,liquibase:INFO,org.hibernate:INFO,org.infinispan:INFO,org.keycloak.services.scheduled:INFO,org.keycloak.transaction:INFO,io.netty.buffer.PoolThreadCache:INFO,org.keycloak.models.sessions.infinispan:INFO'
       ]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://0.0.0.0:8080/realms/master"]
+      start_period: 10s
+      interval: 30s
+      retries: 3
+      timeout: 5s
+
+  aas:
+    build:
+      context: ../service
+      dockerfile: Dockerfile
+    container_name: "aas-auth-server"
+    environment:
+      SPRING_PROFILES_ACTIVE: "${PROFILES_AAS}"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/postgres      
+    ports:
+      - "9000:9000"
+    networks:
+      - "gaia-x"
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  app:
+    build:
+      context: ../app
+      dockerfile: Dockerfile
+    container_name: "aas-test-server"
+    environment:
+      SPRING_PROFILES_ACTIVE: "${PROFILES_AAS}"
+#      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUER_URI: http://key-server:8080/realms/gaia-x
+    extra_hosts:
+      - "key-server:host-gateway"
+    ports:
+      - "8990:8990"
+    networks:
+      - "gaia-x"
+    restart: unless-stopped
+    depends_on:
+      keycloak:
+        condition: service_healthy
 
 networks:
   gaia-x:

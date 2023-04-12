@@ -870,17 +870,6 @@
         ],
         "policies": [
           {
-            "id": "a6c58d19-221a-4bf1-8f86-16959f068aa0",
-            "name": "Default Policy",
-            "description": "A policy that grants access only for users within this realm",
-            "type": "js",
-            "logic": "POSITIVE",
-            "decisionStrategy": "AFFIRMATIVE",
-            "config": {
-              "code": "// by default, grants any permission associated with this policy\n$evaluation.grant();\n"
-            }
-          },
-          {
             "id": "13986fff-5832-4456-9171-0fdb425a77e8",
             "name": "Default Permission",
             "description": "A permission that applies to the default resource type",
@@ -889,7 +878,7 @@
             "decisionStrategy": "UNANIMOUS",
             "config": {
               "defaultResourceType": "urn:cip-app:resources:default",
-              "applyPolicies": "[\"Default Policy\"]"
+              "applyPolicies": "[]"
             }
           },
           {
@@ -900,7 +889,7 @@
             "decisionStrategy": "UNANIMOUS",
             "config": {
               "resources": "[\"Read Resource\"]",
-              "applyPolicies": "[\"Default Policy\"]"
+              "applyPolicies": "[]"
             }
           }
         ],

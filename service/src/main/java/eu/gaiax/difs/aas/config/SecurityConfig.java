@@ -36,6 +36,7 @@ import org.springframework.security.oauth2.server.authorization.token.OAuth2Toke
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 import eu.gaiax.difs.aas.service.SsiAuthProvider;
@@ -54,7 +55,7 @@ public class SecurityConfig {
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http, HandlerMappingIntrospector introspector) throws Exception {
     	log.debug("defaultSecurityFilterChain.enter");
     	HttpSessionRequestCache requestCache = new HttpSessionRequestCache();
-        requestCache.setRequestMatcher(antMatcher("/oauth2/**"));
+        requestCache.setRequestMatcher(new OrRequestMatcher(antMatcher("/oauth2/**"), antMatcher("/connect/**")));
         requestCache.setMatchingRequestParameterName(null);
     	http
             .csrf()
@@ -71,6 +72,7 @@ public class SecurityConfig {
         			.requestMatchers(antMatcher("/.well-known/**")).permitAll()
         			.requestMatchers(antMatcher("/cip/**")).permitAll()
         			.requestMatchers(antMatcher("/clients/**")).permitAll()
+        			//.requestMatchers(antMatcher("/connect/**")).permitAll()
         			.requestMatchers(antMatcher("/ssi/**")).permitAll()
         			.requestMatchers(antMatcher(HttpMethod.OPTIONS, "/oauth2/token")).permitAll()
         			.anyRequest().authenticated()
