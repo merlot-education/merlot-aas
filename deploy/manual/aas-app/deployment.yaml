@@ -20,8 +20,8 @@ spec:
         app: auth-server
     spec:
       containers:
-        - name: auth-server-image
-          image: registry.gitlab.com/gaia-x/data-infrastructure-federation-services/authenticationauthorization/auth-service-image
+        - name: auth-server
+          image: registry.gitlab.com/gaia-x/data-infrastructure-federation-services/authenticationauthorization/auth-service:1.1.0-SNAPSHOT
           imagePullPolicy: Always
           env:
             - name: SPRING_PROFILES_ACTIVE
@@ -50,7 +50,20 @@ spec:
                 secretKeyRef:
                   name: auth-server-keys-secret
                   key: jwk
-          
+            - name: AAS_TSA_URL
+              value: https://gaiax.vereign.com/tsa/policy
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://10.107.255.199:5432/aas
+            - name: SPRING_DATASOURCE_USERNAME
+              value: postgres
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: postgres
+            - name: LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY
+              value: DEBUG
+            - name: LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB
+              value: DEBUG
+            - name: LOGGING_LEVEL_EU_GAIAX_DIFS_AAS
+              value: DEBUG
           ports:
             - name: "http"
               containerPort: 9000

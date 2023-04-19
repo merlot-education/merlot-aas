@@ -67,9 +67,11 @@ public class ClientRegistrationTest {
         assertEquals(clientId, client.get("client_id").toString());
         assertEquals(clientSecret, client.get("client_secret").toString());
         assertEquals(List.of("refresh_token", "client_credentials", "authorization_code"), client.get("grant_types"));
-        assertEquals(List.of("http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint"), client.get("redirect_uris"));
+        assertEquals(List.of("http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint", "https://key-server.gxfs.dev/realms/gaia-x/broker/ssi-oidc/endpoint"), 
+        		client.get("redirect_uris"));
         assertEquals("openid profile email", client.get("scope").toString());
     }
+
     
     @Test
     void registerClientTest() throws Exception {
