@@ -20,8 +20,8 @@ spec:
         app: test-server
     spec:
       containers:
-        - name: test-server-image
-          image: registry.gitlab.com/gaia-x/data-infrastructure-federation-services/authenticationauthorization/auth-app-image
+        - name: test-server
+          image: registry.gitlab.com/gaia-x/data-infrastructure-federation-services/authenticationauthorization/auth-app:1.1.0-SNAPSHOT
           imagePullPolicy: Always
           env:
             - name: LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_WEB
@@ -29,7 +29,7 @@ spec:
             - name: LOGGING_LEVEL_EU_GAIAX_DIFS_AAS
               value: DEBUG
             - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUER_URI 	
-              value: http://key-server.gxfs.dev/realms/gaia-x
+              value: https://key-server.gxfs.dev/realms/gaia-x
             - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_DEMO_APP_OIDC_CLIENT_SECRET 	
               value: changeme
 #              valueFrom:
