@@ -98,5 +98,5 @@ logging:
     root: INFO
     tsclaims: DEBUG
     org.springframework.web: DEBUG
-    org.springframework.security: TRACE #DEBUG
+    org.springframework.security: DEBUG
     eu.gaiax.difs.aas: DEBUG

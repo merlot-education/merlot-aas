@@ -24,7 +24,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationCode;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -38,7 +38,6 @@ import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase.DatabaseProvider;
 
 @SpringBootTest
-@ActiveProfiles("dev")
 @ExtendWith(SpringExtension.class)
 @AutoConfigureMockMvc
 @AutoConfigureEmbeddedDatabase(provider = DatabaseProvider.ZONKY)
@@ -67,7 +66,7 @@ public class ClientRegistrationTest {
         Map<String, Object> client = mapper.readValue(result.getResponse().getContentAsString(), MAP_TYPE_REF);
         assertEquals(clientId, client.get("client_id").toString());
         assertEquals(clientSecret, client.get("client_secret").toString());
-        assertEquals(List.of("client_credentials", "authorization_code"), client.get("grant_types"));
+        assertEquals(List.of("refresh_token", "client_credentials", "authorization_code"), client.get("grant_types"));
         assertEquals(List.of("http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint"), client.get("redirect_uris"));
         assertEquals("openid profile email", client.get("scope").toString());
     }
@@ -78,7 +77,7 @@ public class ClientRegistrationTest {
     	assertEquals(4, clients.size());
     	String json = "{\"application_type\": \"web\", \"client_name\": \"My Web App\", \"grant_types\": [\"authorization_code\", \"client_credentials\"], " + 
     			"\"redirect_uris\": [\"http://new.client.com/test\", \"https://new.client.org/endpoint\"], \"response_types\": [\"code\"], " + 
-    			"\"scope\": \"openid profile email\"}";
+    			"\"scope\": \"openid profile email\", \"my_custom_parameters\": {\"limit\": 32, \"restriction\": \"constraint\", \"enabled\": true}}";
     	Jwt jwt = buildJwt("aas-app-oidc", "client.create");
         MvcResult result = mockMvc.perform(post("/connect/register")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -99,6 +98,8 @@ public class ClientRegistrationTest {
     	assertEquals(client.get("client_secret").toString(), reClient.getClientSecret());
         assertEquals("My Web App", reClient.getClientName());
         assertEquals(Set.of("profile", "openid", "email"), reClient.getScopes());
+        ClientSettings cs = reClient.getClientSettings();
+        assertNotNull(cs);
     }
   
     private Jwt buildJwt(String clientId, String clientScope) {
