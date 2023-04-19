@@ -7,8 +7,6 @@ aas:
   iam:
     iat:
       secret: eyJhbGciOiJIUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJhMWYzMTI2MS1iMTUyLTQ3ZWUtOTcyMi02OThjYTMxNjk1MGYifQ.eyJleHAiOjAsImlhdCI6MTY3Nzg1MTA4NCwianRpIjoiMzVkYzlkNDEtMjg5OC00YmI2LWI2MDAtNmFlMTQ2MGU3ZjM1IiwiaXNzIjoiaHR0cDovL2tleS1zZXJ2ZXI6ODA4MC9yZWFsbXMvZ2FpYS14IiwiYXVkIjoiaHR0cDovL2tleS1zZXJ2ZXI6ODA4MC9yZWFsbXMvZ2FpYS14IiwidHlwIjoiSW5pdGlhbEFjY2Vzc1Rva2VuIn0.VpDxKCCwmQor-zoJnYlzYDqxxdugBoIu4aj7A8sXsZ0
-#  oidc:
-#    issuer: http://auth-server:9000
 #  token:
 #    ttl: 1m
   tsa:
@@ -22,5 +20,5 @@ logging:
     root: INFO
     tsclaims: DEBUG
     org.springframework.web: DEBUG
-    org.springframework.security: TRACE #DEBUG
+    org.springframework.security: DEBUG
     eu.gaiax.difs.aas: DEBUG

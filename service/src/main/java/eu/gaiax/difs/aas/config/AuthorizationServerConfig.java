@@ -92,8 +92,6 @@ public class AuthorizationServerConfig {
     private Duration cacheTtl;
     @Value("${aas.oidc.issuer}")
     private String oidcIssuer;
-    @Value("${aas.token.ttl}")
-    private Duration tokenTtl;
     @Value("${aas.jwk.length}")
     private int jwkLength;
     @Value("${aas.jwk.secret}")
@@ -141,6 +139,18 @@ public class AuthorizationServerConfig {
    		//authorizationServerConfigurer.authorizationEndpoint(authorizationEndpoint -> 
    		//	authorizationEndpoint.authenticationProvider(new SsiAuthProvider(ssiBroker))
    		//);
+
+   		authorizationServerConfigurer.authorizationServerMetadataEndpoint(authorizationServerMetadataEndpoint -> 
+   			authorizationServerMetadataEndpoint.authorizationServerMetadataCustomizer(meta -> meta
+   				.claims(claims())
+   				.clientRegistrationEndpoint(oidcIssuer + "/connect/register")
+   				.scopes(s -> {
+					s.clear();
+					s.addAll(scopeProperties.getScopes().keySet());
+				})
+   				.tokenEndpointAuthenticationMethods(m -> m.add(ClientAuthenticationMethod.NONE.getValue()))
+   				.tokenIntrospectionEndpointAuthenticationMethods(m -> m.add(ClientAuthenticationMethod.NONE.getValue()))
+   				.tokenRevocationEndpointAuthenticationMethods(m -> m.add(ClientAuthenticationMethod.NONE.getValue()))));
         
    		authorizationServerConfigurer.oidc(oidc -> 
 			oidc.clientRegistrationEndpoint(clientRegistrationEndpoint -> 
@@ -158,10 +168,10 @@ public class AuthorizationServerConfig {
    					.providerConfigurationCustomizer(c ->
    						c.claims(claims()
    					)
-   					.grantTypes(g -> {
-   						g.clear();
-   						g.add(AuthorizationGrantType.AUTHORIZATION_CODE.getValue());
-   					})
+   					//.grantTypes(g -> {
+   					//	g.clear();
+   					//	g.add(AuthorizationGrantType.AUTHORIZATION_CODE.getValue());
+   					//})
    					.responseTypes(r -> {
    						r.clear();
    						r.add(OAuth2AuthorizationResponseType.CODE.getValue());
@@ -171,9 +181,14 @@ public class AuthorizationServerConfig {
    						s.addAll(scopeProperties.getScopes().keySet());
    					})
    					.tokenEndpointAuthenticationMethods(m -> {
-   						//m.clear();
    						m.add(ClientAuthenticationMethod.NONE.getValue());
    					}) 
+   					.tokenIntrospectionEndpointAuthenticationMethods(m -> {
+   						m.add(ClientAuthenticationMethod.NONE.getValue());
+   					}) 
+   					.tokenRevocationEndpointAuthenticationMethods(m -> {
+   						m.add(ClientAuthenticationMethod.NONE.getValue());
+   					})
    				) 
    			)
    		);

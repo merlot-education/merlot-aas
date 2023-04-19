@@ -17,7 +17,7 @@ CREATE TABLE oauth2_registered_client (
 INSERT INTO oauth2_registered_client(id, client_id, client_id_issued_at, client_secret, client_secret_expires_at, client_name, client_authentication_methods, 
     authorization_grant_types, redirect_uris, scopes, client_settings, token_settings) 
 VALUES 
-    ('9a9135be-5923-4d96-aefe-bf275ef14087', 'aas-app-oidc', '2023-04-19 01:32:00.866534', '{noop}secret', null, 'SSI OIDC Keycloak Client', 'client_secret_basic', 
+    ('9a9135be-5923-4d96-aefe-bf275ef14087', 'aas-app-oidc', '2023-04-19 01:32:00.866534', '{noop}secret', null, 'SSI OIDC Keycloak Client', 'client_secret_basic,client_secret_post', 
      'client_credentials,authorization_code,refresh_token', 'http://key-server:8080/realms/gaia-x/broker/ssi-oidc/endpoint', 'openid,profile,email', 
      '{"@class":"java.util.Collections$UnmodifiableMap","settings.client.require-authorization-consent":false,"settings.client.token-endpoint-authentication-signing-algorithm":["org.springframework.security.oauth2.jose.jws.SignatureAlgorithm","RS256"],"settings.client.require-proof-key":false}', 
      '{"@class":"java.util.Collections$UnmodifiableMap","settings.token.reuse-refresh-tokens":true,"settings.token.id-token-signature-algorithm":["org.springframework.security.oauth2.jose.jws.SignatureAlgorithm","RS256"],"settings.token.access-token-time-to-live":["java.time.Duration",300.000000000],"settings.token.access-token-format":{"@class":"org.springframework.security.oauth2.server.authorization.settings.OAuth2TokenFormat","value":"self-contained"},"settings.token.refresh-token-time-to-live":["java.time.Duration",3600.000000000],"settings.token.authorization-code-time-to-live":["java.time.Duration",300.000000000]}'),
