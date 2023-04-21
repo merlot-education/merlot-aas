@@ -92,7 +92,7 @@ public class SsiAuthorizationService implements OAuth2AuthorizationService {
             try {
                 throw new Exception("debug");
             } catch (Exception ex) {
-                ex.printStackTrace();
+            	log.error("findByToken;", ex);
             }
         }
         return null;

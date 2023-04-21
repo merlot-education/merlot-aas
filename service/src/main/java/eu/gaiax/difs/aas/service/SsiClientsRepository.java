@@ -23,14 +23,15 @@ public class SsiClientsRepository extends JdbcRegisteredClientRepository {
 		try {
 			log.info("<init>; DB URL: {}, User: {}", jdbcTemplate.getDataSource().getConnection().getMetaData().getURL(),
 					jdbcTemplate.getDataSource().getConnection().getMetaData().getUserName());
-		} catch (SQLException e) {
-			e.printStackTrace();
+			List<RegisteredClient> clients = getAllClients();
+			clients.forEach(c -> log.info("<init>; {}: {}", c.getClientId(), c));
+		} catch (SQLException ex) {
+        	log.error("<init>", ex);
 		}
 	}
 	
 	public List<RegisteredClient> getAllClients() {
-		List<RegisteredClient> clients = this.getJdbcOperations().query(SELECT_ALL, this.getRegisteredClientRowMapper());
-		return clients;
+		return this.getJdbcOperations().query(SELECT_ALL, this.getRegisteredClientRowMapper());
 	}
 
 }
