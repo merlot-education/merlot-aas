@@ -256,19 +256,20 @@ public class SsiBrokerService extends SsiClaimsService {
         
     }
     
-    private boolean addAuthData(String requestId, Map<String, Object> data) {
+    private Map<String, Object> addAuthData(String requestId, Map<String, Object> data) {
         log.debug("addAuthData.enter; got request: {} claims size: {}", requestId, data.size());
-        boolean result = true;
+        boolean found = true;
         Map<String, Object> request = claimsCache.get(requestId);
         if (request == null) {
             // throw error?
-            result = false;
+            found = false;
         } else {
-            data.putAll(request);
+        	request.forEach((k, v) -> data.putIfAbsent(k, v));
+            //data.putAll(request);
         }
         claimsCache.put(requestId, data);
-        log.debug("addAuthData.exit; returning: {}, stored claims: {}, cacheSize: {}", result, data.size(), claimsCache.estimatedSize());
-        return result;
+        log.debug("addAuthData.exit; found: {}, stored claims: {}, cacheSize: {}", found, data.size(), claimsCache.estimatedSize());
+        return data;
     }
 
     private Boolean isValidRequest(String requestId) {
@@ -299,27 +300,35 @@ public class SsiBrokerService extends SsiClaimsService {
     }
     
     public Map<String, Object> getUserClaims(String requestId, boolean required) {
-        Map<String, Object> userClaims = claimsCache.get(requestId); 
-        if (userClaims == null) {
+    	Map<String, Object> tsaClaims = null;
+        Map<String, Object> authClaims = claimsCache.get(requestId); 
+        if (authClaims == null) {
             log.warn("getUserClaims; no claims found for request: {}, required: {}", requestId, required);
             if (required) {
-                userClaims = getTrustedClaims(GET_LOGIN_PROOF_RESULT, requestId);
+                tsaClaims = getTrustedClaims(GET_LOGIN_PROOF_RESULT, requestId);
             }
-        } else if (!((userClaims.containsKey(IdTokenClaimNames.SUB) || userClaims.containsKey(OAuth2ParameterNames.ERROR) ||
-                userClaims.containsKey(StandardClaimNames.NAME) || userClaims.containsKey(StandardClaimNames.EMAIL)))) {
+        } else if (!isClaimsLoaded(authClaims)) {
             if (required) {
-                userClaims = getTrustedClaims(GET_LOGIN_PROOF_RESULT, requestId);
+                tsaClaims = getTrustedClaims(GET_LOGIN_PROOF_RESULT, requestId);
             } else {
-                userClaims = null;
+                authClaims = null;
             }
         }
-        if (userClaims != null) {
-            AccessRequestStatusDto sts = (AccessRequestStatusDto) userClaims.get(TrustServiceClient.PN_STATUS);
-            if (sts != AccessRequestStatusDto.PENDING) {
-            	addAuthData(requestId, userClaims);
-            }        	
+        if (tsaClaims != null) {
+            AccessRequestStatusDto sts = (AccessRequestStatusDto) tsaClaims.get(TrustServiceClient.PN_STATUS);
+            if (sts != AccessRequestStatusDto.PENDING || authClaims == null) {
+            	authClaims = addAuthData(requestId, tsaClaims);
+            } else {
+            	Instant rt = (Instant) authClaims.get("request_time");
+            	Instant tm = rt.plusMillis(getTimeout());
+            	if (tm.isBefore(Instant.now())) {
+            		authClaims.put(TrustServiceClient.PN_STATUS, AccessRequestStatusDto.TIMED_OUT);
+            	} else {
+            		authClaims.put(TrustServiceClient.PN_STATUS, sts);
+            	}
+            }
         }
-        return userClaims;
+        return authClaims;
     }
     
     public Set<String> getUserScopes(String requestId) {
@@ -396,11 +405,7 @@ public class SsiBrokerService extends SsiClaimsService {
 
     private Map<String, Object> loadUserClaims(String requestId) {
         Map<String, Object> userClaims = claimsCache.get(requestId); 
-        if (userClaims == null) {
-            //log.warn("loadUserClaims; no claims found for request: {}, required: {}", requestId, required);
-            userClaims = loadTrustedClaims(GET_LOGIN_PROOF_RESULT, requestId);
-        } else if (!((userClaims.containsKey(IdTokenClaimNames.SUB) || userClaims.containsKey(OAuth2ParameterNames.ERROR) ||
-                userClaims.containsKey(StandardClaimNames.NAME) || userClaims.containsKey(StandardClaimNames.EMAIL)))) {
+        if (userClaims == null || !isClaimsLoaded(userClaims)) {
             userClaims = loadTrustedClaims(GET_LOGIN_PROOF_RESULT, requestId);
         }
         if (userClaims != null) {
@@ -410,6 +415,11 @@ public class SsiBrokerService extends SsiClaimsService {
             }        	
         }
         return userClaims;
+    }
+    
+    private boolean isClaimsLoaded(Map<String, Object> claims) {
+        return claims.containsKey(IdTokenClaimNames.SUB) || claims.containsKey(OAuth2ParameterNames.ERROR) ||
+            claims.containsKey(StandardClaimNames.NAME) || claims.containsKey(StandardClaimNames.EMAIL);
     }
     
 }

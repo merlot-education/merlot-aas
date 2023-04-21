@@ -446,11 +446,6 @@ public class AuthenticationFlowTest {
     
     @Test
     void testSiopCallbackError() throws Exception {
-        
-//        Map<String, Object> claims = getAuthClaims("openid", "QfjgI5XxMjNkvUU2f9sWQymGfKoaBr7Ro2jHprmBZrg.VTxL7FGKhi0.demo-app", "code", 
-//                "aas-app-siop", keycloakUri + "/realms/gaia-x/broker/ssi-siop/endpoint", "Q5h3noccV6Hwb4pVHps41A", "SIOP", "secret2", null, rid -> 
-//                    "openid://?scope=openid&response_type=id_token&client_id=" + oidcIssuer + "&redirect_uri=" + oidcIssuer + 
-//                    "/ssi/siop-callback&response_mode=post&nonce=" + rid, ssn -> {
     	
         MvcResult authResult = getAuthResult("openid", "QfjgI5XxMjNkvUU2f9sWQymGfKoaBr7Ro2jHprmBZrg.VTxL7FGKhi0.demo-app", "code", "aas-app-siop", 
                 keycloakUri + "/realms/gaia-x/broker/ssi-siop/endpoint", "Q5h3noccV6Hwb4pVHps41A", "SIOP", null, rid -> 
