@@ -44,6 +44,10 @@ public abstract class SsiClaimsService {
         claimsCache = new CaffeineDataCache<>(1024, ttl, null); 
     }
     
+    protected long getTimeout() {
+    	return duration;
+    }
+    
     protected Map<String, Object> getTrustedClaims(String policy, String requestId) {
         Map<String, Object> evaluation = trustServiceClient.evaluate(policy, Map.of(TrustServiceClient.PN_REQUEST_ID, requestId));
 
@@ -56,7 +60,7 @@ public abstract class SsiClaimsService {
     }
 
     protected Map<String, Object> loadTrustedClaims(String policy, String requestId) {
-        Instant finish = Instant.now().plusNanos(1_000_000 * duration);
+        Instant finish = Instant.now().plusMillis(duration);
         while (Instant.now().isBefore(finish)) {
             Map<String, Object> evaluation = trustServiceClient.evaluate(policy, Map.of(TrustServiceClient.PN_REQUEST_ID, requestId));
 
