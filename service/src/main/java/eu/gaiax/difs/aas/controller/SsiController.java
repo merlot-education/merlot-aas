@@ -6,7 +6,9 @@ import com.nimbusds.jwt.JWTParser;
 import eu.gaiax.difs.aas.client.TrustServiceClient;
 import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
 import eu.gaiax.difs.aas.model.SsiAuthErrorCodes;
+import eu.gaiax.difs.aas.model.SsiClientCustomClaims;
 import eu.gaiax.difs.aas.service.SsiBrokerService;
+import eu.gaiax.difs.aas.service.SsiClientsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,6 +21,7 @@ import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.web.savedrequest.DefaultSavedRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -55,8 +58,10 @@ public class SsiController {
             if (out == null) {
                 model.addAttribute("errorMessage", getErrorMessage("sessionTimeout", locale));
             } else {
-                model.addAttribute(OAuth2ParameterNames.SCOPE, new String[] {OidcScopes.OPENID});
+            	log.debug("login; no saved request found, model: {}", model.asMap());
                 // assume OIDC client for now..
+                // but which clientId put to the model? hen we could use its scope..
+                model.addAttribute(OAuth2ParameterNames.SCOPE, new String[] {OidcScopes.OPENID});
                 request.getSession().setAttribute("requestId", ssiBrokerService.oidcAuthorize(model.asMap()));
             }
             return "login-template.html";
@@ -70,33 +75,37 @@ public class SsiController {
 
         String[] clientId = auth.getParameterValues(OAuth2ParameterNames.CLIENT_ID);
         if (clientId != null && clientId.length > 0) {
-            if ("aas-app-siop".equals(clientId[0])) {
-                request.getSession().setAttribute("requestId", ssiBrokerService.siopAuthorize(model.asMap()));
-            } else {
-                // we assume all other clients use OIDC protocol
-                String[] age = auth.getParameterValues("max_age");
-                if (age != null && age.length > 0) {
-                    model.addAttribute("max_age", age[0]);
-                }
-    
-                String[] hint = auth.getParameterValues("id_token_hint");
-                if (hint != null && hint.length > 0) {
-                    String sub = getSubject(hint[0]);
-                    if (sub != null) {
-                        model.addAttribute(IdTokenClaimNames.SUB, sub);
-                    }
-                }
- 
-               request.getSession().setAttribute("requestId", ssiBrokerService.oidcAuthorize(model.asMap()));
-            }
-            return "login-template.html";
+        	RegisteredClient client = ssiBrokerService.getClientsRepository().findByClientId(clientId[0]);
+        	if (client != null) {
+                model.addAttribute("clientId", client.getClientId());
+        		String ssiAuthType = client.getClientSettings().getSetting(SsiClientCustomClaims.SSI_AUTH_TYPE);
+        		if (SsiClientCustomClaims.AUTH_TYPE_SIOP.equalsIgnoreCase(ssiAuthType)) {
+	                request.getSession().setAttribute("requestId", ssiBrokerService.siopAuthorize(model.asMap()));
+	            } else {
+	                String[] age = auth.getParameterValues("max_age");
+	                if (age != null && age.length > 0) {
+	                    model.addAttribute("max_age", age[0]);
+	                }
+	    
+	                String[] hint = auth.getParameterValues("id_token_hint");
+	                if (hint != null && hint.length > 0) {
+	                    String sub = getSubject(hint[0]);
+	                    if (sub != null) {
+	                        model.addAttribute(IdTokenClaimNames.SUB, sub);
+	                    }
+	                }
+	 
+	               request.getSession().setAttribute("requestId", ssiBrokerService.oidcAuthorize(model.asMap()));
+	            }
+	            return "login-template.html";
+        	}
         }
 
         throw new OAuth2AuthenticationException("unknown client: " + (clientId == null ? null : Arrays.toString(clientId)));
     }
     
     @GetMapping(value = "/login/status")
-    public ResponseEntity<Void> loginStatus(HttpServletRequest request, HttpServletResponse response, Model model) {    
+    public ResponseEntity<Void> loginStatus(HttpServletRequest request, HttpServletResponse response) { //, Model model) {    
         String requestId = (String) request.getSession().getAttribute("requestId");
         if (requestId == null) {
         	return ResponseEntity.badRequest().build(); 

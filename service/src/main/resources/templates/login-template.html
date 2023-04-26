@@ -62,7 +62,7 @@
                             <td><input class="input-box" type='hidden' name='username' th:value='${requestId}'/></td>
                         </tr>
                         <tr>
-                            <td><input class="input-box" type='hidden' name='password' th:value='${loginType}'/></td>
+                            <td><input class="input-box" type='hidden' name='password' th:value='${clientId}'/></td>
                         </tr>
                         <tr>
                             <td><input id="sign-in-button" class="action_button" name="qr-smartphone-button" type="button"
@@ -100,7 +100,17 @@
    const interval = window.setInterval(async function submitForm() {
            try {
                const response = await fetch(window.location.origin + "/ssi/login/status", { credentials: 'same-origin' });
-               if(response.status == 302) {
+               if (response.status == 302) {
+                 clearInterval(interval);
+                 document.forms["login"].submit()           
+               }
+               if (response.status == 502) { 
+            	 //present login_rejected error..
+                 clearInterval(interval);
+                 document.forms["login"].submit()           
+               }
+               if (response.status == 504) { 
+            	 //present login_timedoutr error..
                  clearInterval(interval);
                  document.forms["login"].submit()           
                }

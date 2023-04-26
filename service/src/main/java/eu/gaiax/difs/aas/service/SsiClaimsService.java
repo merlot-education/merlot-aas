@@ -48,8 +48,8 @@ public abstract class SsiClaimsService {
     	return duration;
     }
     
-    protected Map<String, Object> getTrustedClaims(String policy, String requestId) {
-        Map<String, Object> evaluation = trustServiceClient.evaluate(policy, Map.of(TrustServiceClient.PN_REQUEST_ID, requestId));
+    protected Map<String, Object> getTrustedClaims(String policy, String requestId, Map<String, Object> restrictions) {
+        Map<String, Object> evaluation = trustServiceClient.evaluate(policy, initEvaluationParams(requestId, restrictions));
 
         Object o = evaluation.get(TrustServiceClient.PN_STATUS);
         if (o == null || !(o instanceof AccessRequestStatusDto)) {
@@ -59,10 +59,10 @@ public abstract class SsiClaimsService {
         return evaluation;
     }
 
-    protected Map<String, Object> loadTrustedClaims(String policy, String requestId) {
+    protected Map<String, Object> loadTrustedClaims(String policy, String requestId, Map<String, Object> restrictions) {
         Instant finish = Instant.now().plusMillis(duration);
         while (Instant.now().isBefore(finish)) {
-            Map<String, Object> evaluation = trustServiceClient.evaluate(policy, Map.of(TrustServiceClient.PN_REQUEST_ID, requestId));
+            Map<String, Object> evaluation = trustServiceClient.evaluate(policy, initEvaluationParams(requestId, restrictions));
 
             Object o = evaluation.get(TrustServiceClient.PN_STATUS);
             if (o == null || !(o instanceof AccessRequestStatusDto)) {
@@ -83,6 +83,13 @@ public abstract class SsiClaimsService {
             }
         }
         throw new OAuth2AuthenticationException(LOGIN_TIMED_OUT);
+    }
+    
+    private Map<String, Object> initEvaluationParams(String requestId, Map<String, Object> restrictions) {
+    	if (restrictions == null) {
+    		return Map.of(TrustServiceClient.PN_REQUEST_ID, requestId);
+    	}
+    	return Map.of(TrustServiceClient.PN_REQUEST_ID, requestId, "restrictions", restrictions);
     }
     
     private void delayNextRequest() {

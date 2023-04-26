@@ -102,7 +102,7 @@ public class SsiIatService extends SsiClaimsService {
             params.put(OAuth2ParameterNames.SCOPE, scopes);
             iatClaims = evaluateIatProofInvitation(params);
         } else if (!iatClaims.containsKey(TrustServiceClient.PN_STATUS)) {
-            iatClaims = loadTrustedClaims(GET_IAT_PROOF_RESULT, subjectId);
+            iatClaims = loadTrustedClaims(GET_IAT_PROOF_RESULT, subjectId, null);
             //addAuthData(requestId, iatClaims);
         }
         log.debug("getIatProofClaims.exit; returning: {}", iatClaims.size());

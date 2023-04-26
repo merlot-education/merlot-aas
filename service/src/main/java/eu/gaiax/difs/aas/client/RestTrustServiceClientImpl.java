@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
@@ -55,16 +56,16 @@ public class RestTrustServiceClientImpl implements TrustServiceClient {
             .toEntity(MAP_TYPE_REF)
             .block();
         Map<String, Object> result = trustServiceResponse.getBody();
-        int code = trustServiceResponse.getStatusCodeValue();
+        HttpStatusCode code = trustServiceResponse.getStatusCode();
         claims_log.debug("evaluate; got claims: {}, status code", result, code);
         log.debug("evaluate; got claims: {}, status code: {}", result.keySet(), code);
 
         AccessRequestStatusDto status;
-        if (code == HttpStatus.GATEWAY_TIMEOUT.value()) { //504
+        if (code == HttpStatus.GATEWAY_TIMEOUT) { 
             status = AccessRequestStatusDto.TIMED_OUT;
-        } else if (code >= 400) {
+        } else if (code.isError()) {
             status = AccessRequestStatusDto.REJECTED;
-        } else if (code == HttpStatus.NO_CONTENT.value()) { //204
+        } else if (code  == HttpStatus.NO_CONTENT) { 
             status = AccessRequestStatusDto.PENDING;
         } else { // should be 200
             status = AccessRequestStatusDto.ACCEPTED;
