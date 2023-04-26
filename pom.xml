@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.0.1</version>
+        <version>3.0.6</version>
         <relativePath />
     </parent>
 
@@ -37,9 +37,9 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <!-- dependencies -->
-        <spring-boot.version>3.0.4</spring-boot.version>
-        <spring.security.version>6.0.2</spring.security.version>
-        <spring.auth-server.version>1.0.1</spring.auth-server.version>
+        <spring-boot.version>3.0.6</spring-boot.version>
+        <spring.security.version>6.0.3</spring.security.version>
+        <spring.auth-server.version>1.0.2</spring.auth-server.version>
         <spring.security-cas.version>5.8.2</spring.security-cas.version>
         <springdoc.version>2.0.2</springdoc.version>
         <lombok.version>1.18.24</lombok.version>

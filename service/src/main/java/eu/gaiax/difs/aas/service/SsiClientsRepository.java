@@ -17,6 +17,8 @@ public class SsiClientsRepository extends JdbcRegisteredClientRepository {
 			"id, client_id, client_id_issued_at, client_secret, client_secret_expires_at, client_name, client_authentication_methods, " +
 			"authorization_grant_types, redirect_uris, scopes, client_settings, token_settings " +
 			"from oauth2_registered_client";
+	
+	// TODO: think about local cache for loaded clients..
 
 	public SsiClientsRepository(JdbcTemplate jdbcTemplate) {
 		super(jdbcTemplate);

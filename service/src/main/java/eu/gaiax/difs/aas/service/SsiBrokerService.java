@@ -29,6 +29,8 @@ import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.security.oauth2.core.oidc.StandardClaimNames;
 import org.springframework.security.oauth2.core.oidc.endpoint.OidcParameterNames;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -41,6 +43,7 @@ import com.google.zxing.qrcode.QRCodeWriter;
 import eu.gaiax.difs.aas.client.InvitationServiceClient;
 import eu.gaiax.difs.aas.client.TrustServiceClient;
 import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
+import eu.gaiax.difs.aas.model.SsiClientCustomClaims;
 
 @Slf4j
 @Service
@@ -57,11 +60,14 @@ public class SsiBrokerService extends SsiClaimsService {
 
     private final ScopeProperties scopeProperties;
     private final InvitationServiceClient invitationClient;
+    private final SsiClientsRepository ssiClientsRepository;
     
-    public SsiBrokerService(TrustServiceClient trustServiceClient, ScopeProperties scopeProperties, InvitationServiceClient invitationService) {
+    public SsiBrokerService(TrustServiceClient trustServiceClient, ScopeProperties scopeProperties, InvitationServiceClient invitationService, 
+    		SsiClientsRepository ssiClientsRepository) {
         super(trustServiceClient);
         this.scopeProperties = scopeProperties;
         this.invitationClient = invitationService;
+        this.ssiClientsRepository = ssiClientsRepository;
     }
     
     public String oidcAuthorize(Map<String, Object> model) {
@@ -85,7 +91,7 @@ public class SsiBrokerService extends SsiClaimsService {
         Map<String, Object> result = trustServiceClient.evaluate(GET_LOGIN_PROOF_INVITATION, params);
         String link = (String) result.get(TrustServiceClient.PN_LINK);
         String requestId = (String) result.get(TrustServiceClient.PN_REQUEST_ID);
-        Map<String, Object> data = initAuthRequest(requestId, scopes, "OIDC", link);
+        Map<String, Object> data = initAuthRequest(requestId, scopes, (String) model.get("clientId"), link);
         log.debug("oidcAuthorize; OIDC request {} stored: {}", requestId, data);
 
         String mobileUrl = invitationClient.getMobileInvitationUrl(link);
@@ -95,7 +101,6 @@ public class SsiBrokerService extends SsiClaimsService {
         model.put("qrUrl", qrUrl);
         model.put(TrustServiceClient.PN_REQUEST_ID, requestId);
         model.put("mobileUrl", mobileUrl);
-        model.put("loginType", "OIDC");
 
         log.debug("oidcAuthorize.exit; returning model: {}", model);
         return requestId;
@@ -108,16 +113,19 @@ public class SsiBrokerService extends SsiClaimsService {
 
         String requestId = UUID.randomUUID().toString();
         String link = buildRequestString(scopes, requestId);
-        Map<String, Object> data = initAuthRequest(requestId, scopes, "SIOP", link);
+        Map<String, Object> data = initAuthRequest(requestId, scopes, (String) model.get("clientId"), link);
         log.debug("siopAuthorize; SIOP request {} stored: {}", requestId, data);
         
         String qrUrl = "/ssi/qr/" + Base64.getUrlEncoder().encodeToString(link.getBytes());
         model.put("qrUrl", qrUrl);
         model.put(TrustServiceClient.PN_REQUEST_ID, requestId);
-        model.put("loginType", "SIOP");
 
         log.debug("siopAuthorize.exit; returning model: {}", model);
         return requestId;
+    }
+    
+    public RegisteredClientRepository getClientsRepository() {
+    	return ssiClientsRepository;
     }
 
     private Set<String> processScopes(Map<String, Object> model) {
@@ -226,11 +234,11 @@ public class SsiBrokerService extends SsiClaimsService {
         log.debug("processSiopLoginResponse.exit; error processed: {}", error != null);
     }
     
-    private Map<String, Object> initAuthRequest(String requestId, Set<String> scopes, String authType, String link) {
+    private Map<String, Object> initAuthRequest(String requestId, Set<String> scopes, String clientId, String link) {
         Map<String, Object> data = new HashMap<>();
         data.put("request_time", Instant.now());
         data.put(OAuth2ParameterNames.SCOPE, scopes);
-        data.put("auth_type", authType);
+        data.put("client_id", clientId);
         data.put("auth_link", link);
         claimsCache.put(requestId, data);
         //Map<String, Object> existing = claimsCache.put(requestId, data);
@@ -302,16 +310,12 @@ public class SsiBrokerService extends SsiClaimsService {
     public Map<String, Object> getUserClaims(String requestId, boolean required) {
     	Map<String, Object> tsaClaims = null;
         Map<String, Object> authClaims = claimsCache.get(requestId); 
-        if (authClaims == null) {
-            log.warn("getUserClaims; no claims found for request: {}, required: {}", requestId, required);
+        if (!isClaimsLoaded(authClaims)) {
+            log.info("getUserClaims; no claims found for request: {}, required: {}", requestId, required);
             if (required) {
-                tsaClaims = getTrustedClaims(GET_LOGIN_PROOF_RESULT, requestId);
-            }
-        } else if (!isClaimsLoaded(authClaims)) {
-            if (required) {
-                tsaClaims = getTrustedClaims(GET_LOGIN_PROOF_RESULT, requestId);
+                tsaClaims = getTrustedClaims(GET_LOGIN_PROOF_RESULT, requestId, getClientRestrictions(authClaims));
             } else {
-                authClaims = null;
+            	authClaims = null;
             }
         }
         if (tsaClaims != null) {
@@ -322,6 +326,7 @@ public class SsiBrokerService extends SsiClaimsService {
             	Instant rt = (Instant) authClaims.get("request_time");
             	Instant tm = rt.plusMillis(getTimeout());
             	if (tm.isBefore(Instant.now())) {
+                    log.warn("getUserClaims; detected timeout at: {}", tm);
             		authClaims.put(TrustServiceClient.PN_STATUS, AccessRequestStatusDto.TIMED_OUT);
             	} else {
             		authClaims.put(TrustServiceClient.PN_STATUS, sts);
@@ -405,8 +410,8 @@ public class SsiBrokerService extends SsiClaimsService {
 
     private Map<String, Object> loadUserClaims(String requestId) {
         Map<String, Object> userClaims = claimsCache.get(requestId); 
-        if (userClaims == null || !isClaimsLoaded(userClaims)) {
-            userClaims = loadTrustedClaims(GET_LOGIN_PROOF_RESULT, requestId);
+        if (!isClaimsLoaded(userClaims)) {
+            userClaims = loadTrustedClaims(GET_LOGIN_PROOF_RESULT, requestId, getClientRestrictions(userClaims));
         }
         if (userClaims != null) {
             AccessRequestStatusDto sts = (AccessRequestStatusDto) userClaims.get(TrustServiceClient.PN_STATUS);
@@ -418,8 +423,22 @@ public class SsiBrokerService extends SsiClaimsService {
     }
     
     private boolean isClaimsLoaded(Map<String, Object> claims) {
-        return claims.containsKey(IdTokenClaimNames.SUB) || claims.containsKey(OAuth2ParameterNames.ERROR) ||
-            claims.containsKey(StandardClaimNames.NAME) || claims.containsKey(StandardClaimNames.EMAIL);
+        return claims != null && (claims.containsKey(IdTokenClaimNames.SUB) || claims.containsKey(OAuth2ParameterNames.ERROR) ||
+            claims.containsKey(StandardClaimNames.NAME) || claims.containsKey(StandardClaimNames.EMAIL));
+    }
+    
+    private Map<String, Object> getClientRestrictions(Map<String, Object> claims) {
+    	Map<String, Object> restrictions = null;
+    	if (claims != null) {
+    		String clientId = (String) claims.get("client_id");
+    		if (clientId != null) {
+    			RegisteredClient client = ssiClientsRepository.findByClientId(oidcIssuer);
+    			if (client != null) {
+    				restrictions = client.getClientSettings().getSetting(SsiClientCustomClaims.TSA_RESTRICTIONS);
+    			}
+    		}
+    	}
+    	return restrictions;
     }
     
 }

@@ -18,6 +18,9 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
+
+import eu.gaiax.difs.aas.model.SsiClientCustomClaims;
 
 public class SsiAuthProvider implements AuthenticationProvider {
 
@@ -25,14 +28,23 @@ public class SsiAuthProvider implements AuthenticationProvider {
 
     @Autowired
     private SsiBrokerService ssiBrokerService;
+    @Autowired
+    private SsiClientsRepository ssiClientsRepository;
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         log.debug("authenticate.enter; got authentication: {}; {}", authentication, authentication.getCredentials());
 
         String requestId = (String) authentication.getPrincipal();
-        String authType = (String) authentication.getCredentials();
-        boolean required = "OIDC".equals(authType);
+        String clientId = (String) authentication.getCredentials();
+        RegisteredClient client = ssiClientsRepository.findByClientId(clientId);
+        if (client == null) {
+            log.warn("authenticate.error; no client found for {}:{}", clientId, requestId);
+            throw new OAuth2AuthenticationException(SERVER_ERROR);
+        }
+        
+        String authType = client.getClientSettings().getSetting(SsiClientCustomClaims.SSI_AUTH_TYPE);
+        boolean required = SsiClientCustomClaims.AUTH_TYPE_OIDC.equalsIgnoreCase(authType);
         Map<String, Object> claims = ssiBrokerService.getUserClaims(requestId, required);
         if (claims == null) {
             // wrong principal/requestId?
@@ -40,7 +52,7 @@ public class SsiAuthProvider implements AuthenticationProvider {
             throw new OAuth2AuthenticationException(SERVER_ERROR);
         }
         
-        if ("SIOP".equals(authType)) {
+        if (SsiClientCustomClaims.AUTH_TYPE_SIOP.equalsIgnoreCase(authType)) {
             String error = (String) claims.get("error");
             if (error != null) {
                 OAuth2Error err;
