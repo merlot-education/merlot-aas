@@ -20,16 +20,23 @@
 
 package eu.gaiax.difs.aas.config;
 
+import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.security.interfaces.ECPrivateKey;
+import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -51,6 +58,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.oidc.authentication.OidcUserInfoAuthenticationContext;
 import org.springframework.security.oauth2.server.authorization.oidc.authentication.OidcUserInfoAuthenticationToken;
@@ -62,10 +70,15 @@ import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.jwk.Curve;
+import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKMatcher;
 import com.nimbusds.jose.jwk.JWKSelector;
 import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.KeyUse;
+import com.nimbusds.jose.jwk.OctetSequenceKey;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
@@ -164,32 +177,17 @@ public class AuthorizationServerConfig {
 
    		authorizationServerConfigurer.oidc(oidc -> 
    			oidc.providerConfigurationEndpoint(providerConfigurationEndpoint ->
-   				providerConfigurationEndpoint
-   					.providerConfigurationCustomizer(c ->
-   						c.claims(claims()
-   					)
-   					//.grantTypes(g -> {
-   					//	g.clear();
-   					//	g.add(AuthorizationGrantType.AUTHORIZATION_CODE.getValue());
-   					//})
-   					.responseTypes(r -> {
-   						r.clear();
-   						r.add(OAuth2AuthorizationResponseType.CODE.getValue());
-   					})
-   					.scopes(s -> {
-   						s.clear();
-   						s.addAll(scopeProperties.getScopes().keySet());
-   					})
-   					.tokenEndpointAuthenticationMethods(m -> {
-   						m.add(ClientAuthenticationMethod.NONE.getValue());
-   					}) 
-   					.tokenIntrospectionEndpointAuthenticationMethods(m -> {
-   						m.add(ClientAuthenticationMethod.NONE.getValue());
-   					}) 
-   					.tokenRevocationEndpointAuthenticationMethods(m -> {
-   						m.add(ClientAuthenticationMethod.NONE.getValue());
-   					})
-   				) 
+   				providerConfigurationEndpoint.providerConfigurationCustomizer(c ->
+					c.claims(claims())
+					.idTokenSigningAlgorithms(t -> t.add("ES256"))
+					.scopes(s -> {
+						s.clear();
+						s.addAll(scopeProperties.getScopes().keySet());
+					})
+					.tokenEndpointAuthenticationMethods(m -> m.add(ClientAuthenticationMethod.NONE.getValue()))
+					.tokenIntrospectionEndpointAuthenticationMethods(m -> m.add(ClientAuthenticationMethod.NONE.getValue()))
+					.tokenRevocationEndpointAuthenticationMethods(m -> m.add(ClientAuthenticationMethod.NONE.getValue()))
+				)
    			)
    		);
         
@@ -218,7 +216,7 @@ public class AuthorizationServerConfig {
                 .collect(Collectors.toList());
 
         return (claims) -> {
-            claims.put("userinfo_signing_alg_values_supported", List.of("RS256"));
+            claims.put("userinfo_signing_alg_values_supported", List.of("RS256", "ES256"));
             claims.put("display_values_supported", List.of("page"));
             claims.put("claims_supported", supportedClaims);
             claims.put("claims_locales_supported", List.of("en"));
@@ -248,43 +246,68 @@ public class AuthorizationServerConfig {
                 .build();
     }
     
-    @Bean
-    public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) throws JOSEException {
-        JWK jwk = jwkSource.get(new JWKSelector(new JWKMatcher.Builder().build()), null).get(0);
-        OAuth2TokenValidator<Jwt> jwtValidator = JwtValidators.createDefaultWithIssuer(oidcIssuer);
-        RSAPublicKey publicKey = jwk.toRSAKey().toRSAPublicKey();
-        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withPublicKey(publicKey).build();
-        jwtDecoder.setJwtValidator(jwtValidator);
-        return jwtDecoder;
-    }
-    
+	@Bean
+	public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
+		return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
+	}
+	
     @Bean
     public JWKSource<SecurityContext> jwkSource() {
         RSAKey rsaKey = generateRsa();
-        JWKSet jwkSet = new JWKSet(rsaKey);
+        ECKey ecKey = generateEc();
+        OctetSequenceKey hsKey = generateHs();
+        JWKSet jwkSet = new JWKSet(List.of(rsaKey, ecKey, hsKey));
         return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
     }
 
     private RSAKey generateRsa() {
-        KeyPair keyPair = generateRsaKey();
-        RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
-        RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
-        return new RSAKey.Builder(publicKey)
-                .privateKey(privateKey)
-                .keyID(jwkSecret)
-                .build();
-    }
-
-    private KeyPair generateRsaKey() {
         try {
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
             keyPairGenerator.initialize(jwkLength);
-            return keyPairGenerator.generateKeyPair();
+	        KeyPair keyPair = keyPairGenerator.generateKeyPair();
+	        RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
+	        RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
+	        return new RSAKey.Builder(publicKey)
+	                .privateKey(privateKey)
+	                .keyUse(KeyUse.SIGNATURE)
+	                .keyID(jwkSecret)
+	                .build();
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
     }
 
+    private ECKey generateEc() {
+        try {
+            KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("EC");
+            //keyPairGenerator.initialize(Curve.P_256.toECParameterSpec());
+	        KeyPair keyPair = keyPairGenerator.generateKeyPair();
+	        ECPublicKey publicKey = (ECPublicKey) keyPair.getPublic();
+	        ECPrivateKey privateKey = (ECPrivateKey) keyPair.getPrivate();
+	    	Curve curve = Curve.forECParameterSpec(publicKey.getParams());
+	        //return new ECKey.Builder(Curve.P_256, publicKey)
+	    	return new ECKey.Builder(curve, publicKey)
+	                .privateKey(privateKey)
+	    			.keyID(UUID.randomUUID().toString())
+	                .keyUse(KeyUse.SIGNATURE)
+	                .build();
+        } catch (NoSuchAlgorithmException e) { // | InvalidAlgorithmParameterException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    private OctetSequenceKey generateHs() {
+        try {
+        	SecretKey hmacKey = KeyGenerator.getInstance("HmacSha256").generateKey();
+        	return new OctetSequenceKey.Builder(hmacKey)
+        			.keyID(UUID.randomUUID().toString())
+        			.algorithm(JWSAlgorithm.HS256)
+        			.build();    
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
     @Bean
     public OAuth2AuthorizationService authorizationService() {
         return new SsiAuthorizationService(cacheSize, cacheTtl);

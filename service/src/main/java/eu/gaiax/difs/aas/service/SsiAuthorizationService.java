@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.lang.Nullable;
+import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationCode;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
@@ -52,6 +53,13 @@ public class SsiAuthorizationService implements OAuth2AuthorizationService {
         if (authorizationCode != null) {
             codes.put(authorizationCode.getToken().getTokenValue(), authorization.getId());
         }
+
+        OAuth2Authorization.Token<OAuth2RefreshToken> refreshToken =
+                authorization.getToken(OAuth2RefreshToken.class);
+        if (refreshToken != null) {
+            codes.put(refreshToken.getToken().getTokenValue(), authorization.getId());
+        }
+        
         this.authorizations.put(authorization.getId(), authorization);
         log.debug("save.exit; authorizations: {}, codes: {}", authorizations.estimatedSize(), codes.size());
     }
@@ -88,13 +96,13 @@ public class SsiAuthorizationService implements OAuth2AuthorizationService {
         
         log.info("findByToken.exit; no authorization found for token: {}, type: {}; authorizations size: {}, codes size: {}", 
                 token, tkType, authorizations.estimatedSize(), codes.size());
-        if (token.startsWith("${")) {
-            try {
-                throw new Exception("debug");
-            } catch (Exception ex) {
-            	log.error("findByToken;", ex);
-            }
-        }
+        //if (token.startsWith("${")) {
+        //    try {
+        //        throw new Exception("debug");
+        //    } catch (Exception ex) {
+        //    	log.error("findByToken;", ex);
+        //    }
+        //}
         return null;
     }
 
