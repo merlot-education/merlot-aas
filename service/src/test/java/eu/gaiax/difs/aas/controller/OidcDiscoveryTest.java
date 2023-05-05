@@ -57,7 +57,7 @@ public class OidcDiscoveryTest {
                 .andExpect(status().isOk()).andReturn();
         Map<String, Object> keySet = objectMapper.readValue(result.getResponse().getContentAsString(), MAP_TYPE_REF);
         assertNotNull(keySet.get("keys"));
-        assertEquals(1, ((Collection<?>) keySet.get("keys")).size());
+        assertEquals(2, ((Collection<?>) keySet.get("keys")).size());
     }
     
     @Test
@@ -95,10 +95,4 @@ public class OidcDiscoveryTest {
 
 }
 
-//{issuer=http://auth-server:8090, authorization_endpoint=http://auth-server:8090/oauth2/authorize, token_endpoint=http://auth-server:8090/oauth2/token, 
-//jwks_uri=http://auth-server:8090/oauth2/jwks, userinfo_endpoint=http://auth-server:8090/userinfo, 
-//token_endpoint_auth_methods_supported=[client_secret_basic], response_types_supported=[code], grant_types_supported=[authorization_code], 
-//subject_types_supported=[public], id_token_signing_alg_values_supported=[RS256], scopes_supported=[openid, profile, email], 
-//userinfo_signing_alg_values_supported=[RS256], display_values_supported=[page], 
-//claims_supported=[auth_time, birthdate, email, email_verified, family_name, gender, given_name, iss, middle_name, name, preferred_username, sub, updated_at], 
-//claims_locales_supported=[en], ui_locales_supported=[en, de, fr]}    
+  
