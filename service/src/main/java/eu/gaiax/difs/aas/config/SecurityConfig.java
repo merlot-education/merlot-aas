@@ -26,6 +26,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
@@ -58,10 +59,8 @@ public class SecurityConfig {
         requestCache.setRequestMatcher(new OrRequestMatcher(antMatcher("/oauth2/**"), antMatcher("/connect/**")));
         requestCache.setMatchingRequestParameterName(null);
     	http
-            .csrf()
-                .disable()
-            .cors()
-            .and()	
+    		.csrf(csrf -> csrf.disable())
+            .cors(Customizer.withDefaults())
         	.authorizeHttpRequests(authorize -> authorize 
         			.requestMatchers(antMatcher("/api/**")).permitAll()
         			.requestMatchers(antMatcher("/swagger-ui/**")).permitAll()
@@ -77,18 +76,11 @@ public class SecurityConfig {
         			.requestMatchers(antMatcher(HttpMethod.OPTIONS, "/oauth2/token")).permitAll()
         			.anyRequest().authenticated()
         		)
-            .formLogin()
-       	        //.loginPage("/ssi/login")
-                .failureHandler(ssiAuthenticationFailureHandler())
-          //.and()
-          //  .exceptionHandling()
-          //      .authenticationEntryPoint(new Http403ForbiddenEntryPoint())
-            .and()
-                .logout()
-                    .logoutSuccessUrl("/ssi/login?logout")
-                    .invalidateHttpSession(true)
-            .and()
-            	.requestCache(cache -> cache.requestCache(requestCache));
+        	.formLogin(login -> login.failureHandler(ssiAuthenticationFailureHandler()))
+            .logout(logout -> logout
+            		.logoutSuccessUrl("/ssi/login?logout")
+            		.invalidateHttpSession(true))
+           	.requestCache(cache -> cache.requestCache(requestCache));
     	log.debug("defaultSecurityFilterChain.exit");
         return http.build();
     }
@@ -105,6 +97,7 @@ public class SecurityConfig {
     
     @Bean
     public PasswordEncoder passwordEncoder() {
+    	// returns bcrypt encoder
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }    
 

@@ -3,7 +3,8 @@ version: '3.9'
 services:
 
   postgres:
-    image: library/postgres:${KC_POSTGRES_IMAGE_TAG:-14}
+#    image: library/postgres:${KC_POSTGRES_IMAGE_TAG:-14}
+    image: library/postgres:14
     container_name: "aas-db-server"
     restart: on-failure
     volumes:

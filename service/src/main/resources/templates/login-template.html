@@ -104,16 +104,16 @@
                  clearInterval(interval);
                  document.forms["login"].submit()           
                }
-               if (response.status == 502) { 
+               //if (response.status == 502) { 
             	 //present login_rejected error..
-                 clearInterval(interval);
-                 document.forms["login"].submit()           
-               }
-               if (response.status == 504) { 
-            	 //present login_timedoutr error..
-                 clearInterval(interval);
-                 document.forms["login"].submit()           
-               }
+               //  clearInterval(interval);
+               //  document.forms["login"].submit()           
+               //}
+               //if (response.status == 504) { 
+            	 //present login_timedout error..
+               //  clearInterval(interval);
+               //  document.forms["login"].submit()           
+               //}
            } catch (err) {
                console.log(err);
            }
