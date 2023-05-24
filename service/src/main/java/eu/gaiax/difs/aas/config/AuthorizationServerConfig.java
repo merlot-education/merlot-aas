@@ -46,17 +46,12 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2ResourceServerConfigurer;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
-import org.springframework.security.oauth2.core.OAuth2TokenValidator;
-import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationResponseType;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtValidators;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
@@ -69,13 +64,9 @@ import org.springframework.security.web.authentication.LoginUrlAuthenticationEnt
 import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
-import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
-import com.nimbusds.jose.jwk.JWK;
-import com.nimbusds.jose.jwk.JWKMatcher;
-import com.nimbusds.jose.jwk.JWKSelector;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.KeyUse;
 import com.nimbusds.jose.jwk.OctetSequenceKey;
@@ -125,21 +116,12 @@ public class AuthorizationServerConfig {
 		applyOidcSettings(http, corsSource, ssiBroker);
 		
 		http  
-		    .cors()
-		        .configurationSource(corsSource)
-		    .and()
+		    .cors(cors -> cors.configurationSource(corsSource))
 			// Redirect to the login page when not authenticated from the
 			// authorization endpoint
-			.exceptionHandling((exceptions) -> exceptions
-				.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/ssi/login"))
-			)
-            .formLogin()
-             //   .loginPage("/ssi/login")
-            //    .loginProcessingUrl("/login")
-            .and()    
+			.exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/ssi/login")))
 			// Accept access tokens for User Info and/or Client Registration
-			.oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt)
-			;
+			.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
 
     	log.debug("authorizationServerSecurityFilterChain.exit");
 		return http.build();
@@ -175,10 +157,15 @@ public class AuthorizationServerConfig {
 			)	
    		);
 
+   		//authorizationServerConfigurer.oidc(oidc -> 
+   		//	oidc.logoutEndpoint(logout -> logout.
+		//);
+		   		
    		authorizationServerConfigurer.oidc(oidc -> 
    			oidc.providerConfigurationEndpoint(providerConfigurationEndpoint ->
    				providerConfigurationEndpoint.providerConfigurationCustomizer(c ->
 					c.claims(claims())
+					.endSessionEndpoint(oidcIssuer + "/logout")
 					.idTokenSigningAlgorithms(t -> t.add("ES256"))
 					.scopes(s -> {
 						s.clear();
@@ -203,10 +190,8 @@ public class AuthorizationServerConfig {
         http.securityMatcher(endpointsMatcher)
                 .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
                 .csrf(csrf -> csrf.ignoringRequestMatchers(endpointsMatcher))
-                .apply(authorizationServerConfigurer)
-                .and()
                 .addFilterAfter(new SsiOAuth2ValidationFilter(), LogoutFilter.class)
-                ;
+                .apply(authorizationServerConfigurer);
     }
     
     private Consumer<Map<String, Object>> claims() {
@@ -221,7 +206,6 @@ public class AuthorizationServerConfig {
             claims.put("claims_supported", supportedClaims);
             claims.put("claims_locales_supported", List.of("en"));
             claims.put("ui_locales_supported", List.of("en", "de", "fr", "ru", "sk"));
-            claims.put("end_session_endpoint", oidcIssuer + "/logout");
         };
     }
         

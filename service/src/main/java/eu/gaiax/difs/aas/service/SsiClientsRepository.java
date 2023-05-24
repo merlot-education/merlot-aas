@@ -15,7 +15,7 @@ public class SsiClientsRepository extends JdbcRegisteredClientRepository {
 	
 	private static final String SELECT_ALL = "select " +
 			"id, client_id, client_id_issued_at, client_secret, client_secret_expires_at, client_name, client_authentication_methods, " +
-			"authorization_grant_types, redirect_uris, scopes, client_settings, token_settings " +
+			"authorization_grant_types, redirect_uris, post_logout_redirect_uris, scopes, client_settings, token_settings " +
 			"from oauth2_registered_client";
 	
 	// TODO: think about local cache for loaded clients..

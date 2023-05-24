@@ -324,9 +324,10 @@ public class SsiBrokerService extends SsiClaimsService {
             	authClaims = addAuthData(requestId, tsaClaims);
             } else {
             	Instant rt = (Instant) authClaims.get("request_time");
-            	Instant tm = rt.plusMillis(getTimeout());
+            	long dm = getTimeout();
+            	Instant tm = rt.plusMillis(dm); //getTimeout());
             	if (tm.isBefore(Instant.now())) {
-                    log.warn("getUserClaims; detected timeout at: {}", tm);
+                    log.warn("getUserClaims; detected timeout at: {}, rt: {}, dm: {}", tm, rt, dm);
             		authClaims.put(TrustServiceClient.PN_STATUS, AccessRequestStatusDto.TIMED_OUT);
             	} else {
             		authClaims.put(TrustServiceClient.PN_STATUS, sts);
