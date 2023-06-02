@@ -68,6 +68,7 @@ public class SecurityConfig {
         			.requestMatchers(antMatcher("/error")).permitAll()
         			.requestMatchers(antMatcher("/actuator")).permitAll()
         			.requestMatchers(antMatcher("/actuator/**")).permitAll()
+        			.requestMatchers(antMatcher("/**/*.{js,html,css}")).permitAll()
         			.requestMatchers(antMatcher("/.well-known/**")).permitAll()
         			.requestMatchers(antMatcher("/cip/**")).permitAll()
         			.requestMatchers(antMatcher("/clients/**")).permitAll()
