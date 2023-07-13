@@ -14,11 +14,3 @@ aas:
     duration: 10000
     request:
       count: 1
-
-logging:
-  level:
-    root: INFO
-    tsclaims: DEBUG
-    org.springframework.web: DEBUG
-    org.springframework.security: DEBUG
-    eu.gaiax.difs.aas: DEBUG
