@@ -1,7 +1,7 @@
 package eu.gaiax.difs.aas.controller;
 
-import static eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto.ACCEPTED;
-import static eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto.REJECTED;
+import static eu.xfsc.aas.generated.model.AccessRequestStatusDto.ACCEPTED;
+import static eu.xfsc.aas.generated.model.AccessRequestStatusDto.REJECTED;
 import static eu.gaiax.difs.aas.client.TrustServiceClient.LINK_SCHEME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;

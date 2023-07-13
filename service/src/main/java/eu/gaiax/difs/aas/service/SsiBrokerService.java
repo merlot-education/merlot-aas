@@ -42,7 +42,7 @@ import com.google.zxing.qrcode.QRCodeWriter;
 
 import eu.gaiax.difs.aas.client.InvitationServiceClient;
 import eu.gaiax.difs.aas.client.TrustServiceClient;
-import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
+import eu.xfsc.aas.generated.model.AccessRequestStatusDto;
 import eu.gaiax.difs.aas.model.SsiClientCustomClaims;
 
 @Slf4j

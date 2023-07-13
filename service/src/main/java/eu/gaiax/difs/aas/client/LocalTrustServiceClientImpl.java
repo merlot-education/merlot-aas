@@ -11,11 +11,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.core.oidc.IdTokenClaimNames;
 import org.springframework.security.oauth2.core.oidc.StandardClaimNames;
 
-import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
+import eu.xfsc.aas.generated.model.AccessRequestStatusDto;
 import eu.gaiax.difs.aas.properties.StatusProperties;
 import lombok.extern.slf4j.Slf4j;
 
-import static eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto.*;
+import static eu.xfsc.aas.generated.model.AccessRequestStatusDto.*;
 import static eu.gaiax.difs.aas.model.TrustServicePolicy.*;
 
 @Slf4j

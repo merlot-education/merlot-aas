@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
+import eu.xfsc.aas.generated.model.AccessRequestStatusDto;
 import eu.gaiax.difs.aas.model.TrustServicePolicy;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase.DatabaseProvider;

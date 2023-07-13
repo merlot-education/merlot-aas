@@ -5,10 +5,10 @@ import static eu.gaiax.difs.aas.model.TrustServicePolicy.GET_IAT_PROOF_RESULT;
 
 import eu.gaiax.difs.aas.client.IamClient;
 import eu.gaiax.difs.aas.client.TrustServiceClient;
-import eu.gaiax.difs.aas.generated.model.AccessRequestDto;
-import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
-import eu.gaiax.difs.aas.generated.model.AccessResponseDto;
-import eu.gaiax.difs.aas.generated.model.ServiceAccessScopeDto;
+import eu.xfsc.aas.generated.model.AccessRequestDto;
+import eu.xfsc.aas.generated.model.AccessRequestStatusDto;
+import eu.xfsc.aas.generated.model.AccessResponseDto;
+import eu.xfsc.aas.generated.model.ServiceAccessScopeDto;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

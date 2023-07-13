@@ -5,17 +5,17 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>eu.gaiax.difs.aas</groupId>
+        <groupId>eu.xfsc.aas</groupId>
         <artifactId>auth-service-parent</artifactId>
         <version>1.1.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>eu.gaiax.difs.aas</groupId>
+    <groupId>eu.xfsc.aas</groupId>
     <artifactId>auth-service</artifactId>
     <version>1.1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>auth-service</name>
-    <description>GAIA-X Authentication and Authorization Service implementation</description>
+    <description>Eclipse XFSC Authentication and Authorization Service implementation</description>
 
     <dependencies>
         <dependency>
@@ -199,8 +199,8 @@
                             <inputSpec>${project.basedir}/src/main/resources/openapi/iat_provider.yml</inputSpec>
                             <generatorName>spring</generatorName>
                             <supportingFilesToGenerate>ApiUtil.java</supportingFilesToGenerate>
-                            <modelPackage>${project.groupId}.generated.model</modelPackage>
-                            <apiPackage>${project.groupId}.generated.controller</apiPackage>
+                            <modelPackage>eu.xfsc.aas.generated.model</modelPackage>
+                            <apiPackage>eu.xfsc.aas.generated.controller</apiPackage>
                             <configOptions>
                                 <performBeanValidation>true</performBeanValidation>
                                 <useBeanValidation>true</useBeanValidation>

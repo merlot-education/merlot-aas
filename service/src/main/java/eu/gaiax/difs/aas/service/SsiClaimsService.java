@@ -14,7 +14,7 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import eu.gaiax.difs.aas.cache.DataCache;
 import eu.gaiax.difs.aas.cache.caffeine.CaffeineDataCache;
 import eu.gaiax.difs.aas.client.TrustServiceClient;
-import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
+import eu.xfsc.aas.generated.model.AccessRequestStatusDto;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 

@@ -1,6 +1,6 @@
 package eu.gaiax.difs.aas.controller;
 
-import static eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto.*;
+import static eu.xfsc.aas.generated.model.AccessRequestStatusDto.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -29,9 +29,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.gaiax.difs.aas.client.IamClient;
 import eu.gaiax.difs.aas.client.LocalTrustServiceClientImpl;
 import eu.gaiax.difs.aas.client.TrustServiceClient;
-import eu.gaiax.difs.aas.generated.model.AccessRequestDto;
-import eu.gaiax.difs.aas.generated.model.AccessResponseDto;
-import eu.gaiax.difs.aas.generated.model.ServiceAccessScopeDto;
+import eu.xfsc.aas.generated.model.AccessRequestDto;
+import eu.xfsc.aas.generated.model.AccessResponseDto;
+import eu.xfsc.aas.generated.model.ServiceAccessScopeDto;
 import eu.gaiax.difs.aas.model.TrustServicePolicy;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase.DatabaseProvider;

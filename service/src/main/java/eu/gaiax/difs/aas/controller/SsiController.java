@@ -4,7 +4,7 @@ import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTParser;
 
 import eu.gaiax.difs.aas.client.TrustServiceClient;
-import eu.gaiax.difs.aas.generated.model.AccessRequestStatusDto;
+import eu.xfsc.aas.generated.model.AccessRequestStatusDto;
 import eu.gaiax.difs.aas.model.SsiAuthErrorCodes;
 import eu.gaiax.difs.aas.model.SsiClientCustomClaims;
 import eu.gaiax.difs.aas.service.SsiBrokerService;

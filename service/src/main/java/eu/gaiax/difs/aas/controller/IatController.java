@@ -1,9 +1,9 @@
 package eu.gaiax.difs.aas.controller;
 
-import eu.gaiax.difs.aas.generated.controller.IatControllerApi;
-import eu.gaiax.difs.aas.generated.controller.IatControllerApiDelegate;
-import eu.gaiax.difs.aas.generated.model.AccessRequestDto;
-import eu.gaiax.difs.aas.generated.model.AccessResponseDto;
+import eu.xfsc.aas.generated.controller.IatControllerApi;
+import eu.xfsc.aas.generated.controller.IatControllerApiDelegate;
+import eu.xfsc.aas.generated.model.AccessRequestDto;
+import eu.xfsc.aas.generated.model.AccessResponseDto;
 import eu.gaiax.difs.aas.service.SsiIatService;
 import lombok.RequiredArgsConstructor;
 
