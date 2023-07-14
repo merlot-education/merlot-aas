@@ -27,6 +27,6 @@ spring:
 logging:
   level:
     root: INFO
-    eu.gaiax.difs.aas: DEBUG
+    eu.xfsc.aas: DEBUG
     org.springframework.web: DEBUG
     org.springframework.security: DEBUG
