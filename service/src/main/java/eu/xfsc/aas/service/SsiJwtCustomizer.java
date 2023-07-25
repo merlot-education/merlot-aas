@@ -45,6 +45,7 @@ public class SsiJwtCustomizer implements OAuth2TokenCustomizer<JwtEncodingContex
                     JacksonJsonParser jsonParser = new JacksonJsonParser();
                     claims = jsonParser.parseMap(sClaims);
                     idToken = (Map<String, Object>) claims.get("id_token");
+                    idToken.put(IdTokenClaimNames.SUB, requestId);
                 } else {
                     claims = new HashMap<>();
                 }
@@ -55,27 +56,20 @@ public class SsiJwtCustomizer implements OAuth2TokenCustomizer<JwtEncodingContex
                 updated = ssiBrokerService.setAdditionalParameters(requestId, claims);
             }
             
-            Set<String> claims = idToken == null ? maxAge == null ? null : Set.of(IdTokenClaimNames.AUTH_TIME) : 
+            Set<String> claims = idToken == null ? maxAge == null ? Set.of(IdTokenClaimNames.SUB) : Set.of(IdTokenClaimNames.AUTH_TIME, IdTokenClaimNames.SUB) : 
                 maxAge == null ? idToken.keySet() : Stream.concat(idToken.keySet().stream(), Set.of(IdTokenClaimNames.AUTH_TIME).stream()).collect(Collectors.toSet()); 
+            
 
             // the below is required in case when additional claims were requested via claims.id_token or max_age params
-            if (claims != null) {
-                Map<String, Object> userDetails = ssiBrokerService.getUserClaims(requestId, false, null, claims); // required?
-                if (userDetails != null) {
-                    for (Map.Entry<String, Object> e: userDetails.entrySet()) {
-                        context.getClaims().claim(e.getKey(), e.getValue());
-                    }
+            Map<String, Object> userDetails = ssiBrokerService.getUserClaims(requestId, false, null, claims); // required?
+            if (userDetails != null) {
+                for (Map.Entry<String, Object> e: userDetails.entrySet()) {
+                    context.getClaims().claim(e.getKey(), e.getValue());
                 }
             }
         }
         List<String> claims = new ArrayList<>();
         context.getClaims().claims(c -> claims.addAll(c.keySet()));
-        //Map<String, Object> userDetails = ssiBrokerService.getUserClaims(requestId,false); // required?
-        //if (userDetails != null) {
-        //    for (Map.Entry<String, Object> e: userDetails.entrySet()) {
-        //        context.getClaims().claim(e.getKey(), e.getValue());
-        //    }
-        //}
         log.debug("customize.exit; updated: {}, claims: {}, for request: {}", updated, claims, requestId);
     }
 

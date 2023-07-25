@@ -42,7 +42,7 @@ public class LocalTrustServiceClientTest {
 
         assertEquals(oidcIssuer, response.get("iss"));
         assertEquals("testRequestId", response.get("requestId"));
-        assertEquals("testRequestId", response.get("sub"));
+        assertEquals("urn:id:testRequestId", response.get("sub"));
         assertEquals(AccessRequestStatusDto.PENDING, response.get("status"));
     }
 
@@ -59,7 +59,7 @@ public class LocalTrustServiceClientTest {
 
         assertEquals(oidcIssuer, response.get("iss"));
         assertEquals("testRequestId", response.get("requestId"));
-        assertEquals("testRequestId", response.get("sub"));
+        assertEquals("urn:id:testRequestId", response.get("sub"));
         assertEquals(AccessRequestStatusDto.PENDING, response.get("status"));
     }
 
