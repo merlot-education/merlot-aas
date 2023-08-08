@@ -77,15 +77,15 @@ public class RestTrustServiceClientImpl implements TrustServiceClient {
         }
         
         result.put(PN_STATUS, status);
-        result.remove(IdTokenClaimNames.SUB);
+        //result.remove(IdTokenClaimNames.SUB);
         result.remove(IdTokenClaimNames.ISS);
         result.remove(IdTokenClaimNames.AUTH_TIME);
-        String requestId = (String) result.get(PN_REQUEST_ID);
-        if (requestId == null) {
-            requestId = (String) params.get(PN_REQUEST_ID);
+        //String requestId = (String) result.get(PN_REQUEST_ID);
+        //if (requestId == null) {
+        //    requestId = (String) params.get(PN_REQUEST_ID);
             // a quick fix for TSA mock..
-            result.put(IdTokenClaimNames.SUB, requestId);
-        }
+        //    result.put(IdTokenClaimNames.SUB, requestId);
+        //}
         log.debug("evaluate.exit; returning claims: {} with status: {}", result.keySet(), status);
         return result;
     }

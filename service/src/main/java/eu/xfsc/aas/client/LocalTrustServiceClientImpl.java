@@ -85,7 +85,7 @@ public class LocalTrustServiceClientImpl implements TrustServiceClient {
                     map.put(IdTokenClaimNames.AUTH_TIME, Instant.now().getEpochSecond());
                 }
             }
-            map.put(IdTokenClaimNames.SUB, requestId);
+            map.put(IdTokenClaimNames.SUB, "urn:id:" + requestId);
             map.put(IdTokenClaimNames.ISS, oidcIssuer);
         }
 

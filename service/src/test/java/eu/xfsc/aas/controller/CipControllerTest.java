@@ -55,7 +55,7 @@ public class CipControllerTest {
 
         Map<String, Object> claims = getUserClaims("sub=1234567890&scope=openid");
         assertNotNull(claims.get(IdTokenClaimNames.ISS));
-        assertEquals("1234567890", claims.get(IdTokenClaimNames.SUB));
+        assertEquals("urn:id:1234567890", claims.get(IdTokenClaimNames.SUB));
         assertNotNull(claims.get(IdTokenClaimNames.AUTH_TIME));
         assertNull(claims.get(StandardClaimNames.NAME));
         assertNull(claims.get(StandardClaimNames.GIVEN_NAME));
@@ -70,7 +70,7 @@ public class CipControllerTest {
         
         claims = getUserClaims("sub=1234567890&scope=openid profile email");
         assertNotNull(claims.get(IdTokenClaimNames.ISS));
-        assertEquals("1234567890", claims.get(IdTokenClaimNames.SUB));
+        assertEquals("urn:id:1234567890", claims.get(IdTokenClaimNames.SUB));
         assertNotNull(claims.get(IdTokenClaimNames.AUTH_TIME));
         assertNotNull(claims.get(StandardClaimNames.NAME));
         assertNotNull(claims.get(StandardClaimNames.GIVEN_NAME));
