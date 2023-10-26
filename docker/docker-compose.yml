@@ -68,8 +68,9 @@ services:
 
   aas:
     build:
-      context: ../service
+      context: "${SERVICE_DOCKER_CONTEXT}"
       dockerfile: Dockerfile
+      target: "${SERVICE_DOCKER_TARGET}"
     container_name: "aas-auth-server"
     environment:
       SPRING_PROFILES_ACTIVE: "${PROFILES_AAS}"
@@ -87,8 +88,9 @@ services:
 
   app:
     build:
-      context: ../app
+      context: "${APP_DOCKER_CONTEXT}"
       dockerfile: Dockerfile
+      target: "${APP_DOCKER_TARGET}"
     container_name: "aas-test-server"
     environment:
       SPRING_PROFILES_ACTIVE: "${PROFILES_AAS}"
