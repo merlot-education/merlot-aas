@@ -1,12 +1,32 @@
 ## Build Procedures
 
-Ensure you have JDK 11 (or newer), Maven 3.5.4 (or newer) and Git installed
-
+### Perpetration
 First clone the AAS repository:
 
 ```
 >git clone https://gitlab.com/gaia-x/data-infrastructure-federation-services/authenticationauthorization.git
 ```
+
+To test locally how AAS, IAM and Demo application protected with IAM work together set their domains in /hosts file
+```
+127.0.0.1	auth-server
+127.0.0.1	key-server
+127.0.0.1	test-server
+```
+
+
+
+
+### Docker Only
+To run the A&A Service and IAM (Keycloak) and start and build them with run  docker-compose in the `docker` folder:
+```
+>cd docker
+>docker-compose up --build
+```
+### MVN and Docker
+
+Ensure you have JDK 17 (or newer) and Maven 3.5.4 (or newer) installed.
+
 Then go to the project folder and build it with maven:
 
 ```
@@ -19,15 +39,10 @@ To run the A&A Service and IAM (Keycloak) go to /docker folder and start them wi
 
 ```
 >cd docker
->docker-compose up
+>docker-compose --env-file dev.env up 
 ```
-To test locally how AAS, IAM and Demo application protected with IAM work together set their domains in /hosts file
 
-```
-127.0.0.1	auth-server
-127.0.0.1	key-server
-127.0.0.1	test-server
-```
+### Initial Setup
 On the first start we must set expected secret values for predefined SSI Identity Providers. To do this please open keycloak admin console at `http://key-server:8080/admin`, select `Gaia-X` realm, go to Identity Providers section and set proper Client Secret values:
 - SSI OIDC Broker secret is `secret`
 - SSI SIOP Broker secret is `secret2`
