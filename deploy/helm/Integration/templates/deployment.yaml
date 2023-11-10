@@ -35,6 +35,7 @@ spec:
             env:
               - name: SPRING_PROFILES_ACTIVE
                 value: {{ .Values.config.profile | quote }}
+            {{- if not .Values.externalSecrets }}
               - name: AAS_IAM_IAT_SECRET
                 valueFrom:
                   secretKeyRef:
@@ -55,11 +56,25 @@ spec:
                   secretKeyRef:
                     name: {{ include "app.fullname" . }}-auth-server-keys-secret
                     key: jwk
+            {{- end }}
               - name: SPRING_APPLICATION_JSON
                 valueFrom:
                   configMapKeyRef:
                     name: {{ include "app.fullname" . }}-spring-config
                     key: application.json
+            {{- range $key, $value := .Values.env }}
+              - name: "{{ $key }}"
+                value: "{{ $value }}"
+            {{- end }}
+            {{- if .Values.secretEnv }}
+            {{- range $key, $value := .Values.secretEnv }}
+              - name: "{{ $key }}"
+                valueFrom:
+                  secretKeyRef:
+                    name: "{{ $value.name }}"
+                    key: "{{ $value.key }}"
+            {{- end }}
+            {{- end }}
             ports:
               - name: "http"
                 containerPort: {{ .Values.server.http.port }}
