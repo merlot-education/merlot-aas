@@ -17,6 +17,12 @@ image:
 
 podAnnotations: {}
 
+env: {}
+
+secretEnv: {}
+
+externalSecrets: false
+
 # resources:
 #   requests:
 #     cpu:
@@ -116,4 +122,3 @@ properties:
       statuses:
         GetLoginProofResult: ACCEPTED
         GetIatProofResult: ACCEPTED
-      
