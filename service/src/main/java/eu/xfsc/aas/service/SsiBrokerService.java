@@ -168,7 +168,7 @@ public class SsiBrokerService extends SsiClaimsService {
         QRCodeWriter barcodeWriter = new QRCodeWriter();
         BitMatrix bitMatrix = null;
         try {
-            bitMatrix = barcodeWriter.encode(link, BarcodeFormat.QR_CODE, 200, 200);
+            bitMatrix = barcodeWriter.encode(link, BarcodeFormat.QR_CODE, 600, 600);
         } catch (WriterException e) {
             log.error("getQR.error; QR data generation failed", e);
         }

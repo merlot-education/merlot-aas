@@ -262,6 +262,7 @@ img {
     margin: auto;
     display: block;
     border: 1px solid #E8E8E8;
+    max-width: 100%;
 }
 
 table {
