@@ -18,6 +18,10 @@ import lombok.extern.slf4j.Slf4j;
 import static eu.xfsc.aas.generated.model.AccessRequestStatusDto.*;
 import static eu.xfsc.aas.model.TrustServicePolicy.*;
 
+/**
+ * This class is a mock implementation of the TSA. It is only usable for testing
+ * and demonstration purposes, and is enabled if you use the 'test' profile.
+ */
 @Slf4j
 public class LocalTrustServiceClientImpl implements TrustServiceClient {
 

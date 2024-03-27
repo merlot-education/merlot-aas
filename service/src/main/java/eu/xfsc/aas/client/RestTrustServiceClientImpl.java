@@ -16,6 +16,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 import eu.xfsc.aas.generated.model.AccessRequestStatusDto;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * This is the production implementation of the TSA and it is enabled if you use the 'prod' profile.
+ */
 @Slf4j
 public class RestTrustServiceClientImpl implements TrustServiceClient {
 
