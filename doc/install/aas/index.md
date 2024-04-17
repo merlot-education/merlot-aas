@@ -83,13 +83,13 @@ The full list of AAS properties is:
 
 ### Configuring the metadata database
 
-The AAS uses an SQL database. The settings to configure are 
+The AAS uses an SQL database (in the reference setup, this is a PostgrSQL database). The settings to configure are 
 
 - `spring.datasource.url` - The URL where the database is reachable, something like: `jdbc:postgresql://postgresql-aas:5432/aas`
 - `spring.datasource.username` - The username to access the database
 - `spring.datasource.password` - The password to access the database
 
-### Setting configuration settings with environment variables
+### Updating configuration settings with environment variables
 
 Any AAS property can be overwritten with environment variable in uppercase form: `aas.iam.base-uri -> AAS_IAM_BASE_URI`, where all separators 
 (dots, hyphens) are substituted with underscores.

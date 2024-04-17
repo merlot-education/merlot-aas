@@ -6,7 +6,7 @@ In the reference implementation keycloak [Policy Enforcers](http://www.keycloak.
 The CIP is found at `GET` `/cip/claims` and takes two query parameters:
 
 - `sub` - the subject or username for which to get the claims
-- `scope` - this should be `openid`
+- `scope` - a whitespace seperated list of scopes, i.e. `openid email profile`. Defaults to `openid`.
 
 The endpoint returns a JSON object with the keys being the claim types and the values being the claims.
 For example
