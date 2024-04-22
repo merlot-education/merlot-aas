@@ -1,13 +1,13 @@
 ## AAS Installation & Configuration
 
-Deployment scripts were provided to deploy services in Kubernetes environment, see `/service/deploy` folder. AAS Server installation can be started with Service:
+Deployment scripts were provided to deploy services in a Kubernetes environment, see `/service/deploy` folder. The AAS Server installation can be started with Service:
 
-```
+```shell
 >kubectl apply -f service.yaml
 ```
 Then install secrets:
 
-```
+```shell
 >kubectl apply -f secret-keys.yaml
 >kubectl apply -f secret-oidc.yaml
 >kubectl apply -f secret-siop.yaml
@@ -30,10 +30,15 @@ Then install the AAS Deployment and Ingress:
 >kubectl apply -f ingress.yaml
 ```
 
+### Configuration
+
 All service settings are specified in the base `application.yml` file and its profile-specific extensions:
 - `application-test.yml`: for basic test environment
 - `application-test-suite.yml`: for testing with Conformance Suite in test environment
 - `application-prod.yml`: for production environment
+
+You can specify which profile should be active by setting the `SPRING_PROFILES_ACTIVE` environment variable to the profile name (in this case either `test`, `test-suite` or `prod`).
+You can find these profile config files in the `/service/src/main/resources` directory in this repository.
 
 Profile-specific settings override what is specified in the base `application.yml` (default) profile. If some value not set in profile-specific file then 
 default value used.
@@ -75,6 +80,16 @@ The full list of AAS properties is:
 | aas.tsa.statuses.GetLoginProofResult | Status to return in response from TSA policy evaluation API for GetLoginProofResult policy (used in test profiles only)   | ACCEPTED                                                      |
 | aas.tsa.statuses.GetIatProofResult   | Status to return in response from TSA policy evaluation API for GetIatProofResult policy (used in test profiles only)     | ACCEPTED                                                      |
 
+
+### Configuring the metadata database
+
+The AAS uses an SQL database (in the reference setup, this is a PostgrSQL database). The settings to configure are 
+
+- `spring.datasource.url` - The URL where the database is reachable, something like: `jdbc:postgresql://postgresql-aas:5432/aas`
+- `spring.datasource.username` - The username to access the database
+- `spring.datasource.password` - The password to access the database
+
+### Updating configuration settings with environment variables
 
 Any AAS property can be overwritten with environment variable in uppercase form: `aas.iam.base-uri -> AAS_IAM_BASE_URI`, where all separators 
 (dots, hyphens) are substituted with underscores.
