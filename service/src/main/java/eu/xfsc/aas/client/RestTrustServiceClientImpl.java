@@ -71,7 +71,12 @@ public class RestTrustServiceClientImpl implements TrustServiceClient {
         } else if (code  == HttpStatus.NO_CONTENT) { 
             status = AccessRequestStatusDto.PENDING;
         } else { // should be 200
-            status = AccessRequestStatusDto.ACCEPTED;
+            // validate result
+            if ((boolean) result.getOrDefault("result", false)) {
+                status = AccessRequestStatusDto.ACCEPTED;
+            } else {
+                status = AccessRequestStatusDto.REJECTED;
+            }
         }
 
         result.remove("claims");
