@@ -71,19 +71,17 @@ public class RestTrustServiceClientImpl implements TrustServiceClient {
         } else if (code  == HttpStatus.NO_CONTENT) { 
             status = AccessRequestStatusDto.PENDING;
         } else { // should be 200
-            // validate result
-            if ((boolean) result.getOrDefault("result", false)) {
-                status = AccessRequestStatusDto.ACCEPTED;
-            } else {
-                status = AccessRequestStatusDto.REJECTED;
-            }
+            status = AccessRequestStatusDto.ACCEPTED;
         }
-        System.out.println("tsa-response");
-        result.forEach((key, value) -> System.out.println(key + ":" + value));
 
         result.remove("claims");
         if (result.size() == 0 && status == AccessRequestStatusDto.ACCEPTED) {
             status = AccessRequestStatusDto.PENDING;
+        }
+
+        if (status == AccessRequestStatusDto.ACCEPTED
+                && !((boolean) result.getOrDefault("result", false))) {
+            status = AccessRequestStatusDto.REJECTED;
         }
         
         result.put(PN_STATUS, status);
@@ -96,6 +94,8 @@ public class RestTrustServiceClientImpl implements TrustServiceClient {
             // a quick fix for TSA mock..
         //    result.put(IdTokenClaimNames.SUB, requestId);
         //}
+        System.out.println("tsa-response");
+        result.forEach((key, value) -> System.out.println(key + ":" + value));
         log.debug("evaluate.exit; returning claims: {} with status: {}", result.keySet(), status);
         return result;
     }
