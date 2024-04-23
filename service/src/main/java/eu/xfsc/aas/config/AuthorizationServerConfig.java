@@ -48,6 +48,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
@@ -116,7 +117,8 @@ public class AuthorizationServerConfig {
 		applyOidcSettings(http, corsSource, ssiBroker);
 		
 		http  
-		    .cors(cors -> cors.configurationSource(corsSource))
+		    //.cors(cors -> cors.configurationSource(corsSource))
+			.cors(Customizer.withDefaults())
 			// Redirect to the login page when not authenticated from the
 			// authorization endpoint
 			.exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/ssi/login")))

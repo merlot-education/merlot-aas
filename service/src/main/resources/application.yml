@@ -101,3 +101,8 @@ logging:
     org.springframework.security: DEBUG
     org.springframework.security.jackson2.SecurityJackson2Modules: INFO
     eu.xfsc.aas: DEBUG
+
+cors:
+  global:
+    patterns: http://localhost:[*]
+    origins:
