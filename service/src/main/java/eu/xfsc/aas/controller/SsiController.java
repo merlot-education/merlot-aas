@@ -118,9 +118,11 @@ public class SsiController {
             case ACCEPTED:
                 return ResponseEntity.status(HttpStatus.FOUND).build();
             case REJECTED:
-                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, SsiAuthErrorCodes.LOGIN_REJECTED);
+                response.setHeader("Error-Key", SsiAuthErrorCodes.LOGIN_REJECTED);
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build();
             case TIMED_OUT:
-                throw new ResponseStatusException(HttpStatus.GATEWAY_TIMEOUT, SsiAuthErrorCodes.LOGIN_TIMED_OUT);
+                response.setHeader("Error-Key", SsiAuthErrorCodes.LOGIN_TIMED_OUT);
+                return ResponseEntity.status(HttpStatus.GATEWAY_TIMEOUT).build();
             default:
                 return ResponseEntity.accepted().build();
         }

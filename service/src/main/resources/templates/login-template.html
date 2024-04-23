@@ -107,10 +107,9 @@
                  clearInterval(interval);
                  document.forms["login"].submit()
                }
-               const responseText = await response.text();
                if (response.status == 502 || response.status == 504) {
                  clearInterval(interval);
-                 window.location.href = window.location.origin + "/ssi/login?error=" + responseText;
+                 window.location.href = window.location.origin + "/ssi/login?error=" + response.headers.get("error-key");
                }
            } catch (err) {
                console.log(err);
