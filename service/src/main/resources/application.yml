@@ -106,3 +106,5 @@ cors:
   global:
     patterns: http://localhost:[*]
     origins:
+
+post-logout-redirect-uri: http://localhost:4200

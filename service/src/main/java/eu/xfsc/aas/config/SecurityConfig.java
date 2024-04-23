@@ -22,6 +22,7 @@ package eu.xfsc.aas.config;
 
 import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -36,7 +37,6 @@ import org.springframework.security.oauth2.server.authorization.token.JwtEncodin
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
-import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
@@ -52,6 +52,9 @@ import lombok.extern.slf4j.Slf4j;
 @EnableWebSecurity//(debug = true)
 @Configuration
 public class SecurityConfig {
+
+    @Value("${post-logout-redirect-uri}")
+    private String postLogoutRedirectUri;
 
     @Bean
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http, HandlerMappingIntrospector introspector) throws Exception {
@@ -80,7 +83,7 @@ public class SecurityConfig {
         		)
         	.formLogin(login -> login.failureHandler(ssiAuthenticationFailureHandler()))
             .logout(logout -> logout
-                    .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler())
+                    .logoutSuccessUrl(postLogoutRedirectUri)
             		.invalidateHttpSession(true))
            	.requestCache(cache -> cache.requestCache(requestCache));
     	log.debug("defaultSecurityFilterChain.exit");
