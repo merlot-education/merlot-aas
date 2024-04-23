@@ -36,6 +36,7 @@ import org.springframework.security.oauth2.server.authorization.token.JwtEncodin
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
@@ -79,7 +80,7 @@ public class SecurityConfig {
         		)
         	.formLogin(login -> login.failureHandler(ssiAuthenticationFailureHandler()))
             .logout(logout -> logout
-            		.logoutSuccessUrl("/ssi/login?logout")
+                    .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler())
             		.invalidateHttpSession(true))
            	.requestCache(cache -> cache.requestCache(requestCache));
     	log.debug("defaultSecurityFilterChain.exit");
