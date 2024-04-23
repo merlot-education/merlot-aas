@@ -13,7 +13,7 @@
 </head>
 <body>
 <header>
-<!--    <p class="error-message" th:if= "${errorMessage != null}" th:text="${errorMessage}"></p>-->
+<p class="error-message" th:if= "${errorMessage != null}" th:text="${errorMessage}"></p>
     <div id="modal" class="modal show" th:if= "${errorMessage != null}">
         <div class="modal-content">
             <h1 class="modal-title" th:text="#{modalTitle}">Error</h1>
