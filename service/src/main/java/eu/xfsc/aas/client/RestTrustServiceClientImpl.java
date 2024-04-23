@@ -78,6 +78,8 @@ public class RestTrustServiceClientImpl implements TrustServiceClient {
                 status = AccessRequestStatusDto.REJECTED;
             }
         }
+        System.out.println("tsa-response");
+        result.forEach((key, value) -> System.out.println(key + ":" + value));
 
         result.remove("claims");
         if (result.size() == 0 && status == AccessRequestStatusDto.ACCEPTED) {
