@@ -106,7 +106,7 @@ public class SsiController {
     }
     
     @GetMapping(value = "/login/status")
-    public ResponseEntity<Void> loginStatus(HttpServletRequest request, HttpServletResponse response) { //, Model model) {    
+    public ResponseEntity<Void> loginStatus(HttpServletRequest request, HttpServletResponse response) { //, Model model) {
         String requestId = (String) request.getSession().getAttribute("requestId");
         if (requestId == null) {
         	return ResponseEntity.badRequest().build(); 
@@ -114,22 +114,15 @@ public class SsiController {
 
         Map<String, Object> claims = ssiBrokerService.getUserClaims(requestId, true);
         AccessRequestStatusDto sts = (AccessRequestStatusDto) claims.get(TrustServiceClient.PN_STATUS);
-        try {
-	        switch (sts) {
-	            case ACCEPTED:
-	                return ResponseEntity.status(HttpStatus.FOUND).build();
-	            case REJECTED:
-	                response.sendRedirect("/ssi/login?error=" + SsiAuthErrorCodes.LOGIN_REJECTED);
-	                return ResponseEntity.status(HttpStatus.BAD_GATEWAY).build(); 
-	            case TIMED_OUT:
-	                response.sendRedirect("/ssi/login?error=" + SsiAuthErrorCodes.LOGIN_TIMED_OUT);
-	                return ResponseEntity.status(HttpStatus.GATEWAY_TIMEOUT).build();
-	            default:    
-	            	return ResponseEntity.accepted().build();
-	        }
-        } catch (IOException ex) {
-        	ex.printStackTrace();
-        	return ResponseEntity.internalServerError().build(); 
+        switch (sts) {
+            case ACCEPTED:
+                return ResponseEntity.status(HttpStatus.FOUND).build();
+            case REJECTED:
+                throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, SsiAuthErrorCodes.LOGIN_REJECTED);
+            case TIMED_OUT:
+                throw new ResponseStatusException(HttpStatus.GATEWAY_TIMEOUT, SsiAuthErrorCodes.LOGIN_TIMED_OUT);
+            default:
+                return ResponseEntity.accepted().build();
         }
     }
 

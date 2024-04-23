@@ -97,27 +97,26 @@
     }
 </script>
 <script type="application/javascript">
-   const interval = window.setInterval(async function submitForm() {
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    if (!urlParams.has('error')) {
+        const interval = window.setInterval(async function submitForm() {
            try {
                const response = await fetch(window.location.origin + "/ssi/login/status", { credentials: 'same-origin' });
                if (response.status == 302) {
                  clearInterval(interval);
-                 document.forms["login"].submit()           
+                 document.forms["login"].submit()
                }
-               //if (response.status == 502) { 
-            	 //present login_rejected error..
-               //  clearInterval(interval);
-               //  document.forms["login"].submit()           
-               //}
-               //if (response.status == 504) { 
-            	 //present login_timedout error..
-               //  clearInterval(interval);
-               //  document.forms["login"].submit()           
-               //}
+               const responseText = await response.text();
+               if (response.status == 502 || response.status == 504) {
+                 clearInterval(interval);
+                 window.location.href = window.location.origin + "/ssi/login?error=" + responseText;
+               }
            } catch (err) {
                console.log(err);
            }
        }, 5000);
+    }
 </script>
 
 <footer>
