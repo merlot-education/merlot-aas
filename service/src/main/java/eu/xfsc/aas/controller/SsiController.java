@@ -55,8 +55,9 @@ public class SsiController {
         
         if (auth == null) {
             String out = request.getParameter("logout");
+            String error = request.getParameter("error");
             if (out == null) {
-                model.addAttribute("errorMessage", getErrorMessage("sessionTimeout", locale));
+                model.addAttribute("errorMessage", getErrorMessage(error, locale));
             } else {
             	log.debug("login; no saved request found, model: {}", model.asMap());
                 // assume OIDC client for now..
