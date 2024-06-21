@@ -55,12 +55,11 @@
         <div class="card-bottom">
             <div class="card-bottom-contents">
                 <h2 id="greeting" th:text="#{qrTitle}">Scan the QR code with your mobile device</h2>
-                <h2>
-                    <a href="https://ktc.merlot-education.eu/for_companies/ssi-log-in/"
-                       target="popup"
-                       onclick="window.open('https://ktc.merlot-education.eu/for_companies/ssi-log-in/','name','width=1280,height=720')">
-                    SSI Log In | Merlot (merlot-education.eu)</a>
-                </h2>
+                <a href="https://ktc.merlot-education.eu/for_companies/ssi-log-in/"
+                   target="popup"
+                   onclick="window.open('https://ktc.merlot-education.eu/for_companies/ssi-log-in/','name','width=1280,height=720')">
+                    SSI Log In | Merlot (merlot-education.eu)
+                </a>
                 <img th:src="${qrUrl}" alt="QR Code">
                 <form id="login" th:action="@{/login}" method="post">
                     <table>
