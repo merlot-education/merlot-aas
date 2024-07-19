@@ -196,7 +196,7 @@ public class SsiBrokerService extends SsiClaimsService {
         BufferedImage combined = new BufferedImage(qrcode.getWidth(), qrcode.getHeight(), BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2 = (Graphics2D)combined.getGraphics();
         g2.drawImage(qrcode, 0, 0, null);
-        g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.0f));
+        g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
         g2.drawImage(scaledOverlay, Math.round(deltaWidth/2), Math.round(deltaHeight/2), null);
         return combined;
     }
@@ -208,7 +208,7 @@ public class SsiBrokerService extends SsiClaimsService {
         BufferedImage imageBuff = new BufferedImage(scaledWidth, scaledHeight, BufferedImage.TYPE_INT_ARGB);
         try {
             Graphics g = imageBuff.createGraphics();
-            BufferedImage overlay = ImageIO.read(SsiBrokerService.class.getResourceAsStream("/merlot-pcm.png"));
+            BufferedImage overlay = ImageIO.read(SsiBrokerService.class.getResourceAsStream("/merlot-pcm-opaque.png"));
             g.drawImage(overlay.getScaledInstance(scaledWidth, scaledHeight, BufferedImage.SCALE_SMOOTH), 0, 0, new Color(0,0,0), null);
             g.dispose();
         } catch (Exception e) {
