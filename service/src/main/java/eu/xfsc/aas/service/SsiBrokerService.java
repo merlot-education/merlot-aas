@@ -5,12 +5,15 @@ import static eu.xfsc.aas.model.TrustServicePolicy.GET_LOGIN_PROOF_RESULT;
 import static org.springframework.security.oauth2.core.OAuth2ErrorCodes.INVALID_REQUEST;
 import static org.springframework.security.oauth2.core.OAuth2ErrorCodes.INVALID_SCOPE;
 
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.text.ParseException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
@@ -61,15 +64,15 @@ public class SsiBrokerService extends SsiClaimsService {
     private final ScopeProperties scopeProperties;
     private final InvitationServiceClient invitationClient;
     private final SsiClientsRepository ssiClientsRepository;
-    
-    public SsiBrokerService(TrustServiceClient trustServiceClient, ScopeProperties scopeProperties, InvitationServiceClient invitationService, 
+
+    public SsiBrokerService(TrustServiceClient trustServiceClient, ScopeProperties scopeProperties, InvitationServiceClient invitationService,
     		SsiClientsRepository ssiClientsRepository) {
         super(trustServiceClient);
         this.scopeProperties = scopeProperties;
         this.invitationClient = invitationService;
         this.ssiClientsRepository = ssiClientsRepository;
     }
-    
+
     public String oidcAuthorize(Map<String, Object> model) {
         log.debug("oidcAuthorize.enter; got model: {}", model);
 
@@ -82,7 +85,7 @@ public class SsiBrokerService extends SsiClaimsService {
         } else {
             params.put(OAuth2ParameterNames.SCOPE, scopes);
         }
-        
+
         // they can be provided in re-login scenario..
         processAttribute(model, params, IdTokenClaimNames.SUB);
         processAttribute(model, params, "max_age");
@@ -115,7 +118,7 @@ public class SsiBrokerService extends SsiClaimsService {
         String link = buildRequestString(scopes, requestId);
         Map<String, Object> data = initAuthRequest(requestId, scopes, (String) model.get("clientId"), link);
         log.debug("siopAuthorize; SIOP request {} stored: {}", requestId, data);
-        
+
         String qrUrl = "/ssi/qr/" + Base64.getUrlEncoder().encodeToString(link.getBytes());
         model.put("qrUrl", qrUrl);
         model.put(TrustServiceClient.PN_REQUEST_ID, requestId);
@@ -123,7 +126,7 @@ public class SsiBrokerService extends SsiClaimsService {
         log.debug("siopAuthorize.exit; returning model: {}", model);
         return requestId;
     }
-    
+
     public RegisteredClientRepository getClientsRepository() {
     	return ssiClientsRepository;
     }
@@ -174,7 +177,8 @@ public class SsiBrokerService extends SsiClaimsService {
         }
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
-            ImageIO.write(MatrixToImageWriter.toBufferedImage(bitMatrix), "png", baos);
+            BufferedImage bi = getQRCodeWithOverlay(MatrixToImageWriter.toBufferedImage(bitMatrix));
+            ImageIO.write(bi, "png", baos);
         } catch (IOException e) {
             log.error("getQR.error; Failed to generate image from QR data", e);
         }
@@ -182,12 +186,45 @@ public class SsiBrokerService extends SsiClaimsService {
         return baos.toByteArray();
     }
 
+    private BufferedImage getQRCodeWithOverlay(BufferedImage qrcode)
+    {
+        BufferedImage scaledOverlay = scaleOverlay(qrcode);
+
+        int deltaHeight = qrcode.getHeight() - scaledOverlay.getHeight();
+        int deltaWidth  = qrcode.getWidth()  - scaledOverlay.getWidth();
+
+        BufferedImage combined = new BufferedImage(qrcode.getWidth(), qrcode.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = (Graphics2D)combined.getGraphics();
+        g2.drawImage(qrcode, 0, 0, null);
+        g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.0f));
+        g2.drawImage(scaledOverlay, Math.round(deltaWidth/2), Math.round(deltaHeight/2), null);
+        return combined;
+    }
+
+    private BufferedImage scaleOverlay(BufferedImage qrcode) {
+        int scaledWidth = Math.round(Math.round(qrcode.getWidth() * 0.2));
+        int scaledHeight = Math.round(Math.round(qrcode.getHeight() * 0.2));
+
+        BufferedImage imageBuff = new BufferedImage(scaledWidth, scaledHeight, BufferedImage.TYPE_INT_ARGB);
+        try {
+            Graphics g = imageBuff.createGraphics();
+            BufferedImage overlay = ImageIO.read(SsiBrokerService.class.getResourceAsStream("/merlot-pcm.png"));
+            g.drawImage(overlay.getScaledInstance(scaledWidth, scaledHeight, BufferedImage.SCALE_SMOOTH), 0, 0, new Color(0,0,0), null);
+            g.dispose();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return imageBuff;
+    }
+
+
     public void processSiopLoginResponse(Map<String, Object> response) {
         log.debug("processSiopLoginResponse.enter; got response: {}", response);
         String requestId = (String) response.get(IdTokenClaimNames.NONCE);
         if (requestId == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_response: invalid nonce"); 
-        } 
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_response: invalid nonce");
+        }
         Boolean valid = isValidRequest(requestId);
         if (valid == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_response: invalid nonce");
@@ -195,7 +232,7 @@ public class SsiBrokerService extends SsiClaimsService {
         if (!valid) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_response: request expired");
         }
-        
+
         String error = (String) response.get(OAuth2ParameterNames.ERROR);
         if (error == null) {
             Collection<String> requestedScopes = (Collection<String>) claimsCache.get(requestId).get(OAuth2ParameterNames.SCOPE);
@@ -203,7 +240,7 @@ public class SsiBrokerService extends SsiClaimsService {
                     .filter(e -> requestedScopes.contains(e.getKey())).flatMap(e -> e.getValue().stream()).collect(Collectors.toSet());
             // special handling for auth_time..
             requestedClaims.remove(IdTokenClaimNames.AUTH_TIME);
-            
+
             DefaultJWTClaimsVerifier<?> verifier = new DefaultJWTClaimsVerifier<>(new JWTClaimsSet.Builder()
                 .issuer(siopIssuer)
                 .audience(oidcIssuer)
@@ -213,16 +250,16 @@ public class SsiBrokerService extends SsiClaimsService {
             } catch(ParseException | BadJWTException ex) {
                 log.info("processSiopLoginResponse.error; {}", ex.getMessage());
                 claimsCache.remove(requestId);
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_response: " + ex.getMessage()); 
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_response: " + ex.getMessage());
             }
-                
+
             String issuer = (String) response.get(IdTokenClaimNames.ISS);
             String subject = (String) response.get(IdTokenClaimNames.SUB);
             // should be the same..
             if (!issuer.equals(subject)) {
                 log.info("processSiopLoginResponse; issuer and subject have different values");
             }
-                
+
             try {
                 subject = new String(Base64.getUrlDecoder().decode(subject));
                 log.debug("processSiopLoginResponse; subject: {}", subject);
@@ -233,7 +270,7 @@ public class SsiBrokerService extends SsiClaimsService {
         addAuthData(requestId, response);
         log.debug("processSiopLoginResponse.exit; error processed: {}", error != null);
     }
-    
+
     private Map<String, Object> initAuthRequest(String requestId, Set<String> scopes, String clientId, String link) {
         Map<String, Object> data = new HashMap<>();
         data.put("request_time", Instant.now());
@@ -247,7 +284,7 @@ public class SsiBrokerService extends SsiClaimsService {
         //}
         return data;
     }
-    
+
     public boolean setAdditionalParameters(String requestId, Map<String, Object> additionalParams) {
         log.debug("setAdditionalParameters.enter; got request: {} params: {}", requestId, additionalParams);
         boolean result = true;
@@ -261,9 +298,9 @@ public class SsiBrokerService extends SsiClaimsService {
         }
         log.debug("setAdditionalParameters.exit; updated: {}, cacheSize: {}", result, claimsCache.estimatedSize());
         return result;
-        
+
     }
-    
+
     private Map<String, Object> addAuthData(String requestId, Map<String, Object> data) {
         log.debug("addAuthData.enter; got request: {} claims size: {}", requestId, data.size());
         boolean found = true;
@@ -285,11 +322,11 @@ public class SsiBrokerService extends SsiClaimsService {
         if (request == null) {
             return null;
         }
-        
+
         Instant requestTime = (Instant) request.get("request_time");
         return requestTime != null && requestTime.isBefore(Instant.now()) && requestTime.isAfter(Instant.now().minus(clockSkew));
     }
-    
+
     public Map<String, Object> getSubjectClaims(String subjectId, Collection<String> requestedScopes) {
         log.debug("getSubjectClaims.enter; got subject: {}, scopes: {}", subjectId, requestedScopes);
         Map<String, Object> userClaims = getUserClaims(subjectId, true, requestedScopes, null);
@@ -300,16 +337,16 @@ public class SsiBrokerService extends SsiClaimsService {
     public Map<String, Object> getUserClaims(String requestId, boolean required, Collection<String> requestedScopes, Collection<String> requestedClaims) {
         Map<String, Object> userClaims = getUserClaims(requestId, required);
         if (userClaims == null) {
-            log.debug("getUserClaims; no claims found, cache size is: {}", claimsCache.estimatedSize()); 
+            log.debug("getUserClaims; no claims found, cache size is: {}", claimsCache.estimatedSize());
             return null;
         }
-        
+
         return filterUserClaims(userClaims, requestedScopes, requestedClaims);
     }
-    
+
     public Map<String, Object> getUserClaims(String requestId, boolean required) {
     	Map<String, Object> tsaClaims = null;
-        Map<String, Object> authClaims = claimsCache.get(requestId); 
+        Map<String, Object> authClaims = claimsCache.get(requestId);
         if (!isClaimsLoaded(authClaims)) {
             log.info("getUserClaims; no claims found for request: {}, required: {}", requestId, required);
             if (required) {
@@ -336,14 +373,14 @@ public class SsiBrokerService extends SsiClaimsService {
         }
         return authClaims;
     }
-    
+
     public Set<String> getUserScopes(String requestId) {
         Map<String, Object> userClaims = claimsCache.get(requestId);
         if (userClaims == null) {
             log.warn("getUserScopes; no claims found for request: {}", requestId);
             throw new OAuth2AuthenticationException(INVALID_REQUEST);
         }
-        
+
         Set<String> scopes = (Set<String>) userClaims.get(OAuth2ParameterNames.SCOPE);
         if (scopes == null) {
             log.warn("getUserScopes; no scopes found for request: {}", requestId);
@@ -353,7 +390,7 @@ public class SsiBrokerService extends SsiClaimsService {
         //Map<String, String> claims = scopeProperties.getScopes().entrySet().stream().map(e -> e.getValue())
         return scopes; //userClaims.keySet().stream().filter(c -> scopeProperties.getScopes().entrySet() .values().contains(c)).collect(Collectors.toSet());
     }
-    
+
     public Map<String, Object> getAdditionalParameters(String requestId) {
         Map<String, Object> userClaims = claimsCache.get(requestId);
         if (userClaims == null) {
@@ -373,8 +410,8 @@ public class SsiBrokerService extends SsiClaimsService {
         try {
             userClaims = loadUserClaims(subjectId);
             if (userClaims == null) {
-                log.debug("getUserClaims; no claims found, cache size is: {}", claimsCache.estimatedSize()); 
-            } else {            
+                log.debug("getUserClaims; no claims found, cache size is: {}", claimsCache.estimatedSize());
+            } else {
                 userClaims = filterUserClaims(userClaims, requestedScopes, null);
             }
         } catch (OAuth2AuthenticationException ex) {
@@ -390,7 +427,7 @@ public class SsiBrokerService extends SsiClaimsService {
         log.debug("getSubjectClaims.exit; returning: {}", userClaims == null ? null : userClaims.keySet());
         return userClaims;
     }
- 
+
     private Map<String, Object> filterUserClaims(Map<String, Object> userClaims, Collection<String> requestedScopes, Collection<String> requestedClaims) {
         // return claims which corresponds to requested scopes only..
         Set<String> scopedClaims;
@@ -406,11 +443,11 @@ public class SsiBrokerService extends SsiClaimsService {
         return userClaims.entrySet().stream()
                 .filter(e -> e.getValue() != null && scopedClaims.contains(e.getKey()) && !e.getValue().toString().isEmpty())
                 .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
-    	
+
     }
 
     private Map<String, Object> loadUserClaims(String requestId) {
-        Map<String, Object> userClaims = claimsCache.get(requestId); 
+        Map<String, Object> userClaims = claimsCache.get(requestId);
         if (!isClaimsLoaded(userClaims)) {
             userClaims = loadTrustedClaims(GET_LOGIN_PROOF_RESULT, requestId, getClientRestrictions(userClaims));
         }
@@ -418,16 +455,16 @@ public class SsiBrokerService extends SsiClaimsService {
             AccessRequestStatusDto sts = (AccessRequestStatusDto) userClaims.get(TrustServiceClient.PN_STATUS);
             if (sts != AccessRequestStatusDto.PENDING) {
             	addAuthData(requestId, userClaims);
-            }        	
+            }
         }
         return userClaims;
     }
-    
+
     private boolean isClaimsLoaded(Map<String, Object> claims) {
         return claims != null && (claims.containsKey(IdTokenClaimNames.SUB) || claims.containsKey(OAuth2ParameterNames.ERROR) ||
             claims.containsKey(StandardClaimNames.NAME) || claims.containsKey(StandardClaimNames.EMAIL));
     }
-    
+
     private Map<String, Object> getClientRestrictions(Map<String, Object> claims) {
     	Map<String, Object> restrictions = null;
     	if (claims != null) {
@@ -441,5 +478,5 @@ public class SsiBrokerService extends SsiClaimsService {
     	}
     	return restrictions;
     }
-    
+
 }
